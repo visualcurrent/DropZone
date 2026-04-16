@@ -20,7 +20,7 @@ Python 3.6+  (zero extra packages — pure stdlib)
 ## How it works
 
 Host page   →  http://localhost:7070
-Remote page →  http://<your-ip>:7070/remote  (or scan the QR)
+Remote page →  http://your-ip:7070/remote  (or scan the QR)
 
 Both pages have:
   • Tap-to-pick file upload using the device's native file picker
@@ -36,7 +36,7 @@ instantly on any phone without typing a URL.
   python3 DropZone.py
 
 Then open http://localhost:7070 in your browser.
-The QR code on that page points remote users straight to http://<your-ip>:7070/remote.
+The QR code on that page points remote users straight to http://your-ip:7070/remote.
 
 Make sure your DropZone.py is actually in /your/script/directory/.
 
