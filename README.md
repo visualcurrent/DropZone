@@ -1,6 +1,6 @@
 # DropZone — Instant LAN File Sharing
 
-LAN file sharing where only the host needs to install anything to get going. Everyone else just uses their browser — no app needed.
+LAN file sharing where only the host needs to install anything. Everyone else just uses their browser — no app needed.
 
 ## Description
 
@@ -15,117 +15,91 @@ The host starts DropZone on their phone or laptop. A QR code appears on screen. 
 The only requirement for guests: a browser. Which everyone already has.
 
 ## Requirements
-Python 3.6+  (zero extra packages — pure stdlib)
 
-## How it works
+Python 3.6+ (zero extra packages — pure stdlib)
 
-Host page   →  http://localhost:7070
-Remote page →  http://your-ip:7070/remote  (or scan the QR)
+## How It Works
+
+- **Host page** → `http://localhost:7070`
+- **Remote page** → `http://your-ip:7070/remote` (or scan the QR code)
 
 Both pages have:
-  • Tap-to-pick file upload using the device's native file picker
-  • A live list of all shared files, grouped by user, with download buttons
-  • Editable display name (auto-assigned friendly name on first visit)
+- Tap-to-pick file upload using the device's native file picker
+- A live list of all shared files, grouped by user, with download buttons
+- An editable display name (auto-assigned a friendly name on first visit)
 
-The host page also shows a QR code — scan it to open the Remote page
-instantly on any phone without typing a URL.
+The host page also shows a QR code — scan it to open the Remote page instantly on any phone without typing a URL. The Remote page shows the same QR at the bottom, so anyone already in can invite others by passing their phone around.
 
-## Run it
+## Run It
 
-From any Python3 enabled terminal.
+From any Python 3-enabled terminal:
 
-```
+```bash
 cd /your/script/directory/
 python3 DropZone.py
 ```
 
-Then open http://localhost:7070 in your browser.
-The QR code on that page points remote users straight to http://your-ip:7070/remote.
+Then open `http://localhost:7070` in your browser. The QR code on that page points remote users straight to `http://your-ip:7070/remote`.
 
-Make sure your DropZone.py is actually in /your/script/directory/.
+## Host on Android
 
-## To Host On Android
+These instructions use Termux. Install it from [GitHub](https://github.com/termux/termux-app) or F-Droid.
 
-Adapt these instructions to your personal terminal of choice. 
+> **Important:** Termux and any Termux add-ons (like Termux:Widget) must all be installed from the **same source** — all from F-Droid, or all from GitHub. Mixing sources causes a signature mismatch error.
 
-Install Termux. 
-[Termux on github](https://github.com/termux/termux-app) or F-Droid.
+### One-Time Setup
 
-### One-time set-up
-
-Optionally choose your repository mirror region
-```
+Optionally choose your repository mirror region:
+```bash
 termux-change-repo
 ```
 
-Install Python
-```
+Install Python:
+```bash
 pkg update && pkg install python
 ```
 
-Grant storage permission
+Grant storage permission:
+```bash
+termux-setup-storage
 ```
-termux-setup-storage        
-```
-An Android system permissions dialog should pop up.
+An Android system permissions dialog will appear. Then see **Run It** above.
 
-Done! See **Run it** section above.
+### Optional: One-Tap Home Screen Shortcut
 
-#### One-tap home screen shortcut set-up
-
-This screen shortcut is optional for convenience. You can always just **Run it** from terminal.
-
-Install **Termux:Widget**.
-[Termux-Widget on github](https://github.com/termux/termux-widget) or F-Droid.
+Install **[Termux:Widget](https://github.com/termux/termux-widget)** from the same source as Termux.
 
 Enable "Appear on top" permission for Termux:
-	Android Settings > Apps > Triple dot menu > Special Access > Appear on top > Enable for Termux
+> Android Settings → Apps → ⋮ Menu → Special Access → Appear on top → Enable for Termux
 
-##### In Termux — create the shortcuts folder
-
-```
+**Create the shortcuts folder:**
+```bash
 mkdir -p ~/.shortcuts
 chmod 700 ~/.shortcuts
 ```
 
-##### Create the launcher script
-
-From the terminal:
+**Create the launcher script** using nano:
 ```
-cat > ~/.shortcuts/DropZone << 'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-cd /your/script/directory/
-python3 DropZone.py
-EOF
-```
-
-Or use nano:
-
-```bash
 nano ~/.shortcuts/DropZone
 ```
-
-```nano
+Type the following inside nano:
+```
 #!/data/data/com.termux/files/usr/bin/bash
 cd /your/script/directory/
 python3 DropZone.py
 ```
-Save with Ctrl+O → Enter, exit with Ctrl+X
+Save: `Ctrl+O` → `Enter`, exit: `Ctrl+X`
 
-##### Give the script Permission to Run
-
+**Make it executable:**
 ```
 chmod +x ~/.shortcuts/DropZone
 ```
 
-Without this, Termux:Widget will see the file but won't be able to run it.
-
-##### Create the Widget
-
-Use normal Android Widget methods (usually long click the home screen). Choose **Termux:Widget**. 
+**Add the widget:** long-press your home screen → Widgets → Termux:Widget → drag it onto your screen. Tap **DropZone** to launch.
 
 ## Notes
-• Uploaded files are stored in a system temp folder while the server runs
-• Temp files are automatically deleted when you stop with Ctrl+C
-• State is in-memory — restarting clears the shared file lists
-• Change the port by editing: PORT = 7070  near the top of DropZone.py
+
+- Uploaded files are stored in a system temp folder while the server runs
+- Temp files are automatically deleted when you stop the server with `Ctrl+C`
+- State is in-memory — restarting the server clears the shared file lists
+- To change the port, edit `PORT = 7070` near the top of `DropZone.py`
