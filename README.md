@@ -32,7 +32,7 @@ The host page also shows a QR code — scan it to open the Remote page instantly
 
 ## Run It
 
-From any Python 3-enabled terminal:
+From any Python-3 enabled terminal:
 
 ```bash
 cd /your/script/directory/
