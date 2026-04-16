@@ -32,15 +32,21 @@ instantly on any phone without typing a URL.
 
 ## Run it
 
-  cd /your/script/directory/
-  python3 DropZone.py
+From any Python3 enabled terminal.
+
+```
+cd /your/script/directory/
+python3 DropZone.py
+```
 
 Then open http://localhost:7070 in your browser.
 The QR code on that page points remote users straight to http://your-ip:7070/remote.
 
 Make sure your DropZone.py is actually in /your/script/directory/.
 
-## On Android (via Termux app)
+## To Host On Android
+
+Adapt these instructions to your personal terminal of choice. 
 
 Install Termux. 
 [Termux on github](https://github.com/termux/termux-app) or F-Droid.
