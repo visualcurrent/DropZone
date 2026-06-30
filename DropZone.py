@@ -5,7 +5,7 @@ Run: python3 DropZone.py
 Then open http://localhost:7070 in your browser
 """
 
-import os, sys, json, uuid, socket, re, shutil, tempfile, mimetypes
+import os, sys, json, uuid, socket, re, shutil, tempfile, mimetypes, io, zipfile
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -20,6 +20,21 @@ PORT         = 7070
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
 ANIMALS    = ["Fox","Wolf","Hawk","Bear","Lynx","Deer","Crow","Orca","Ibis","Puma"]
 import random
+import threading, socketserver
+
+# ── Transfer tuning ──────────────────────────────────────────────────────────
+# At/below STREAM_THRESHOLD a download or zip is buffered in RAM (keeps an exact
+# Content-Length so browsers show a progress bar). Above it, data is streamed
+# from disk so peak memory stays bounded no matter how large the transfer is.
+STREAM_THRESHOLD         = 64 * 1024 * 1024    # 64 MB
+WARN_THRESHOLD           = 512 * 1024 * 1024   # 512 MB: confirm (size + ETA) first
+MAX_CONCURRENT_TRANSFERS = 4                   # backstop on simultaneous heavy transfers
+SPEEDTEST_BYTES          = 3 * 1024 * 1024     # sample the client times to estimate speed
+THREADED                 = True                # set False to force single-threaded serving
+
+SPEEDTEST_PAYLOAD = bytes(SPEEDTEST_BYTES)
+transfer_sem = threading.BoundedSemaphore(MAX_CONCURRENT_TRANSFERS)
+state_lock   = threading.Lock()                # guards users / shared_files mutation
 
 def get_local_ip():
     try:
@@ -38,9 +53,19 @@ def fmt_size(b):
     return f"{b:.1f} TB"
 
 def get_or_create_user(sid):
-    if sid not in users:
-        users[sid] = {"name": gen_name(), "files": []}
-    return users[sid]
+    with state_lock:
+        if sid not in users:
+            users[sid] = {"name": gen_name(), "files": []}
+        return users[sid]
+
+def dedup_name(seen, name):
+    "Return a unique archive name within `seen`, suffixing ' (n)' on clashes."
+    if name in seen:
+        seen[name] += 1
+        stem, dot, ext = name.rpartition(".")
+        return f"{stem} ({seen[name]}){dot}{ext}" if dot else f"{name} ({seen[name]})"
+    seen[name] = 0
+    return name
 
 # ─── Multipart parser ─────────────────────────────────────────────────────────
 def parse_multipart(data, boundary):
@@ -101,6 +126,39 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers","Content-Type")
         self.end_headers()
 
+    def _zip_headers(self, zipname, length):
+        fsafe = urllib.parse.quote(zipname)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/zip")
+        self.send_header("Content-Disposition",
+                         f'attachment; filename="{zipname}"; filename*=UTF-8\'\'{fsafe}')
+        self.send_header("Content-Length", length)
+        self.end_headers()
+
+    def stream_zip(self, entries, zipname):
+        # entries: list of (arcname, src_path, size). Decide RAM vs disk-spool by
+        # cumulative pre-compression size, then bound memory either way.
+        total = sum(sz for _, _, sz in entries)
+        with transfer_sem:
+            if total <= STREAM_THRESHOLD:
+                buf = io.BytesIO()
+                with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                    for arc, src, _ in entries: zf.write(src, arc)
+                data = buf.getvalue()
+                self._zip_headers(zipname, len(data))
+                self.wfile.write(data)
+            else:
+                tmp = UPLOAD_DIR / ("_zip_" + uuid.uuid4().hex)
+                try:
+                    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+                        for arc, src, _ in entries: zf.write(src, arc)
+                    self._zip_headers(zipname, tmp.stat().st_size)
+                    with open(tmp, "rb") as fh:
+                        shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                finally:
+                    try: tmp.unlink()
+                    except OSError: pass
+
     def do_GET(self):
         parsed = urlparse(self.path)
         path, qs = parsed.path, parse_qs(parsed.query)
@@ -110,12 +168,24 @@ class Handler(BaseHTTPRequestHandler):
         if path == "/api/state":
             sid  = self.get_session()
             user = get_or_create_user(sid) if sid else {"name":"?","files":[]}
-            all_users = [
-                {"name": u["name"], "files": u["files"], "is_me": sid2 == sid}
-                for sid2, u in users.items() if u["files"]
-            ]
+            with state_lock:
+                all_users = [
+                    {"id": sid2, "name": u["name"], "files": u["files"], "is_me": sid2 == sid}
+                    for sid2, u in users.items() if u["files"]
+                ]
             self.send_json({"session":sid,"user":user,"all_users":all_users,
-                            "local_ip":LOCAL_IP,"port":PORT})
+                            "local_ip":LOCAL_IP,"port":PORT,
+                            "warn_bytes":WARN_THRESHOLD})
+            return
+
+        if path == "/api/speedtest":
+            self.send_response(200)
+            self.send_header("Content-Type", "application/octet-stream")
+            self.send_header("Content-Length", len(SPEEDTEST_PAYLOAD))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(SPEEDTEST_PAYLOAD)
             return
 
         if path == "/api/download":
@@ -124,14 +194,56 @@ class Handler(BaseHTTPRequestHandler):
             f  = shared_files[fid]
             fp = Path(f["tmp_path"])
             if not fp.exists(): self.send_json({"error":"File missing"},404); return
-            data = fp.read_bytes()
+            size  = fp.stat().st_size
             fsafe = urllib.parse.quote(f["name"])
             self.send_response(200)
             self.send_header("Content-Type", mimetypes.guess_type(f["name"])[0] or "application/octet-stream")
             self.send_header("Content-Disposition", f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}')
-            self.send_header("Content-Length", len(data))
+            self.send_header("Content-Length", size)
             self.end_headers()
-            self.wfile.write(data)
+            if size <= STREAM_THRESHOLD:
+                self.wfile.write(fp.read_bytes())
+            else:
+                with transfer_sem, open(fp, "rb") as fh:
+                    shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+            return
+
+        if path == "/api/download_all":
+            uid = qs.get("user",[""])[0]
+            with state_lock:
+                if uid not in users or not users[uid]["files"]:
+                    self.send_json({"error":"No files"},404); return
+                seen, entries = {}, []
+                for f in users[uid]["files"]:
+                    fp = Path(f["tmp_path"])
+                    if not fp.exists(): continue
+                    entries.append((dedup_name(seen, f["name"]), str(fp), f.get("size", 0)))
+                safe = re.sub(r'[^A-Za-z0-9._-]', '_', users[uid]["name"]) or "files"
+            self.stream_zip(entries, f"DropZone-{safe}.zip")
+            return
+
+        if path == "/api/download_everything":
+            me = self.get_session()
+            with state_lock:
+                owners = [(uid, u) for uid, u in users.items()
+                          if u["files"] and uid != me]
+                if not owners:
+                    self.send_json({"error":"No files"},404); return
+                entries, used_folders = [], {}
+                for uid, u in owners:
+                    folder = re.sub(r'[^A-Za-z0-9._ -]', '_', u["name"]).strip() or "user"
+                    if folder in used_folders:
+                        used_folders[folder] += 1
+                        folder = f"{folder} ({used_folders[folder]})"
+                    else:
+                        used_folders[folder] = 0
+                    seen = {}
+                    for f in u["files"]:
+                        fp = Path(f["tmp_path"])
+                        if not fp.exists(): continue
+                        arc = dedup_name(seen, f["name"])
+                        entries.append((f"{folder}/{arc}", str(fp), f.get("size", 0)))
+            self.stream_zip(entries, "DropZone-all-files.zip")
             return
 
     def do_POST(self):
@@ -173,30 +285,34 @@ class Handler(BaseHTTPRequestHandler):
                 tmp.write_bytes(data)
                 entry = {"id":fid,"name":fname,"tmp_path":str(tmp),
                          "size":len(data),"size_str":fmt_size(len(data))}
-                user["files"].append(entry)
-                shared_files[fid] = {**entry,"owner_id":sid,"owner_name":user["name"]}
+                with state_lock:
+                    user["files"].append(entry)
+                    shared_files[fid] = {**entry,"owner_id":sid,"owner_name":user["name"]}
                 uploaded.append({"id":fid,"name":fname,"size_str":fmt_size(len(data))})
             self.send_json({"ok":True,"files":uploaded})
             return
 
         if path == "/api/rename":
             data = json.loads(self.rfile.read(length))
-            if sid in users:
-                users[sid]["name"] = data.get("name", users[sid]["name"])[:30]
-                for f in shared_files.values():
-                    if f["owner_id"] == sid: f["owner_name"] = users[sid]["name"]
-            self.send_json({"ok":True,"name":users.get(sid,{}).get("name","")})
+            with state_lock:
+                if sid in users:
+                    users[sid]["name"] = data.get("name", users[sid]["name"])[:30]
+                    for f in shared_files.values():
+                        if f["owner_id"] == sid: f["owner_name"] = users[sid]["name"]
+                name = users.get(sid,{}).get("name","")
+            self.send_json({"ok":True,"name":name})
             return
 
         if path == "/api/remove_file":
             data = json.loads(self.rfile.read(length))
             fid  = data.get("id","")
-            if sid in users:
-                users[sid]["files"] = [f for f in users[sid]["files"] if f["id"] != fid]
-            if fid in shared_files and shared_files[fid]["owner_id"] == sid:
-                try: Path(shared_files[fid]["tmp_path"]).unlink(missing_ok=True)
-                except: pass
-                del shared_files[fid]
+            with state_lock:
+                if sid in users:
+                    users[sid]["files"] = [f for f in users[sid]["files"] if f["id"] != fid]
+                if fid in shared_files and shared_files[fid]["owner_id"] == sid:
+                    try: Path(shared_files[fid]["tmp_path"]).unlink(missing_ok=True)
+                    except OSError: pass
+                    del shared_files[fid]
             self.send_json({"ok":True})
             return
 
@@ -370,12 +486,13 @@ button{cursor:pointer;background:none;border:none}
   border-radius:var(--r);background:var(--pri-hl);color:var(--pri);
   font-size:1rem;font-weight:700;text-decoration:none;transition:background .15s,color .15s}
 .dl-btn:hover{background:var(--pri);color:#fff}
+.dl-btn svg{width:16px;height:16px}
 
 /* ── User groups ── */
-.user-group{border:1px solid var(--div);border-radius:var(--rx);
+.user-group{border:1px solid var(--pri);border-radius:var(--rx);
   overflow:hidden;margin-bottom:11px}
 .user-group:last-child{margin-bottom:0}
-.user-group.is-me{border-color:var(--pri)}
+.user-group.is-me{border-color:var(--div)}
 .u-hdr{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--off)}
 .u-av{width:28px;height:28px;border-radius:50%;background:var(--pri);color:#fff;
   display:flex;align-items:center;justify-content:center;
@@ -383,6 +500,25 @@ button{cursor:pointer;background:none;border:none}
 .u-nm{font-size:.88rem;font-weight:600;flex:1;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .u-ct{font-size:.72rem;color:var(--hint);white-space:nowrap}
+.dl-all{
+  flex-shrink:0;display:flex;align-items:center;gap:5px;
+  padding:6px 11px;border-radius:var(--rfull);
+  background:var(--pri);color:#fff;font-size:.74rem;font-weight:600;
+  text-decoration:none;white-space:nowrap;transition:background .15s;
+}
+.dl-all:hover{background:var(--pri-h)}
+.dl-all svg{width:13px;height:13px}
+/* ── Download-everything bar (top of network card) ── */
+.dl-every{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  width:100%;padding:11px 14px;margin-bottom:12px;
+  border-radius:var(--r);background:var(--pri);color:#fff;
+  font-size:.86rem;font-weight:600;text-decoration:none;
+  transition:background .15s;
+}
+.dl-every:hover{background:var(--pri-h)}
+.dl-every svg{width:16px;height:16px;flex-shrink:0}
+.dl-every .sub{font-weight:400;opacity:.85;font-size:.78rem}
 .u-files{padding:4px 8px}
 .u-files .file-list{margin-top:0}
 
@@ -410,6 +546,8 @@ button{cursor:pointer;background:none;border:none}
 JS = """
 const API = window.location.origin;
 let session = '';
+let warnBytes = 512*1024*1024;   // refreshed from /api/state
+let measuredBps = 0;             // last measured throughput, bytes/sec
 
 async function initSession(){
   const r = await fetch(`${API}/api/session`,{method:'POST',body:'{}'});
@@ -428,6 +566,7 @@ async function fetchState(){
 function startPolling(){
   setInterval(async()=>{
     const s = await fetchState();
+    if(s.warn_bytes) warnBytes = s.warn_bytes;
     renderMyFiles(s.user?.files||[]);
     renderAllUsers(s.all_users||[]);
   }, 2500);
@@ -472,12 +611,34 @@ function renderAllUsers(all_users){
   const el = document.getElementById('net-files');
   if(!el) return;
   if(!all_users.length){el.innerHTML='<p class="empty">No files on the network yet.</p>';return;}
-  el.innerHTML=all_users.map(u=>`
+  // Alphabetical by name, but keep your own section pinned to the bottom.
+  all_users=[...all_users].sort((a,b)=>
+    (a.is_me?1:0)-(b.is_me?1:0) ||
+    a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
+  // "Download everything" covers everyone else (your own files are up top already).
+  const others=all_users.filter(u=>!u.is_me);
+  const totalFiles=others.reduce((n,u)=>n+u.files.length,0);
+  const totalBytes=others.reduce((n,u)=>n+u.files.reduce((m,f)=>m+(f.size||0),0),0);
+  const everyBar=(totalFiles>0)?`
+    <a class="dl-every" href="${API}/api/download_everything"
+       onclick="return confirmBulk(event,this.href,${totalBytes})"
+       title="Download every file from everyone as one ZIP, organized into a subfolder per user">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+      Download everything (.zip)
+      <span class="sub">· ${totalFiles} files · ${fmtBytes(totalBytes)}, foldered by user</span>
+    </a>`:'';
+  const groupHtml=u=>{
+    const ub=u.files.reduce((m,f)=>m+(f.size||0),0);
+    return `
     <div class="user-group${u.is_me?' is-me':''}">
       <div class="u-hdr">
         <div class="u-av">${escHtml(u.name[0].toUpperCase())}</div>
         <span class="u-nm">${escHtml(u.name)}${u.is_me?' <span style="color:var(--hint);font-weight:400">(you)</span>':''}</span>
-        <span class="u-ct">${u.files.length} file${u.files.length!==1?'s':''}</span>
+        ${u.files.length>1?`<a class="dl-all" href="${API}/api/download_all?user=${encodeURIComponent(u.id)}"
+             onclick="return confirmBulk(event,this.href,${ub})"
+             title="Download all ${u.files.length} of ${escAttr(u.name)}'s files as one ZIP">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+             All ${u.files.length} files (.zip)</a>`:''}
       </div>
       <div class="u-files"><div class="file-list">
         ${u.files.map(f=>`
@@ -487,11 +648,15 @@ function renderAllUsers(all_users){
             <span class="f-meta">${f.size_str}</span>
             <span class="f-action">
               <a class="dl-btn" href="${API}/api/download?id=${f.id}"
-                 download="${escAttr(f.name)}" title="Download">↓</a>
+                 download="${escAttr(f.name)}" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></a>
             </span>
           </div>`).join('')}
       </div></div>
-    </div>`).join('');
+    </div>`;};
+  // Layout: everyone else's files, then the "Download everything" bar acting as a
+  // divider, then your own contribution below it (which the bar deliberately omits).
+  const mine=all_users.filter(u=>u.is_me).map(groupHtml).join('');
+  el.innerHTML=others.map(groupHtml).join('')+everyBar+mine;
 }
 
 async function removeFile(id){
@@ -546,6 +711,38 @@ async function uploadFiles(fileList){
   if(fi) fi.value='';
 }
 
+function fmtBytes(b){
+  const u=['B','KB','MB','GB','TB']; let i=0;
+  while(b>=1024&&i<u.length-1){b/=1024;i++;}
+  return b.toFixed(b<10&&i>0?1:0)+' '+u[i];
+}
+function fmtTime(sec){
+  if(!isFinite(sec)||sec<=0) return 'an unknown amount of time';
+  if(sec<60) return 'about '+Math.max(1,Math.round(sec))+' sec';
+  if(sec<3600) return 'about '+Math.round(sec/60)+' min';
+  return 'about '+(sec/3600).toFixed(1)+' hr';
+}
+async function probeSpeed(){
+  // Time a small sample download to estimate this client's throughput (bytes/sec).
+  try{
+    const t0=performance.now();
+    const r=await fetch(`${API}/api/speedtest?t=`+Date.now());
+    const buf=await r.arrayBuffer();
+    const secs=(performance.now()-t0)/1000;
+    if(secs>0) measuredBps=buf.byteLength/secs;
+  }catch(e){}
+  return measuredBps;
+}
+async function confirmBulk(ev, url, totalBytes){
+  if(!totalBytes || totalBytes<=warnBytes) return true;   // small enough: proceed
+  ev.preventDefault();
+  const bps=await probeSpeed();
+  const eta = bps>0 ? fmtTime(totalBytes/bps) : 'an unknown amount of time';
+  const speed = bps>0 ? ` (~${fmtBytes(bps)}/s on this network)` : '';
+  if(confirm(`This download is ${fmtBytes(totalBytes)} and will take ${eta}${speed}.\n\nStart the download?`))
+    window.location.href=url;
+  return false;
+}
 function escHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
@@ -750,8 +947,22 @@ HOST_PAGE   = make_page("Host",   "",              HOST_BODY,   HOST_INIT)
 REMOTE_PAGE = make_page("Remote", REMOTE_TAGLINE,  REMOTE_BODY, REMOTE_INIT)
 
 # ─── Run ──────────────────────────────────────────────────────────────────────
+class ThreadingServer(socketserver.ThreadingMixIn, HTTPServer):
+    """Serve each request in its own daemon thread so one big transfer never
+    blocks the room. transfer_sem caps how many heavy transfers run at once;
+    light requests (state polling) stay snappy."""
+    daemon_threads = True
+
+def make_server():
+    if THREADED:
+        try:
+            return ThreadingServer(("0.0.0.0", PORT), Handler)
+        except Exception as e:
+            print(f"  (threaded server unavailable: {e} - falling back to single-threaded)")
+    return HTTPServer(("0.0.0.0", PORT), Handler)
+
 if __name__ == "__main__":
-    server = HTTPServer(("0.0.0.0", PORT), Handler)
+    server = make_server()
     print(f"\n  ╔══════════════════════════════════════════╗")
     print(f"  ║         DropZone is running!             ║")
     print(f"  ╠══════════════════════════════════════════╣")

@@ -28,6 +28,17 @@ Both pages have:
 - A live list of all shared files, grouped by user, with download buttons
 - An editable display name (auto-assigned a friendly name on first visit)
 
+### Bulk downloads
+
+Beyond the per-file download buttons, DropZone offers two bulk options so you don't have to tap each file one at a time:
+
+- **All _n_ files (.zip)** — appears in each user's section header (when that user has more than one file). Bundles just that user's files into a single ZIP named `DropZone-<UserName>.zip`.
+- **Download everything (.zip)** — a bar in the "Available on Network" card that bundles everyone *else's* files into one ZIP named `DropZone-all-files.zip`, organized into a subfolder per user (e.g. `Alice/`, `Bob/`). Your own files are excluded, since they're already listed in your upload box at the top. The bar sits directly between other people's files (above it) and your own contribution (below it), so its position mirrors exactly what it collects.
+
+Both archives de-duplicate clashing filenames automatically (`notes.txt`, `notes (1).txt`), and the "everything" archive gives same-named users distinct folders (`Bob`, `Bob (2)`).
+
+In the network list, other users are sorted alphabetically and your own section is pinned to the bottom.
+
 The host page also shows a QR code — scan it to open the Remote page instantly on any phone without typing a URL. The Remote page shows the same QR at the bottom, so anyone already in can invite others by passing their phone around.
 
 ## Run It
@@ -96,6 +107,17 @@ chmod +x ~/.shortcuts/DropZone
 ```
 
 **Add the widget:** long-press your home screen → Widgets → Termux:Widget → drag it onto your screen. Tap **DropZone** to launch.
+
+## Performance & memory
+
+DropZone is built to stay light on the host, even when a room shares a lot of data:
+
+- **Files live on disk, not in RAM.** Uploads are written to a temp folder; only small metadata (name, size, path) is kept in memory. Sharing many gigabytes does not hold gigabytes of RAM.
+- **Bounded-memory transfers.** Downloads and ZIP bundles up to `STREAM_THRESHOLD` (default 64 MB) are buffered in memory so the browser gets an exact size and progress bar. Anything larger is streamed straight from disk (single files) or built to a temp ZIP and streamed (bundles), so peak memory stays flat regardless of total size.
+- **Multi-threaded with a backstop.** Each request is handled in its own thread so one big download never freezes the room. `MAX_CONCURRENT_TRANSFERS` (default 4) caps how many heavy transfers run at once; shared state is guarded by a lock. Set `THREADED = False` near the top of `DropZone.py` to force single-threaded serving.
+- **Big-download warning.** Before a bulk ZIP larger than `WARN_THRESHOLD` (default 512 MB), the page runs a quick speed probe against the host and asks for confirmation, showing the total size and a rough transfer-time estimate so whoever clicks knows what they're starting.
+
+All four limits are plain constants near the top of `DropZone.py` and can be tuned to the host's hardware.
 
 ## Notes
 
