@@ -16,22 +16,66 @@ batch, all uploaded byte-exact with server RSS flat at 12-16 MB. No freeze, no
 OOM, no traceback. The streaming fix (v0.2.05) holds at real >2 GB single-file
 sizes.
 
-**Running build now v0.2.10 (nightly)** — adds HTTP Range support to single-file
-downloads (BACKLOG 10). Root cause of the `(1)` duplicates was iOS Safari probing
-a download with a Range request and re-fetching because `/api/download` only ever
-replied `200`; it now answers `206` + `Content-Range` (with `Accept-Ranges`/
-`ETag`/`Last-Modified`/`If-Range`, `416` past EOF). Android's single-`200` path is
-why it never reproduced Android-to-Android. Zips unchanged. Tested green
-(`tests/test_download_range.py`, whole suite passes).
+**Running build now v0.2.12 (nightly).** BACKLOG 10 fixes in:
+- v0.2.10 — HTTP Range support on `/api/download` (206 + `Content-Range`,
+  `Accept-Ranges`/`ETag`/`Last-Modified`/`If-Range`, `416` past EOF). Fixes the iOS
+  Safari duplicate (Safari probes with a Range request and re-fetched against a
+  200-only server). Zips unchanged.
+- v0.2.11 — Android re-fire fix (client only): the single-file button routed
+  through one detached, debounced (1.5 s/URL) trigger on `<body>`, plus the file
+  lists skip no-op re-renders. The bare button node used to be destroyed by the
+  2.5 s poll mid-download, so the browser aborted+retried (same `[id]` ~3x). Now
+  one click = one request.
+Whole test suite green; embedded JS `node --check`s clean; boot smoke confirms the
+served page carries the new code.
 
-**Next on the phone — field-confirm the Range fix (closes BACKLOG 10):** on an
-iPhone, download several SMALL files individually (one tap each) and confirm they
-land once each — no `name (1).ext`. If a dupe still appears, capture the browser
-and the `[id]` log lines. (Deploy v0.2.10 to the phone via Syncthing first.)
+**v0.2.12 (nightly) — the important one:** the app shell had NO cache headers, so
+the phone kept running a CACHED old client across deploys. That is why the v0.2.11
+field run still showed the re-fire storm even though the v0.2.11 *server* was live
+(the log carried the new `206` range replies). `send_html` is now `no-store`;
+client changes take effect on load.
 
-Then next code target: the host connected-users panel (BACKLOG 4). A separate,
-lower-priority thread stays open: the Android download triple-fire (same `[id]`
-3x ~ the 1 s `/api/state` poll) — a list-re-render guard on the client.
+**Next — field-confirm BACKLOG 10 on Android (deploy v0.2.12 via Syncthing):**
+1. Load the page ONCE on a fresh cache — clear the site's data or append `?v=12` to
+   the URL — to get past the currently cached old page. After that no-store keeps
+   it current automatically.
+2. Then: one tap = one logical download, and the zip button = one request (no
+   cancel/re-request storm). A single-file download may still show multiple `206`
+   range lines — that is the browser segmenting one download into parts, which
+   assembles into ONE file. Only multiple full `200` completions would be a real
+   duplicate. iPhone dupe check still waits for an iPhone.
+
+Then next code target: the host connected-users panel (BACKLOG 4).
+
+## Last session — 2026-08-30 (later 9)
+- Read the v0.2.11 field log: the Android re-fire was NOT fixed in the field — but
+  the debounce was correct; the phone was running a CACHED old page. Tell: the zip
+  re-fire storm was unchanged, yet the same log had the server's new `206` range
+  replies (server updated, client not). Root gap: `send_html` sent the HTML shell
+  with no cache headers, so browsers pin an old client across deploys.
+- Shipped **v0.2.12**: `send_html` now `Cache-Control: no-store` (+ Pragma/Expires).
+  Client-side changes take effect on the next load. Boot smoke confirms `GET /`
+  carries no-store and still serves the v0.2.12 client; full suite green. Commit
+  note docs/commits/0014. Backup docs/notes/DropZone.py.bak6-*.
+- Log-reading note for the future: with Range support (v0.2.10), a browser may
+  split ONE single-file download into parallel `206` range parts — that is one
+  saved file, NOT a duplicate. Only multiple full `200` completions are a dupe.
+- Item 10 stays `[~]`: re-test on Android after loading the fresh (uncached) page.
+
+## Last session — 2026-08-30 (later 8)
+- BACKLOG 10 second fix shipped as **v0.2.11** (client only): fixed the Android
+  download re-fire. Root cause was the single-file button being a bare navigating
+  `<a download>` whose node the 2.5 s `/api/state` poll destroyed mid-download
+  (list rebuilt via `innerHTML`), so the browser aborted+retried (same `[id]` ~3x,
+  matching the poll cadence). Now: one detached, self-removing anchor on `<body>`
+  for ALL downloads + a 1.5 s per-URL debounce, and `renderMyFiles`/`renderAllUsers`
+  skip the rebuild when unchanged. Server download path untouched.
+- Verified without a browser harness: `node --check` on JS/HOST_INIT/REMOTE_INIT,
+  full server suite green, boot smoke shows the page carries `downloadOne`/
+  `DL_DEBOUNCE_MS`/the render-skip guards. Commit note docs/commits/0013. Backup
+  docs/notes/DropZone.py.bak5-*.
+- Item 10 stays `[~]`: both fixes in, awaiting field confirm (Android re-fire gone
+  = you can check now; iPhone dupe gone = when an iPhone is available).
 
 ## Last session — 2026-08-30 (later 7)
 - BACKLOG 10 fix shipped as **v0.2.10**: HTTP Range support on `/api/download`

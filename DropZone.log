@@ -1699,3 +1699,299 @@ ConnectionResetError: [Errno 104] Connection reset by peer
 [2026-08-30 19:46:53] download: '20260630_185929.jpg' [a2947980] 4.2 MB to 10.150.157.94
 [2026-08-30 19:46:53] download done: '20260630_185929.jpg' [a2947980]
 [2026-08-30 19:48:48] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 20:53:44] === DropZone v0.2.11 (nightly) starting; pid=15826 ===
+[2026-08-30 20:55:58] upload start: Content-Length=17938323 (17.1 MB) from 127.0.0.1; RSS=15.8 MB
+[2026-08-30 20:55:58] upload saved: '20260830_165604.jpg' [1faa1e66] 2.6 MB; RSS=17.6 MB
+[2026-08-30 20:55:58] upload saved: '20260829_191513.jpg' [e8aad689] 3.0 MB; RSS=20.2 MB
+[2026-08-30 20:55:58] upload saved: '20260829_191327.jpg' [e99f0949] 3.5 MB; RSS=20.2 MB
+[2026-08-30 20:55:58] upload saved: '20260829_183822.jpg' [5450e691] 2.7 MB; RSS=16.5 MB
+[2026-08-30 20:55:58] upload saved: '20260829_172924(0).jpg' [1e14c082] 5.4 MB; RSS=16.2 MB
+[2026-08-30 20:55:58] upload done: 5 file(s) saved; RSS=16.2 MB
+[2026-08-30 20:56:13] upload start: Content-Length=3772537 (3.6 MB) from 192.168.1.93; RSS=16.2 MB
+[2026-08-30 20:56:14] upload saved: 'IMG_20260805_180715.jpg' [baa654d9] 1.8 MB; RSS=19.8 MB
+[2026-08-30 20:56:14] upload saved: 'IMG_20260819_232806.jpg' [a31b7c38] 1.8 MB; RSS=16.2 MB
+[2026-08-30 20:56:14] upload done: 2 file(s) saved; RSS=16.2 MB
+[2026-08-30 20:56:26] download: '20260830_165604.jpg' [1faa1e66] 2.6 MB to 192.168.1.93
+[2026-08-30 20:56:26] download done: '20260830_165604.jpg' [1faa1e66]
+[2026-08-30 20:56:27] download: '20260830_165604.jpg' [1faa1e66] 2.6 MB to 192.168.1.93
+[2026-08-30 20:56:27] download done: '20260830_165604.jpg' [1faa1e66]
+[2026-08-30 20:56:28] download: '20260830_165604.jpg' [1faa1e66] bytes 898670-1797339/2696011 (partial) 877.6 KB to 192.168.1.93
+[2026-08-30 20:56:28] download: '20260830_165604.jpg' [1faa1e66] bytes 0-898669/2696011 (partial) 877.6 KB to 192.168.1.93
+[2026-08-30 20:56:28] download: '20260830_165604.jpg' [1faa1e66] bytes 1797340-2696010/2696011 (partial) 877.6 KB to 192.168.1.93
+[2026-08-30 20:56:28] download done: '20260830_165604.jpg' [1faa1e66]
+[2026-08-30 20:56:28] download done: '20260830_165604.jpg' [1faa1e66]
+[2026-08-30 20:56:28] download done: '20260830_165604.jpg' [1faa1e66]
+[2026-08-30 20:56:28] download: '20260829_191513.jpg' [e8aad689] 3.0 MB to 192.168.1.93
+[2026-08-30 20:56:28] download done: '20260829_191513.jpg' [e8aad689]
+[2026-08-30 20:56:29] download: '20260829_191513.jpg' [e8aad689] 3.0 MB to 192.168.1.93
+[2026-08-30 20:56:29] download done: '20260829_191513.jpg' [e8aad689]
+[2026-08-30 20:56:29] download: '20260829_191513.jpg' [e8aad689] bytes 0-1047176/3141532 (partial) 1022.6 KB to 192.168.1.93
+[2026-08-30 20:56:29] download: '20260829_191513.jpg' [e8aad689] bytes 1047177-2094353/3141532 (partial) 1022.6 KB to 192.168.1.93
+[2026-08-30 20:56:29] download: '20260829_191513.jpg' [e8aad689] bytes 2094354-3141531/3141532 (partial) 1022.6 KB to 192.168.1.93
+[2026-08-30 20:56:29] download done: '20260829_191513.jpg' [e8aad689]
+[2026-08-30 20:56:29] download done: '20260829_191513.jpg' [e8aad689]
+[2026-08-30 20:56:29] download done: '20260829_191513.jpg' [e8aad689]
+[2026-08-30 20:56:30] download: '20260829_191327.jpg' [e99f0949] 3.5 MB to 192.168.1.93
+[2026-08-30 20:56:30] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:31] download: '20260829_191327.jpg' [e99f0949] 3.5 MB to 192.168.1.93
+[2026-08-30 20:56:31] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:31] download: '20260829_191327.jpg' [e99f0949] bytes 912249-1824497/3648999 (partial) 890.9 KB to 192.168.1.93
+[2026-08-30 20:56:31] download: '20260829_191327.jpg' [e99f0949] bytes 1824498-2736746/3648999 (partial) 890.9 KB to 192.168.1.93
+[2026-08-30 20:56:31] download: '20260829_191327.jpg' [e99f0949] bytes 2736747-3648998/3648999 (partial) 890.9 KB to 192.168.1.93
+[2026-08-30 20:56:31] download: '20260829_191327.jpg' [e99f0949] bytes 0-912248/3648999 (partial) 890.9 KB to 192.168.1.93
+[2026-08-30 20:56:31] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:31] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:31] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:31] download done: '20260829_191327.jpg' [e99f0949]
+[2026-08-30 20:56:32] download: '20260829_183822.jpg' [5450e691] 2.7 MB to 192.168.1.93
+[2026-08-30 20:56:32] download done: '20260829_183822.jpg' [5450e691]
+[2026-08-30 20:56:33] download: '20260829_183822.jpg' [5450e691] 2.7 MB to 192.168.1.93
+[2026-08-30 20:56:33] download done: '20260829_183822.jpg' [5450e691]
+[2026-08-30 20:56:33] download: '20260829_183822.jpg' [5450e691] bytes 1857134-2785700/2785701 (partial) 906.8 KB to 192.168.1.93
+[2026-08-30 20:56:33] download: '20260829_183822.jpg' [5450e691] bytes 0-928566/2785701 (partial) 906.8 KB to 192.168.1.93
+[2026-08-30 20:56:33] download: '20260829_183822.jpg' [5450e691] bytes 928567-1857133/2785701 (partial) 906.8 KB to 192.168.1.93
+[2026-08-30 20:56:33] download done: '20260829_183822.jpg' [5450e691]
+[2026-08-30 20:56:33] download done: '20260829_183822.jpg' [5450e691]
+[2026-08-30 20:56:33] download done: '20260829_183822.jpg' [5450e691]
+[2026-08-30 20:56:34] download: '20260829_172924(0).jpg' [1e14c082] 5.4 MB to 192.168.1.93
+[2026-08-30 20:56:34] download cancelled by 192.168.1.93: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] 5.4 MB to 192.168.1.93
+[2026-08-30 20:56:35] download cancelled by 192.168.1.93: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 1888428-2832641/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 944214-1888427/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 3776856-4721069/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 0-944213/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 2832642-3776855/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download: '20260829_172924(0).jpg' [1e14c082] bytes 4721070-5665287/5665288 (partial) 922.1 KB to 192.168.1.93
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:35] download done: '20260829_172924(0).jpg' [1e14c082]
+[2026-08-30 20:56:40] download: 'IMG_20260805_180715.jpg' [baa654d9] 1.8 MB to 127.0.0.1
+[2026-08-30 20:56:40] download cancelled by 127.0.0.1: 'IMG_20260805_180715.jpg' [baa654d9]
+[2026-08-30 20:56:41] download: 'IMG_20260805_180715.jpg' [baa654d9] 1.8 MB to 127.0.0.1
+[2026-08-30 20:56:41] download cancelled by 127.0.0.1: 'IMG_20260805_180715.jpg' [baa654d9]
+[2026-08-30 20:56:41] download: 'IMG_20260805_180715.jpg' [baa654d9] bytes 931667-1863333/1863334 (partial) 909.8 KB to 127.0.0.1
+[2026-08-30 20:56:41] download: 'IMG_20260805_180715.jpg' [baa654d9] bytes 0-931666/1863334 (partial) 909.8 KB to 127.0.0.1
+[2026-08-30 20:56:41] download done: 'IMG_20260805_180715.jpg' [baa654d9]
+[2026-08-30 20:56:41] download done: 'IMG_20260805_180715.jpg' [baa654d9]
+[2026-08-30 20:56:42] download: 'IMG_20260819_232806.jpg' [a31b7c38] 1.8 MB to 127.0.0.1
+[2026-08-30 20:56:42] download cancelled by 127.0.0.1: 'IMG_20260819_232806.jpg' [a31b7c38]
+[2026-08-30 20:56:42] download: 'IMG_20260819_232806.jpg' [a31b7c38] 1.8 MB to 127.0.0.1
+[2026-08-30 20:56:42] download cancelled by 127.0.0.1: 'IMG_20260819_232806.jpg' [a31b7c38]
+[2026-08-30 20:56:42] download: 'IMG_20260819_232806.jpg' [a31b7c38] bytes 0-954425/1908853 (partial) 932.1 KB to 127.0.0.1
+[2026-08-30 20:56:42] download: 'IMG_20260819_232806.jpg' [a31b7c38] bytes 954426-1908852/1908853 (partial) 932.1 KB to 127.0.0.1
+[2026-08-30 20:56:42] download done: 'IMG_20260819_232806.jpg' [a31b7c38]
+[2026-08-30 20:56:42] download done: 'IMG_20260819_232806.jpg' [a31b7c38]
+[2026-08-30 20:56:45] zip requested: DropZone-X11.zip <- 2 file(s), 3.6 MB (from 127.0.0.1)
+[2026-08-30 20:56:45] zip sending (streamed): DropZone-X11.zip 3.6 MB
+[2026-08-30 20:56:45] zip cancelled by 127.0.0.1: DropZone-X11.zip
+[2026-08-30 20:56:46] zip requested: DropZone-X11.zip <- 2 file(s), 3.6 MB (from 127.0.0.1)
+[2026-08-30 20:56:46] zip sending (streamed): DropZone-X11.zip 3.6 MB
+[2026-08-30 20:56:46] zip cancelled by 127.0.0.1: DropZone-X11.zip
+[2026-08-30 20:56:46] zip requested: DropZone-X11.zip <- 2 file(s), 3.6 MB (from 127.0.0.1)
+[2026-08-30 20:56:46] zip sending (streamed): DropZone-X11.zip 3.6 MB
+[2026-08-30 20:56:46] zip done: DropZone-X11.zip
+[2026-08-30 20:56:48] zip requested: DropZone-S11.zip <- 5 file(s), 17.1 MB (from 192.168.1.93)
+[2026-08-30 20:56:48] zip sending (streamed): DropZone-S11.zip 17.1 MB
+[2026-08-30 20:56:48] zip cancelled by 192.168.1.93: DropZone-S11.zip
+[2026-08-30 20:56:49] zip requested: DropZone-S11.zip <- 5 file(s), 17.1 MB (from 192.168.1.93)
+[2026-08-30 20:56:49] zip sending (streamed): DropZone-S11.zip 17.1 MB
+[2026-08-30 20:56:49] zip cancelled by 192.168.1.93: DropZone-S11.zip
+[2026-08-30 20:56:49] zip requested: DropZone-S11.zip <- 5 file(s), 17.1 MB (from 192.168.1.93)
+[2026-08-30 20:56:49] zip sending (streamed): DropZone-S11.zip 17.1 MB
+[2026-08-30 20:56:52] zip done: DropZone-S11.zip
+[2026-08-30 20:57:10] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 21:11:39] === DropZone v0.2.12 (nightly) starting; pid=27195 ===
+[2026-08-30 21:12:39] upload start: Content-Length=3772537 (3.6 MB) from 192.168.1.93; RSS=24.2 MB
+[2026-08-30 21:12:39] upload saved: 'IMG_20260805_180715.jpg' [30526de4] 1.8 MB; RSS=27.8 MB
+[2026-08-30 21:12:39] upload saved: 'IMG_20260819_232806.jpg' [eeaae6c6] 1.8 MB; RSS=24.2 MB
+[2026-08-30 21:12:39] upload done: 2 file(s) saved; RSS=24.2 MB
+[2026-08-30 21:13:00] upload start: Content-Length=26681771 (25.4 MB) from 192.168.1.93; RSS=24.3 MB
+[2026-08-30 21:13:01] upload saved: 'Litrato_04_06_2021_.1_12.apk' [a5c2d13c] 13.6 MB; RSS=28.4 MB
+[2026-08-30 21:13:02] upload saved: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] 6.5 MB; RSS=28.4 MB
+[2026-08-30 21:13:02] upload saved: 'tcandroid362d-universal.apk' [96e1beee] 5.3 MB; RSS=24.4 MB
+[2026-08-30 21:13:02] upload done: 3 file(s) saved; RSS=24.4 MB
+[2026-08-30 21:13:18] upload start: Content-Length=16923588 (16.1 MB) from 127.0.0.1; RSS=24.3 MB
+[2026-08-30 21:13:18] upload saved: '20260630_002937.jpg' [0b5316c5] 2.2 MB; RSS=26.0 MB
+[2026-08-30 21:13:18] upload saved: '20260630_143350.jpg' [522f9788] 5.1 MB; RSS=24.9 MB
+[2026-08-30 21:13:18] upload saved: '20260630_143408.jpg' [49916b3b] 4.6 MB; RSS=24.3 MB
+[2026-08-30 21:13:18] upload saved: '20260630_185929.jpg' [e4bc9126] 4.2 MB; RSS=24.5 MB
+[2026-08-30 21:13:18] upload done: 4 file(s) saved; RSS=24.5 MB
+[2026-08-30 21:13:33] upload start: Content-Length=2786286 (2.7 MB) from 127.0.0.1; RSS=24.9 MB
+[2026-08-30 21:13:33] upload saved: 'Screenshot_20260319_235252_Bumble.jpg' [2a90c032] 470.7 KB; RSS=21.9 MB
+[2026-08-30 21:13:33] upload saved: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8] 878.0 KB; RSS=21.9 MB
+[2026-08-30 21:13:33] upload saved: 'Screenshot_20260328_001832_Facebook.jpg' [1c03957d] 724.6 KB; RSS=19.8 MB
+[2026-08-30 21:13:33] upload saved: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede] 647.0 KB; RSS=19.2 MB
+[2026-08-30 21:13:33] upload done: 4 file(s) saved; RSS=19.2 MB
+[2026-08-30 21:15:21] upload start: Content-Length=3561042 (3.4 MB) from 192.168.1.159; RSS=19.5 MB
+[2026-08-30 21:15:22] upload saved: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995] 289.1 KB; RSS=22.9 MB
+[2026-08-30 21:15:22] upload saved: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] 3.0 MB; RSS=19.5 MB
+[2026-08-30 21:15:22] upload saved: 'WhrCXK6I.jpg' [944d651e] 128.8 KB; RSS=19.5 MB
+[2026-08-30 21:15:22] upload done: 3 file(s) saved; RSS=19.5 MB
+[2026-08-30 21:15:49] download: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995] 289.1 KB to 127.0.0.1
+[2026-08-30 21:15:49] download done: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995]
+[2026-08-30 21:15:50] download: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995] 289.1 KB to 127.0.0.1
+[2026-08-30 21:15:50] download done: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995]
+[2026-08-30 21:15:50] download: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995] bytes 0-295990/295991 (partial) 289.1 KB to 127.0.0.1
+[2026-08-30 21:15:50] download done: 'Corrected Tax Deed to Purchaser Krause Roy.pdf' [c2ce5995]
+[2026-08-30 21:15:51] download: 'WhrCXK6I.jpg' [944d651e] 128.8 KB to 127.0.0.1
+[2026-08-30 21:15:51] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:15:52] download: 'WhrCXK6I.jpg' [944d651e] 128.8 KB to 127.0.0.1
+[2026-08-30 21:15:52] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:15:52] download: 'WhrCXK6I.jpg' [944d651e] bytes 0-131926/131927 (partial) 128.8 KB to 127.0.0.1
+[2026-08-30 21:15:52] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:15:54] download: 'IMG_20260805_180715.jpg' [30526de4] 1.8 MB to 127.0.0.1
+[2026-08-30 21:15:54] download cancelled by 127.0.0.1: 'IMG_20260805_180715.jpg' [30526de4]
+[2026-08-30 21:15:55] download: 'IMG_20260805_180715.jpg' [30526de4] 1.8 MB to 127.0.0.1
+[2026-08-30 21:15:55] download cancelled by 127.0.0.1: 'IMG_20260805_180715.jpg' [30526de4]
+[2026-08-30 21:15:55] download: 'IMG_20260805_180715.jpg' [30526de4] bytes 0-931666/1863334 (partial) 909.8 KB to 127.0.0.1
+[2026-08-30 21:15:55] download done: 'IMG_20260805_180715.jpg' [30526de4]
+[2026-08-30 21:15:55] download: 'IMG_20260805_180715.jpg' [30526de4] bytes 931667-1863333/1863334 (partial) 909.8 KB to 127.0.0.1
+[2026-08-30 21:15:55] download done: 'IMG_20260805_180715.jpg' [30526de4]
+[2026-08-30 21:15:56] download: 'tcandroid362d-universal.apk' [96e1beee] 5.3 MB to 127.0.0.1
+[2026-08-30 21:15:56] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] 5.3 MB to 127.0.0.1
+[2026-08-30 21:15:57] download cancelled by 127.0.0.1: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 4665850-5599019/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 2799510-3732679/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 0-933169/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 3732680-4665849/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 1866340-2799509/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download: 'tcandroid362d-universal.apk' [96e1beee] bytes 933170-1866339/5599020 (partial) 911.3 KB to 127.0.0.1
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:15:57] download done: 'tcandroid362d-universal.apk' [96e1beee]
+[2026-08-30 21:16:07] download: '20260630_185929.jpg' [e4bc9126] 4.2 MB to 192.168.1.159
+[2026-08-30 21:16:07] download done: '20260630_185929.jpg' [e4bc9126]
+[2026-08-30 21:16:10] download: 'Screenshot_20260319_235252_Bumble.jpg' [2a90c032] 470.7 KB to 192.168.1.159
+[2026-08-30 21:16:10] download done: 'Screenshot_20260319_235252_Bumble.jpg' [2a90c032]
+[2026-08-30 21:16:17] download: 'Litrato_04_06_2021_.1_12.apk' [a5c2d13c] 13.6 MB to 192.168.1.159
+[2026-08-30 21:16:18] download done: 'Litrato_04_06_2021_.1_12.apk' [a5c2d13c]
+[2026-08-30 21:16:27] download: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] 3.0 MB to 192.168.1.93
+[2026-08-30 21:16:27] download done: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb]
+[2026-08-30 21:16:28] download: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] 3.0 MB to 192.168.1.93
+[2026-08-30 21:16:28] download done: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb]
+[2026-08-30 21:16:28] download: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] bytes 1044178-2088355/3132534 (partial) 1019.7 KB to 192.168.1.93
+[2026-08-30 21:16:28] download: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] bytes 0-1044177/3132534 (partial) 1019.7 KB to 192.168.1.93
+[2026-08-30 21:16:28] download: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb] bytes 2088356-3132533/3132534 (partial) 1019.7 KB to 192.168.1.93
+[2026-08-30 21:16:28] download done: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb]
+[2026-08-30 21:16:28] download done: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb]
+[2026-08-30 21:16:28] download done: '10 Bai Hoc Travel Vietnamese.pdf' [4163eceb]
+[2026-08-30 21:16:30] download: 'WhrCXK6I.jpg' [944d651e] 128.8 KB to 192.168.1.93
+[2026-08-30 21:16:30] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:16:31] download: 'WhrCXK6I.jpg' [944d651e] 128.8 KB to 192.168.1.93
+[2026-08-30 21:16:31] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:16:31] download: 'WhrCXK6I.jpg' [944d651e] bytes 0-131926/131927 (partial) 128.8 KB to 192.168.1.93
+[2026-08-30 21:16:31] download done: 'WhrCXK6I.jpg' [944d651e]
+[2026-08-30 21:16:35] download: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8] 878.0 KB to 192.168.1.93
+[2026-08-30 21:16:35] download done: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8]
+[2026-08-30 21:16:36] download: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8] 878.0 KB to 192.168.1.93
+[2026-08-30 21:16:36] download done: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8]
+[2026-08-30 21:16:36] download: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8] bytes 0-899064/899065 (partial) 878.0 KB to 192.168.1.93
+[2026-08-30 21:16:36] download done: 'Screenshot_20260326_011133_Instagram.jpg' [d6f6c7d8]
+[2026-08-30 21:16:36] download: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede] 647.0 KB to 192.168.1.93
+[2026-08-30 21:16:36] download done: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede]
+[2026-08-30 21:16:37] download: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede] 647.0 KB to 192.168.1.93
+[2026-08-30 21:16:37] download done: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede]
+[2026-08-30 21:16:37] download: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede] bytes 0-662526/662527 (partial) 647.0 KB to 192.168.1.93
+[2026-08-30 21:16:37] download done: 'Screenshot_20260328_001854_Facebook.jpg' [51d8cede]
+[2026-08-30 21:16:38] download: '20260630_143350.jpg' [522f9788] 5.1 MB to 192.168.1.93
+[2026-08-30 21:16:38] download cancelled by 192.168.1.93: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:39] download: '20260630_143350.jpg' [522f9788] 5.1 MB to 192.168.1.93
+[2026-08-30 21:16:39] download cancelled by 192.168.1.93: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 0-895597/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 895598-1791195/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 4477990-5373592/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 1791196-2686793/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 2686794-3582391/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download: '20260630_143350.jpg' [522f9788] bytes 3582392-4477989/5373593 (partial) 874.6 KB to 192.168.1.93
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:40] download done: '20260630_143350.jpg' [522f9788]
+[2026-08-30 21:16:42] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] 6.5 MB to 192.168.1.93
+[2026-08-30 21:16:42] download cancelled by 192.168.1.93: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] 6.5 MB to 192.168.1.93
+[2026-08-30 21:16:43] download cancelled by 192.168.1.93: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 3912516-4890644/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 2934387-3912515/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 0-978128/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 4890645-5868773/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 978129-1956257/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 5868774-6846902/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download: 'QR & Barcode Scanner  1.10.apk' [f9d539aa] bytes 1956258-2934386/6846903 (partial) 955.2 KB to 192.168.1.93
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:43] download done: 'QR & Barcode Scanner  1.10.apk' [f9d539aa]
+[2026-08-30 21:16:45] download: 'IMG_20260819_232806.jpg' [eeaae6c6] 1.8 MB to 192.168.1.93
+[2026-08-30 21:16:45] download done: 'IMG_20260819_232806.jpg' [eeaae6c6]
+[2026-08-30 21:16:47] download: 'IMG_20260819_232806.jpg' [eeaae6c6] 1.8 MB to 192.168.1.93
+[2026-08-30 21:16:47] download done: 'IMG_20260819_232806.jpg' [eeaae6c6]
+[2026-08-30 21:16:47] download: 'IMG_20260819_232806.jpg' [eeaae6c6] bytes 0-954425/1908853 (partial) 932.1 KB to 192.168.1.93
+[2026-08-30 21:16:47] download: 'IMG_20260819_232806.jpg' [eeaae6c6] bytes 954426-1908852/1908853 (partial) 932.1 KB to 192.168.1.93
+[2026-08-30 21:16:47] download done: 'IMG_20260819_232806.jpg' [eeaae6c6]
+[2026-08-30 21:16:47] download done: 'IMG_20260819_232806.jpg' [eeaae6c6]
+[2026-08-30 21:16:54] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 192.168.1.93)
+[2026-08-30 21:16:54] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:16:54] zip cancelled by 192.168.1.93: DropZone-X12.zip
+[2026-08-30 21:16:55] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 192.168.1.93)
+[2026-08-30 21:16:55] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:16:55] zip cancelled by 192.168.1.93: DropZone-X12.zip
+[2026-08-30 21:16:55] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 192.168.1.93)
+[2026-08-30 21:16:55] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:17:01] zip requested: DropZone-S12.zip <- 8 file(s), 18.8 MB (from 192.168.1.93)
+[2026-08-30 21:17:01] zip sending (streamed): DropZone-S12.zip 18.8 MB
+[2026-08-30 21:17:02] zip done: DropZone-X12.zip
+[2026-08-30 21:17:02] zip cancelled by 192.168.1.93: DropZone-S12.zip
+[2026-08-30 21:17:03] zip requested: DropZone-S12.zip <- 8 file(s), 18.8 MB (from 192.168.1.93)
+[2026-08-30 21:17:03] zip sending (streamed): DropZone-S12.zip 18.8 MB
+[2026-08-30 21:17:03] zip cancelled by 192.168.1.93: DropZone-S12.zip
+[2026-08-30 21:17:03] zip requested: DropZone-S12.zip <- 8 file(s), 18.8 MB (from 192.168.1.93)
+[2026-08-30 21:17:03] zip sending (streamed): DropZone-S12.zip 18.8 MB
+[2026-08-30 21:17:07] zip done: DropZone-S12.zip
+[2026-08-30 21:17:07] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 192.168.1.93)
+[2026-08-30 21:17:07] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:07] zip done: DropZone-f11.zip
+[2026-08-30 21:17:09] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 192.168.1.93)
+[2026-08-30 21:17:09] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:09] zip cancelled by 192.168.1.93: DropZone-f11.zip
+[2026-08-30 21:17:09] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 192.168.1.93)
+[2026-08-30 21:17:09] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:09] zip done: DropZone-f11.zip
+[2026-08-30 21:17:15] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 127.0.0.1)
+[2026-08-30 21:17:15] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:15] zip cancelled by 127.0.0.1: DropZone-f11.zip
+[2026-08-30 21:17:16] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 127.0.0.1)
+[2026-08-30 21:17:16] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:16] zip cancelled by 127.0.0.1: DropZone-f11.zip
+[2026-08-30 21:17:16] zip requested: DropZone-f11.zip <- 3 file(s), 3.4 MB (from 127.0.0.1)
+[2026-08-30 21:17:16] zip sending (streamed): DropZone-f11.zip 3.4 MB
+[2026-08-30 21:17:16] zip done: DropZone-f11.zip
+[2026-08-30 21:17:18] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 127.0.0.1)
+[2026-08-30 21:17:18] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:17:18] zip cancelled by 127.0.0.1: DropZone-X12.zip
+[2026-08-30 21:17:18] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 127.0.0.1)
+[2026-08-30 21:17:19] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:17:19] zip cancelled by 127.0.0.1: DropZone-X12.zip
+[2026-08-30 21:17:19] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 127.0.0.1)
+[2026-08-30 21:17:19] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:17:19] zip done: DropZone-X12.zip
+[2026-08-30 21:17:31] zip requested: DropZone-X12.zip <- 5 file(s), 29.0 MB (from 192.168.1.159)
+[2026-08-30 21:17:31] zip sending (streamed): DropZone-X12.zip 29.0 MB
+[2026-08-30 21:17:33] zip done: DropZone-X12.zip
+[2026-08-30 21:17:36] zip requested: DropZone-S12.zip <- 8 file(s), 18.8 MB (from 192.168.1.159)
+[2026-08-30 21:17:36] zip sending (streamed): DropZone-S12.zip 18.8 MB
+[2026-08-30 21:17:37] zip done: DropZone-S12.zip
+[2026-08-30 21:17:55] === DropZone stopped (Ctrl+C) ===

@@ -195,7 +195,7 @@ visibly stops at the real point rather than sitting near 100%.
 `upload.onprogress` (true bytes sent, with bytes + ETA). Field note: confirm on
 the phone that it visibly halts at the stall point during a large upload.
 
-### 10. [~] Investigate duplicate / double downloads  (BUG)  — fix shipped v0.2.10, awaiting iPhone field confirm
+### 10. [~] Investigate duplicate / double downloads  (BUG)  — fixes shipped v0.2.10 (Safari Range) + v0.2.11 (Android re-fire) + v0.2.12 (no-store shell), awaiting field confirm
 Field report: selecting each file once still produced many OS-suffixed
 duplicates ("name (1).ext") in the download folder. Two candidate causes: (a) a
 real double-fire — the same request sent twice; or (b) not a bug — distinct
@@ -246,8 +246,18 @@ never reproduced it. Fix: single-file downloads now speak HTTP Range (206 +
 EOF); see docs/commits/0012 and tests/test_download_range.py. Zips unchanged.
 **Field confirm still owed:** on an iPhone, download several small files
 individually (one tap each) and check they land once each — no `(1)` copies.
-Separately, the Android triple-fire (same `[id]` 3x ~ the 1 s poll) is a distinct
-lower-priority client issue (list re-render churns the anchor); not fixed here.
+The Android triple-fire (same `[id]` ~3x ~ the 2.5 s poll) is now ALSO fixed in
+v0.2.11: the single-file button routes through one detached, debounced trigger and
+the file lists skip no-op re-renders, so the re-render can't abort/retry a download
+and a re-tap can't double-fire. Android field check: one tap = one `download [id]`
+in the log (no cancel/re-request storm).
+**v0.2.11 field run showed the re-fire UNCHANGED — because the phone ran a CACHED
+old page** (the log had the new server's `206` range replies but the old client's
+re-fire). v0.2.12 fixes the real blocker: the app shell is now `no-store`, so
+client changes take effect on load. Re-test on Android after loading the page on a
+fresh cache. NOTE: with Range now supported, a browser may split one download into
+parallel `206` range parts — that is one file, not a duplicate; only multiple full
+`200` completions would be a real duplicate.
 **Definition of done:** cause identified from logs; fix or a clear "working as
 intended, here is the better UX" decision recorded.
 

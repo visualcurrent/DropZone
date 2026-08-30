@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.10"        # running build
+__version__   = "0.2.12"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -382,6 +382,13 @@ class Handler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", len(body))
+        # No caching for the app shell: the HTML embeds all CSS/JS, so a cached
+        # page silently keeps running an OLD client across version bumps (that is
+        # why the v0.2.11 download-debounce never ran on the phone — it was still
+        # executing the pre-0.2.11 cached page). Always serve the current UI.
+        self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
         self.end_headers()
         self.wfile.write(body)
 
@@ -989,9 +996,15 @@ function fileIcon(name){
   return m[ext]||'📁';
 }
 
+let _myFilesSig=null;
 function renderMyFiles(files){
   const el = document.getElementById('my-files');
   if(!el) return;
+  // Skip the DOM rebuild when nothing changed — avoids churning buttons under an
+  // in-flight click every poll (contributes to the re-fire).
+  const sig=JSON.stringify(files);
+  if(sig===_myFilesSig) return;
+  _myFilesSig=sig;
   if(!files.length){el.innerHTML='<p class="empty">No files shared yet.</p>';return;}
   el.innerHTML='<div class="file-list">'+files.map(f=>`
     <div class="file-row">
@@ -1004,9 +1017,14 @@ function renderMyFiles(files){
     </div>`).join('')+'</div>';
 }
 
+let _netSig=null;
 function renderAllUsers(all_users){
   const el = document.getElementById('net-files');
   if(!el) return;
+  // Skip the rebuild when the network file list is unchanged (see renderMyFiles).
+  const sig=JSON.stringify(all_users);
+  if(sig===_netSig) return;
+  _netSig=sig;
   if(!all_users.length){el.innerHTML='<p class="empty">No files on the network yet.</p>';return;}
   // Alphabetical by name, but keep your own section pinned to the bottom.
   all_users=[...all_users].sort((a,b)=>
@@ -1045,7 +1063,7 @@ function renderAllUsers(all_users){
             <span class="f-meta">${f.size_str}</span>
             <span class="f-action">
               <a class="dl-btn" href="${API}/api/download?id=${f.id}"
-                 download="${escAttr(f.name)}" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></a>
+                 download="${escAttr(f.name)}" onclick="return downloadOne(event,'${f.id}')" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></a>
             </span>
           </div>`).join('')}
       </div></div>
@@ -1162,13 +1180,32 @@ async function probeSpeed(){
 // leaves the current page untouched — so a slow, still-spooling zip no longer
 // blanks the page, and a refresh no longer re-fires the download (BUG: host page
 // navigated to /api/download_all and duplicated on reload).
+const _dlLast = new Map();   // download URL -> ms of last trigger (debounce)
+// Ignore a repeat of the SAME download fired within this window. Kills the
+// Android re-fire (BACKLOG 10): a re-tap, or the list re-render destroying the
+// button mid-click and the browser retrying, otherwise sends the same GET 2-3x
+// (log showed one [id] fired thrice, two cancelled). One click = one request.
+const DL_DEBOUNCE_MS = 1500;
 function triggerDownload(url){
+  const now=Date.now();
+  if(now-(_dlLast.get(url)||0) < DL_DEBOUNCE_MS) return;   // duplicate within window
+  _dlLast.set(url, now);
+  // Detached, self-removing anchor appended to <body> (NOT the polled file list),
+  // so a re-render of the list can never abort this download mid-flight.
   const a=document.createElement('a');
   a.href=url; a.download='';
   a.style.display='none';
   document.body.appendChild(a);
   a.click();
   setTimeout(()=>a.remove(), 2000);
+}
+// Single-file download button. preventDefault so the anchor never navigates on
+// its own; the debounced trigger owns the request. href stays as a no-JS
+// fallback, and the server's Content-Disposition supplies the filename.
+function downloadOne(ev, id){
+  ev.preventDefault();
+  triggerDownload(`${API}/api/download?id=${encodeURIComponent(id)}`);
+  return false;
 }
 
 async function confirmBulk(ev, url, totalBytes){

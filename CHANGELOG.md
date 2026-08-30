@@ -5,8 +5,29 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 `docs/DEVELOPMENT.md`).
 
 ## [Unreleased]
-- Field-confirm the Range fix on an iPhone (BACKLOG 10): download several small
-  files individually and check they land once each — no "name (1).ext" copies.
+- Field-confirm BACKLOG 10 on Android once the phone loads the fresh (uncached)
+  page: the zip re-fire storm should collapse to one request per click, and a
+  single-file download should be one logical download (the browser may still
+  split it into parallel `206` range parts — that assembles into one file).
+
+## [0.2.12] — nightly
+- Serve the app shell with `Cache-Control: no-store` (+ `Pragma`/`Expires`). The
+  page embeds all CSS/JS, so with no cache headers a browser kept running an OLD
+  client across version bumps — which is why the v0.2.11 download debounce never
+  actually ran on the phone (the v0.2.11 field log still showed the zip re-fire
+  storm, while the server's new `206` range replies proved the server half WAS
+  updated). Client-side changes now take effect on the next load.
+
+## [0.2.11] — nightly
+- Fix the Android download re-fire (BACKLOG 10): one click now sends exactly one
+  request. The single-file button was a bare navigating `<a download>` whose node
+  the 2.5 s `/api/state` poll destroyed mid-download (the list is rebuilt with
+  `innerHTML`), so the browser aborted and retried — the log showed one `[id]`
+  fired ~3× with two cancels. Now every download (single + bulk) goes through one
+  detached, self-removing anchor on `<body>` that a list re-render can't touch,
+  guarded by a 1.5 s per-URL debounce that drops duplicate fires. The file lists
+  also skip their DOM rebuild when nothing changed, so buttons no longer churn
+  under an in-flight click. Client-only; the server download path is unchanged.
 
 ## [0.2.10] — nightly
 - Single-file downloads now support HTTP Range requests (BACKLOG 10).
