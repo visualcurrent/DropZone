@@ -45,3 +45,26 @@ the byte layout and the length calc, instead of predicting `zipfile`'s internal
 zip64 decisions. Headline test: streamed byte count == the Content-Length we
 computed, across ascii/space/unicode names and across the 4 GiB thresholds;
 validate the archives open on Windows, macOS, and Android.
+
+---
+
+## Implemented — 2026-08-30 (v0.2.09)
+
+Built as a hand-rolled STORE streamer (zip_stream / zip_stream_size), chosen over
+predicting `zipfile`'s output because `zipfile` decides zip64 per-field by actual
+value, which is hard to predict exactly. The streamer is **uniformly zip64** (every
+file gets 8-byte size/offset fields and a data descriptor; the archive always ends
+with a zip64 EOCD + locator + EOCD), so the byte layout is fixed and the exact size
+is a closed form:
+
+    per file = 30 + name + 20 + size + 24 + 46 + name + 28   (= size + 2*name + 148)
+    end      = 56 + 20 + 22   (= 98)
+
+Verified: written bytes == zip_stream_size() exactly, for ascii/space/unicode names
+and for a 5 GiB single file (past the 4 GiB boundary); archives pass Python
+zipfile.testzip() and Info-ZIP `unzip -t`, extract byte-exact; against the live
+server, time-to-first-byte ~1 ms, Content-Length == streamed bytes, peak RSS ~30 MB
+for a 364 MB archive, mid-stream cancel logged cleanly (no traceback).
+
+Uniform zip64 costs ~148 bytes/file of overhead regardless of size — negligible.
+Modern extractors (Windows Explorer, macOS, Android, 7-Zip, Info-ZIP) all read it.

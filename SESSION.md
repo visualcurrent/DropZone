@@ -4,7 +4,7 @@ Read this first at the start of every session. Update it last.
 See `docs/DEVELOPMENT.md` for how the workflow runs, `BACKLOG.md` for what's next.
 
 ## Current focus
-Running build is **v0.2.08 (nightly)** (deploy to the phone via Syncthing
+Running build is **v0.2.09 (nightly)** (deploy to the phone via Syncthing
 -> Downloads -> /storage/emulated/0/Backups/DropZone). DEBUG=True is on.
 
 Logs persist to `DropZone.log` beside the script (survives a Termux crash), so
@@ -27,6 +27,18 @@ field confirmation on the phone.
 
 Then next code target: the duplicate-downloads decision (BACKLOG 10), then the
 host connected-users panel (BACKLOG 4).
+
+## Last session — 2026-08-30 (later 3)
+- v0.2.09: ZIP downloads STREAM as built (BACKLOG 13 done). Hand-rolled,
+  uniformly-zip64 STORE streamer with an exact-size formula, so downloads start
+  instantly (TTFB ~1 ms vs tens of seconds), no temp file, real progress bar,
+  flat memory. Verified byte-exact incl. >4 GiB, valid under python + unzip,
+  clean mid-stream cancel. Findings in docs/notes/streaming-zip-findings.md.
+- Fix: non-ASCII upload filenames were mangled since v0.2.05 (latin-1 header
+  decode); now UTF-8, round-trip correct.
+- Robustness: request-side connection resets log one line, not a traceback.
+- Likely knock-on: this should defuse the duplicate-download re-clicks (BACKLOG
+  10) since there is no spool wait to click through — confirm in the field.
 
 ## Last session — 2026-08-30 (later 2)
 - Fixed a field-reported host-page bug: bulk ZIP clicks navigated the whole

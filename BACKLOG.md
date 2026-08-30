@@ -196,6 +196,9 @@ OS adds a suffix. The new per-download `[id]` logging (v0.2.03) distinguishes
 them: repeat the test and read the terminal — the same id twice means (a);
 different ids with the same name means (b), which argues for namespacing
 single-file downloads by user or offering a per-user zip.
+**Update (v0.2.09):** the spool delay that made people re-click bulk downloads
+is gone (zips now stream instantly), which should remove the biggest source of
+accidental duplicate downloads. Re-test to see what, if anything, remains.
 **Definition of done:** cause identified from logs; fix or a clear "working as
 intended, here is the better UX" decision recorded.
 
@@ -221,7 +224,7 @@ and whether it is the initial load or the toggle click that misbehaves.
 OS light/dark setting on load and the toggle flips it; the regression's cause is
 identified and fixed, with a one-line note on what it was.
 
-### 13. [ ] Stream the "download everything"/zip as it is built  (IMPROVEMENT)
+### 13. [x] Stream the "download everything"/zip as it is built  (IMPROVEMENT)  — shipped v0.2.09
 Replace spool-whole-then-send with streaming the STORE archive straight to the
 socket, removing the silent spool delay and the temp-file disk cost. Investigated
 2026-08-30 (docs/notes/streaming-zip-findings.md): feasible, data descriptors are

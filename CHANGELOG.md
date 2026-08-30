@@ -6,10 +6,19 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 
 ## [Unreleased]
 - Investigate duplicate/double downloads (now that per-file [id] logging exists).
-- Stream the ZIP as it is built to remove the spool delay (BACKLOG 13; findings
-  in docs/notes/streaming-zip-findings.md).
 - Field-test the v0.2.05 streaming upload on the phone (a ~2 GB single file and a
   multi-user run) to fully close BACKLOG 1's Definition of done.
+
+## [0.2.09] — nightly
+- ZIP downloads now STREAM as they are built instead of spooling a whole temp
+  copy first (BACKLOG 13). Downloads start immediately (time-to-first-byte went
+  from tens of seconds to ~1 ms), use no temp disk, and keep a real progress bar
+  (the uniformly-zip64 layout makes the exact size computable up front). Peak
+  memory stays flat. Removes the spool delay that was causing re-clicks and
+  duplicate downloads.
+- Fix: non-ASCII upload filenames (accents, CJK) were mangled since v0.2.05
+  (headers decoded latin-1); now decoded UTF-8 and round-trip correctly.
+- Client connection drops now log one line instead of an unhandled traceback.
 
 ## [0.2.08] — nightly
 - Fix: bulk ZIP downloads no longer navigate the page. Clicking "All N files"

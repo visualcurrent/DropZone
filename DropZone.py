@@ -5,7 +5,7 @@ Run: python3 DropZone.py
 Then open http://localhost:7070 in your browser
 """
 
-import os, sys, json, uuid, socket, re, shutil, tempfile, mimetypes, io, zipfile
+import os, sys, json, uuid, socket, re, shutil, tempfile, mimetypes, io, zipfile, struct, zlib
 from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
@@ -19,7 +19,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.08"        # running build
+__version__   = "0.2.09"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -235,7 +235,7 @@ def stream_multipart(rfile, boundary, length, open_dest, chunk=UPLOAD_CHUNK):
         while True:
             line = read_line()
             if not line: break                 # None or blank line ends headers
-            s = line.decode("latin-1", "replace")
+            s = line.decode("utf-8", "replace")  # filenames are UTF-8 (RFC 7578)
             if ":" in s:
                 k, v = s.split(":", 1)
                 headers[k.strip().lower()] = v.strip()
@@ -254,6 +254,71 @@ def get_filename(cd):
         m = re.search(pat, cd)
         if m: return urllib.parse.unquote(m.group(1))
     return "upload"
+
+# ─── Streaming ZIP (STORE, bounded memory, exact size) ────────────────────────
+# Writes a STORE (no-compression) zip straight to a write() callback as it reads
+# each source file, so the download starts immediately (no spool to a temp file)
+# and peak memory stays flat (BACKLOG 13). The layout is *uniformly* zip64, so
+# the exact archive size is a simple closed form — we can send a real
+# Content-Length and the browser shows true progress. Per file:
+#   local(30)+name+localextra(20)+data+datadesc(24)+central(46)+name+centralextra(28)
+# End: zip64-EOCD(56)+locator(20)+EOCD(22). Verified byte-exact vs the emitter
+# across ascii/space/unicode names and past the 4 GiB boundary; archives validate
+# under Python zipfile and Info-ZIP unzip.
+def zip_stream_size(entries):
+    "Exact byte length of the archive zip_stream() will emit. entries: (arc, path, size)."
+    total = 0
+    for arc, _p, size in entries:
+        n = len(arc.encode("utf-8"))
+        total += 30 + n + 20 + size + 24 + 46 + n + 28
+    return total + 56 + 20 + 22
+
+def _dos_dt(ts=None):
+    t = time.localtime(ts if ts is not None else time.time())
+    d  = ((max(t.tm_year, 1980) - 1980) << 9) | (t.tm_mon << 5) | t.tm_mday
+    tm = (t.tm_hour << 11) | (t.tm_min << 5) | (t.tm_sec // 2)
+    return d, tm
+
+def zip_stream(entries, write, chunk=1024*1024):
+    "Emit the archive to write(bytes), reading each file in bounded chunks."
+    dt, tm = _dos_dt()
+    offset = 0
+    central = []
+    def w(b):
+        nonlocal offset
+        write(b); offset += len(b)
+    for arc, path, size in entries:
+        name  = arc.encode("utf-8")
+        flags = 0x0008 | (0x0800 if any(c > 127 for c in name) else 0)  # data-desc + utf8
+        hoff  = offset
+        w(struct.pack("<IHHHHHIIIHH",
+            0x04034b50, 45, flags, 0, tm, dt, 0, 0xFFFFFFFF, 0xFFFFFFFF, len(name), 20))
+        w(name)
+        w(struct.pack("<HHQQ", 0x0001, 16, size, size))          # local zip64 extra
+        crc = 0
+        with open(path, "rb") as fh:
+            while True:
+                b = fh.read(chunk)
+                if not b: break
+                crc = zlib.crc32(b, crc)
+                w(b)
+        crc &= 0xFFFFFFFF
+        w(struct.pack("<IIQQ", 0x08074b50, crc, size, size))     # zip64 data descriptor
+        central.append((name, flags, crc, size, hoff))
+    cd_off = offset
+    for name, flags, crc, size, hoff in central:
+        w(struct.pack("<IHHHHHHIIIHHHHHII",
+            0x02014b50, 45, 45, flags, 0, tm, dt, crc,
+            0xFFFFFFFF, 0xFFFFFFFF, len(name), 28, 0, 0, 0, 0, 0xFFFFFFFF))
+        w(name)
+        w(struct.pack("<HHQQQ", 0x0001, 24, size, size, hoff))   # central zip64 extra
+    cd_size = offset - cd_off
+    n = len(central)
+    w(struct.pack("<IQHHIIQQQQ", 0x06064b50, 44, 45, 45, 0, 0, n, n, cd_size, cd_off))
+    w(struct.pack("<IIQI", 0x07064b50, 0, cd_off + cd_size, 1))
+    w(struct.pack("<IHHHHIIH", 0x06054b50, 0xFFFF, 0xFFFF, 0xFFFF, 0xFFFF,
+                  0xFFFFFFFF, 0xFFFFFFFF, 0))
+    return offset
 
 # ─── HTTP Handler ─────────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
@@ -303,47 +368,33 @@ class Handler(BaseHTTPRequestHandler):
         # entries: list of (arcname, src_path, size). ZIP_STORED = wrap only, no
         # compression: files are usually already compressed, and storing is far
         # faster on a phone and keeps the archive size predictable.
-        total = sum(sz for _, _, sz in entries)
+        # Re-stat each source now, so the advertised Content-Length and the bytes
+        # we stream derive from the same current file sizes (and drop any file
+        # that vanished since the list was built).
+        entries = [(arc, path, os.path.getsize(path))
+                   for arc, path, _sz in entries if os.path.exists(path)]
+        total  = sum(sz for _, _, sz in entries)
+        zsize  = zip_stream_size(entries)
         client = self.client_address[0]
-        sid = self.get_session()
+        sid    = self.get_session()
         log(f"zip requested: {zipname} <- {len(entries)} file(s), {fmt_size(total)} (from {client})")
         tid = transfer_start("zip", zipname, total, sid, user_display(sid, client))
         try:
             with transfer_sem:
-                transfer_set(tid, "building")
-                if total <= STREAM_THRESHOLD:
-                    log(f"zip building in RAM (store, no compression): {zipname}")
-                    buf = io.BytesIO()
-                    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
-                        for arc, src, _ in entries: zf.write(src, arc)
-                    data = buf.getvalue()
-                    self._zip_headers(zipname, len(data))
-                    transfer_set(tid, "sending")
-                    log(f"zip sending: {zipname} {fmt_size(len(data))}")
-                    try:
-                        self.wfile.write(data)
-                        log(f"zip done: {zipname}")
-                    except (BrokenPipeError, ConnectionResetError):
-                        log(f"zip cancelled by {client}: {zipname}")
-                else:
-                    log(f"zip spooling to disk (store, no compression): {zipname}")
-                    tmp = UPLOAD_DIR / ("_zip_" + uuid.uuid4().hex)
-                    try:
-                        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as zf:
-                            for arc, src, _ in entries: zf.write(src, arc)
-                        zsize = tmp.stat().st_size
-                        self._zip_headers(zipname, zsize)
-                        transfer_set(tid, "sending")
-                        log(f"zip sending: {zipname} {fmt_size(zsize)}")
-                        with open(tmp, "rb") as fh:
-                            try:
-                                shutil.copyfileobj(fh, self.wfile, 256 * 1024)
-                                log(f"zip done: {zipname}")
-                            except (BrokenPipeError, ConnectionResetError):
-                                log(f"zip cancelled by {client}: {zipname}")
-                    finally:
-                        try: tmp.unlink()
-                        except OSError: pass
+                # Streamed straight to the socket — no temp file, first byte goes
+                # out immediately, peak memory ~ one chunk (BACKLOG 13).
+                self._zip_headers(zipname, zsize)
+                transfer_set(tid, "sending")
+                log(f"zip sending (streamed): {zipname} {fmt_size(zsize)}")
+                try:
+                    zip_stream(entries, self.wfile.write)
+                    log(f"zip done: {zipname}")
+                except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
+                    log(f"zip cancelled by {client}: {zipname}")
+                except (FileNotFoundError, OSError) as e:
+                    # A source vanished mid-stream: headers are already sent, so
+                    # we can only drop the connection. Rare (temp files are stable).
+                    log(f"zip aborted ({zipname}): {e!r}")
         finally:
             transfer_end(tid)
 
@@ -1251,6 +1302,13 @@ class _LogErrors:
     crash still leaves a record. Benign client disconnects are already caught in
     the handlers and never reach here."""
     def handle_error(self, request, client_address):
+        exc = sys.exc_info()[1]
+        if isinstance(exc, (ConnectionResetError, BrokenPipeError,
+                            ConnectionAbortedError, TimeoutError)):
+            # Client vanished at the socket level (e.g. reset mid request-line) —
+            # nothing actionable, so log one line instead of a full traceback.
+            log(f"client {client_address[0]} dropped the connection ({type(exc).__name__})")
+            return
         log(f"UNHANDLED server error from {client_address}:\n{traceback.format_exc()}")
 
 class ThreadingServer(_LogErrors, socketserver.ThreadingMixIn, HTTPServer):

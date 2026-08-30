@@ -316,3 +316,69 @@ Traceback (most recent call last):
 ConnectionResetError: [Errno 104] Connection reset by peer
 
 [2026-08-30 13:31:55] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 14:29:44] === DropZone v0.2.09 (nightly) starting; pid=25066 ===
+[2026-08-30 14:31:43] upload start: Content-Length=1284216039 (1.2 GB) from 192.168.7.110; RSS=24.5 MB
+[2026-08-30 14:31:45] upload start: Content-Length=1746168322 (1.6 GB) from 192.168.7.187; RSS=32.4 MB
+[2026-08-30 14:31:47] upload start: Content-Length=1674678880 (1.6 GB) from 127.0.0.1; RSS=32.9 MB
+[2026-08-30 14:31:50] upload saved: 'Mr.and.Mrs.Smith.2024.S01E01.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [7a10b762] 301.1 MB; RSS=33.0 MB
+[2026-08-30 14:31:52] upload saved: 'The.Mosquito.Coast.S01E01.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [6dee1256] 404.2 MB; RSS=39.3 MB
+[2026-08-30 14:31:55] upload saved: 'Mr.and.Mrs.Smith.2024.S01E02.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [55382edd] 207.5 MB; RSS=33.1 MB
+[2026-08-30 14:31:55] upload saved: 'The.Mosquito.Coast.S01E02.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [7e8b2db3] 309.9 MB; RSS=35.3 MB
+[2026-08-30 14:31:58] upload saved: 'The.Mosquito.Coast.S01E03.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [1e25088f] 285.3 MB; RSS=35.5 MB
+[2026-08-30 14:31:59] upload saved: 'Mr.and.Mrs.Smith.2024.S01E03.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [b5ff4b5f] 201.5 MB; RSS=31.0 MB
+[2026-08-30 14:32:01] upload saved: 'The.Mosquito.Coast.S01E04.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [b150f2b5] 285.2 MB; RSS=32.0 MB
+[2026-08-30 14:32:04] upload saved: 'Mr.and.Mrs.Smith.2024.S01E04.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [64b96b36] 231.3 MB; RSS=32.5 MB
+[2026-08-30 14:32:05] upload saved: 'The.Mosquito.Coast.S01E05.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [11537d6c] 312.5 MB; RSS=35.9 MB
+[2026-08-30 14:32:05] upload done: 5 file(s) saved; RSS=35.9 MB
+[2026-08-30 14:32:10] upload saved: 'Mr.and.Mrs.Smith.2024.S01E05.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [dca0beb3] 283.4 MB; RSS=25.1 MB
+[2026-08-30 14:32:10] upload done: 5 file(s) saved; RSS=25.1 MB
+[2026-08-30 14:32:22] upload saved: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [01b1cc41] 352.3 MB; RSS=29.0 MB
+[2026-08-30 14:32:36] upload saved: '[YakuboEncodes] Cowboy Bebop - 02 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [235ea9d7] 308.2 MB; RSS=29.0 MB
+[2026-08-30 14:32:46] upload saved: '[YakuboEncodes] Cowboy Bebop - 03 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [ded99451] 247.5 MB; RSS=28.9 MB
+[2026-08-30 14:32:58] upload saved: '[YakuboEncodes] Cowboy Bebop - 04 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [4ee6f521] 322.2 MB; RSS=27.0 MB
+[2026-08-30 14:33:06] upload saved: '[YakuboEncodes] Cowboy Bebop - 05 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [083dbf80] 206.3 MB; RSS=29.0 MB
+[2026-08-30 14:33:16] upload saved: '[YakuboEncodes] Cowboy Bebop - 06 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [0d2739eb] 228.8 MB; RSS=22.1 MB
+[2026-08-30 14:33:16] upload done: 6 file(s) saved; RSS=22.1 MB
+[2026-08-30 14:34:32] zip requested: DropZone-all-files.zip <- 11 file(s), 3.2 GB (from 192.168.7.110)
+[2026-08-30 14:34:32] zip sending (streamed): DropZone-all-files.zip 3.2 GB
+[2026-08-30 14:34:32] zip cancelled by 192.168.7.110: DropZone-all-files.zip
+[2026-08-30 14:34:35] zip requested: DropZone-all-files.zip <- 11 file(s), 3.2 GB (from 192.168.7.110)
+[2026-08-30 14:34:35] zip sending (streamed): DropZone-all-files.zip 3.2 GB
+[2026-08-30 14:34:35] zip cancelled by 192.168.7.110: DropZone-all-files.zip
+[2026-08-30 14:34:35] zip requested: DropZone-all-files.zip <- 11 file(s), 3.2 GB (from 192.168.7.110)
+[2026-08-30 14:34:35] zip sending (streamed): DropZone-all-files.zip 3.2 GB
+[2026-08-30 14:34:36] zip requested: DropZone-all-files.zip <- 11 file(s), 2.8 GB (from 127.0.0.1)
+[2026-08-30 14:34:36] zip sending (streamed): DropZone-all-files.zip 2.8 GB
+[2026-08-30 14:34:36] zip cancelled by 127.0.0.1: DropZone-all-files.zip
+[2026-08-30 14:34:37] zip requested: DropZone-all-files.zip <- 11 file(s), 2.8 GB (from 127.0.0.1)
+[2026-08-30 14:34:37] zip sending (streamed): DropZone-all-files.zip 2.8 GB
+[2026-08-30 14:34:37] zip cancelled by 127.0.0.1: DropZone-all-files.zip
+[2026-08-30 14:34:37] zip requested: DropZone-all-files.zip <- 11 file(s), 2.8 GB (from 127.0.0.1)
+[2026-08-30 14:34:37] zip sending (streamed): DropZone-all-files.zip 2.8 GB
+[2026-08-30 14:34:39] zip requested: DropZone-all-files.zip <- 10 file(s), 2.8 GB (from 192.168.7.187)
+[2026-08-30 14:34:39] zip sending (streamed): DropZone-all-files.zip 2.8 GB
+[2026-08-30 14:34:47] zip done: DropZone-all-files.zip
+[2026-08-30 14:35:15] zip done: DropZone-all-files.zip
+[2026-08-30 14:35:25] zip requested: DropZone-S9.zip <- 5 file(s), 1.6 GB (from 192.168.7.110)
+[2026-08-30 14:35:25] zip sending (streamed): DropZone-S9.zip 1.6 GB
+[2026-08-30 14:35:25] zip cancelled by 192.168.7.110: DropZone-S9.zip
+[2026-08-30 14:35:26] zip requested: DropZone-S9.zip <- 5 file(s), 1.6 GB (from 192.168.7.110)
+[2026-08-30 14:35:26] zip sending (streamed): DropZone-S9.zip 1.6 GB
+[2026-08-30 14:35:27] zip cancelled by 192.168.7.110: DropZone-S9.zip
+[2026-08-30 14:35:27] zip requested: DropZone-S9.zip <- 5 file(s), 1.6 GB (from 192.168.7.110)
+[2026-08-30 14:35:27] zip sending (streamed): DropZone-S9.zip 1.6 GB
+[2026-08-30 14:35:36] zip requested: DropZone-X9.zip <- 5 file(s), 1.2 GB (from 192.168.7.187)
+[2026-08-30 14:35:36] zip sending (streamed): DropZone-X9.zip 1.2 GB
+[2026-08-30 14:35:41] zip requested: DropZone-flip9.zip <- 6 file(s), 1.6 GB (from 127.0.0.1)
+[2026-08-30 14:35:41] zip sending (streamed): DropZone-flip9.zip 1.6 GB
+[2026-08-30 14:35:41] zip cancelled by 127.0.0.1: DropZone-flip9.zip
+[2026-08-30 14:35:43] zip requested: DropZone-flip9.zip <- 6 file(s), 1.6 GB (from 127.0.0.1)
+[2026-08-30 14:35:43] zip sending (streamed): DropZone-flip9.zip 1.6 GB
+[2026-08-30 14:35:43] zip cancelled by 127.0.0.1: DropZone-flip9.zip
+[2026-08-30 14:35:43] zip requested: DropZone-flip9.zip <- 6 file(s), 1.6 GB (from 127.0.0.1)
+[2026-08-30 14:35:43] zip sending (streamed): DropZone-flip9.zip 1.6 GB
+[2026-08-30 14:35:48] zip done: DropZone-S9.zip
+[2026-08-30 14:35:52] zip done: DropZone-flip9.zip
+[2026-08-30 14:37:52] zip done: DropZone-X9.zip
+[2026-08-30 14:38:29] zip done: DropZone-all-files.zip
+[2026-08-30 14:39:37] === DropZone stopped (Ctrl+C) ===
