@@ -24,6 +24,7 @@ Each script prints a short result and exits `0` on pass, non-zero on fail.
 | `test_upload_memory.py`  | 1  | Uploads (small / multi / 800 MB) save byte-exact (size + sha256) **and** peak server memory stays flat — it must not scale with upload size (the old OOM-on-big-files bug). |
 | `test_queue_feedback.py` | 6  | With the transfer cap forced to 1, three concurrent downloads show up in `/api/state` as one `sending` + others `queued` with positions, and the registry drains to empty. |
 | `test_zip_streaming.py`  | 13 | The per-user ZIP streams as it is built: advertised `Content-Length` == bytes streamed == `DropZone.zip_stream_size()`, first byte is near-instant, the archive is valid (Python `zipfile`, and Info-ZIP `unzip -t` if installed) and extracts byte-exact, and a mid-stream cancel leaves no traceback. |
+| `test_download_range.py` | 10 | Single-file `/api/download` speaks HTTP Range: a full GET is 200 with `Accept-Ranges`/`ETag`/`Last-Modified`; closed, open-ended and suffix ranges return 206 with the right `Content-Range` and offset-exact slices; a range past EOF is 416; a stale `If-Range` and a multi-range header both fall back to 200; a >`STREAM_THRESHOLD` slice streams from disk via seek byte-exact. Guards the iOS-Safari duplicate-download fix. |
 
 ## How it works (for the next agent)
 

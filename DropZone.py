@@ -10,6 +10,7 @@ from pathlib import Path
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 import urllib.parse
+from email.utils import formatdate
 
 # ─── State ────────────────────────────────────────────────────────────────────
 users        = {}
@@ -19,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.09"        # running build
+__version__   = "0.2.10"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -120,6 +121,49 @@ def fmt_size(b):
         if b < 1024: return f"{b:.1f} {u}"
         b /= 1024
     return f"{b:.1f} TB"
+
+def parse_range(header, size):
+    """Parse a single HTTP byte-range request for a file of `size` bytes.
+
+    Returns (start, end) inclusive for a satisfiable range, ("unsatisfiable",
+    None) when it names only bytes at/after EOF (caller replies 416), or
+    (None, None) when there is no range or it must be ignored — absent header,
+    malformed, or multi-range — in which case the caller serves a normal 200
+    (RFC 7233: an unparsable Range MUST be ignored). This is the fix for iOS
+    Safari, which probes a download with a Range request and then re-fetches if
+    the server answers a plain 200; supporting 206 makes the probe and the save
+    resolve to one download instead of an OS-suffixed duplicate.
+    """
+    if not header:
+        return (None, None)
+    header = header.strip()
+    if not header.lower().startswith("bytes=") or "," in header:
+        return (None, None)                       # not a byte range / multi-range
+    spec = header[6:].strip()
+    if "-" not in spec:
+        return (None, None)
+    lo, _, hi = spec.partition("-")
+    lo, hi = lo.strip(), hi.strip()
+    try:
+        if lo == "":                              # suffix range: final N bytes
+            n = int(hi)
+            if n <= 0:
+                return (None, None)
+            start, end = max(0, size - n), size - 1
+        else:
+            start = int(lo)
+            if size == 0 or start >= size:
+                return ("unsatisfiable", None)     # start at/after EOF -> 416
+            end = int(hi) if hi != "" else size - 1
+            if end >= size:
+                end = size - 1
+            if end < start:
+                return (None, None)
+    except ValueError:
+        return (None, None)
+    if size == 0 or start >= size:
+        return ("unsatisfiable", None)
+    return (start, end)
 
 def get_or_create_user(sid):
     with state_lock:
@@ -434,33 +478,83 @@ class Handler(BaseHTTPRequestHandler):
             f  = shared_files[fid]
             fp = Path(f["tmp_path"])
             if not fp.exists(): self.send_json({"error":"File missing"},404); return
-            size  = fp.stat().st_size
-            log(f"download: '{f['name']}' [{fid}] {fmt_size(size)} to {self.client_address[0]}")
-            fsafe = urllib.parse.quote(f["name"])
-            self.send_response(200)
-            self.send_header("Content-Type", mimetypes.guess_type(f["name"])[0] or "application/octet-stream")
-            self.send_header("Content-Disposition", f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}')
-            self.send_header("Content-Length", size)
-            self.end_headers()
-            if size <= STREAM_THRESHOLD:
-                try:
-                    self.wfile.write(fp.read_bytes())
-                    log(f"download done: '{f['name']}' [{fid}]")
-                except (BrokenPipeError, ConnectionResetError):
-                    log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
+            st       = fp.stat()
+            size     = st.st_size
+            etag     = f'"{int(st.st_mtime):x}-{size:x}"'
+            lastmod  = formatdate(st.st_mtime, usegmt=True)
+            fsafe    = urllib.parse.quote(f["name"])
+            ctype    = mimetypes.guess_type(f["name"])[0] or "application/octet-stream"
+            cdisp    = f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}'
+
+            # Range support (BACKLOG 10). If-Range gates the range: on a validator
+            # mismatch — or a malformed/multi-range header — we fall through to a
+            # normal 200 so the client always gets a coherent whole file.
+            start, end = parse_range(self.headers.get("Range"), size)
+            if_range = self.headers.get("If-Range")
+            if start is not None and start != "unsatisfiable" and if_range \
+               and if_range.strip() not in (etag, lastmod):
+                start = end = None                     # validator changed → full body
+
+            if start == "unsatisfiable":
+                self.send_response(416)
+                self.send_header("Content-Range", f"bytes */{size}")
+                self.send_header("Accept-Ranges", "bytes")
+                self.send_header("Content-Length", 0)
+                self.end_headers()
+                log(f"download 416 (range past EOF) [{fid}] from {self.client_address[0]}")
+                return
+
+            is_partial = start is not None
+            if is_partial:
+                span = end - start + 1
+                self.send_response(206)
+                self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+                self.send_header("Content-Length", span)
+                label = f"[{fid}] bytes {start}-{end}/{size} (partial)"
             else:
-                sid = self.get_session()
-                tid = transfer_start("file", f["name"], size, sid,
-                                     user_display(sid, self.client_address[0]))
+                start, span = 0, size
+                self.send_response(200)
+                self.send_header("Content-Length", size)
+                label = f"[{fid}]"
+            self.send_header("Content-Type", ctype)
+            self.send_header("Content-Disposition", cdisp)
+            self.send_header("Accept-Ranges", "bytes")
+            self.send_header("ETag", etag)
+            self.send_header("Last-Modified", lastmod)
+            self.end_headers()
+            log(f"download: '{f['name']}' {label} {fmt_size(span)} to {self.client_address[0]}")
+
+            # Small spans (incl. a Safari probe): one buffered slice write — fast,
+            # exact, and it never consumes a heavy-transfer slot.
+            if span <= STREAM_THRESHOLD:
                 try:
-                    with transfer_sem, open(fp, "rb") as fh:
-                        transfer_set(tid, "sending")
-                        shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                    with open(fp, "rb") as fh:
+                        if start: fh.seek(start)
+                        self.wfile.write(fh.read(span))
                     log(f"download done: '{f['name']}' [{fid}]")
                 except (BrokenPipeError, ConnectionResetError):
                     log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
-                finally:
-                    transfer_end(tid)
+                return
+
+            # Large span → stream the slice from disk under the transfer registry.
+            sid = self.get_session()
+            tid = transfer_start("file", f["name"], span, sid,
+                                 user_display(sid, self.client_address[0]))
+            try:
+                with transfer_sem, open(fp, "rb") as fh:
+                    transfer_set(tid, "sending")
+                    fh.seek(start)
+                    remaining = span
+                    while remaining > 0:
+                        chunk = fh.read(min(256 * 1024, remaining))
+                        if not chunk: break
+                        self.wfile.write(chunk)
+                        remaining -= len(chunk)
+                log(f"download done: '{f['name']}' [{fid}]")
+            except (BrokenPipeError, ConnectionResetError):
+                log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
+            finally:
+                transfer_end(tid)
             return
 
         if path == "/api/download_all":

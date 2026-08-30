@@ -5,9 +5,23 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 `docs/DEVELOPMENT.md`).
 
 ## [Unreleased]
-- Investigate duplicate/double downloads (now that per-file [id] logging exists).
-- Field-test the v0.2.05 streaming upload on the phone (a ~2 GB single file and a
-  multi-user run) to fully close BACKLOG 1's Definition of done.
+- Field-confirm the Range fix on an iPhone (BACKLOG 10): download several small
+  files individually and check they land once each — no "name (1).ext" copies.
+
+## [0.2.10] — nightly
+- Single-file downloads now support HTTP Range requests (BACKLOG 10).
+  `/api/download` advertises `Accept-Ranges`, `ETag` and `Last-Modified`, answers
+  a `Range:` header with `206 Partial Content` + `Content-Range` (gated by
+  `If-Range`), and returns `416` for a range past EOF; a malformed or multi-range
+  header falls back to a normal `200`. This fixes duplicate downloads from iOS
+  Safari, which probes a file with a Range request and then re-fetched — creating
+  an OS-suffixed `name (1).ext` — whenever the server only ever replied `200`.
+  Ranges also make single-file downloads resumable and seekable. Streamed
+  "download everything" zips are unchanged (still `200`). Covered by
+  `tests/test_download_range.py`.
+- BACKLOG 1 (upload freeze) confirmed CLOSED by the 2026-08-30 phone field run:
+  single files of 2.4/2.6/1.8 GB and a 4.4 GB batch, all byte-exact, server RSS
+  flat 12-16 MB, no freeze/OOM.
 
 ## [0.2.09] — nightly
 - ZIP downloads now STREAM as they are built instead of spooling a whole temp

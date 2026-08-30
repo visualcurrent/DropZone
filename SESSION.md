@@ -10,23 +10,66 @@ Running build is **v0.2.09 (nightly)** (deploy to the phone via Syncthing
 Logs persist to `DropZone.log` beside the script (survives a Termux crash), so
 instead of copying terminal scrollback, just send that file's contents back.
 
-v0.2.05 shipped the streaming upload fix (BACKLOG 1) and the real progress bar
-(BACKLOG 9). The freeze cause is confirmed and the fix is verified in the
-container (a 1.2 GB upload peaked at ~23 MB RSS, byte-exact). What remains is
-field confirmation on the phone.
+BACKLOG 1 (upload freeze) is CLOSED — confirmed on the phone in the 2026-08-30
+field run: single files of 2.4 GB, 2.6 GB and 1.8 GB, plus a 4.4 GB two-file
+batch, all uploaded byte-exact with server RSS flat at 12-16 MB. No freeze, no
+OOM, no traceback. The streaming fix (v0.2.05) holds at real >2 GB single-file
+sizes.
 
-**Two things to do on the phone next:**
-1. Close BACKLOG 1: run a single ~2 GB upload and a multi-user ~1 GB-per-user
-   run on the phone. Confirm from `DropZone.log` that the RSS lines stay flat,
-   there is no freeze, and the listed size matches the real file. While there,
-   watch the new real progress bar halt at the true point if an upload stalls
-   (BACKLOG 9).
-2. Duplicate downloads (BACKLOG 10): repeat the download test and read the
-   per-file `[id]` logs — same id twice = real double-fire; different ids same
-   name = OS dedup on save.
+**Running build now v0.2.10 (nightly)** — adds HTTP Range support to single-file
+downloads (BACKLOG 10). Root cause of the `(1)` duplicates was iOS Safari probing
+a download with a Range request and re-fetching because `/api/download` only ever
+replied `200`; it now answers `206` + `Content-Range` (with `Accept-Ranges`/
+`ETag`/`Last-Modified`/`If-Range`, `416` past EOF). Android's single-`200` path is
+why it never reproduced Android-to-Android. Zips unchanged. Tested green
+(`tests/test_download_range.py`, whole suite passes).
 
-Then next code target: the duplicate-downloads decision (BACKLOG 10), then the
-host connected-users panel (BACKLOG 4).
+**Next on the phone — field-confirm the Range fix (closes BACKLOG 10):** on an
+iPhone, download several SMALL files individually (one tap each) and confirm they
+land once each — no `name (1).ext`. If a dupe still appears, capture the browser
+and the `[id]` log lines. (Deploy v0.2.10 to the phone via Syncthing first.)
+
+Then next code target: the host connected-users panel (BACKLOG 4). A separate,
+lower-priority thread stays open: the Android download triple-fire (same `[id]`
+3x ~ the 1 s `/api/state` poll) — a list-re-render guard on the client.
+
+## Last session — 2026-08-30 (later 7)
+- BACKLOG 10 fix shipped as **v0.2.10**: HTTP Range support on `/api/download`
+  (206 + `Content-Range`, `Accept-Ranges`/`ETag`/`Last-Modified`, `If-Range`, 416
+  past EOF; malformed/multi-range -> 200). Root cause was iOS Safari's Range probe
+  re-fetching against a 200-only server. Streamed zips untouched. Bonus: single
+  downloads are now resumable/seekable. New `tests/test_download_range.py` (10
+  checks) + whole suite green. Commit note docs/commits/0012. Pre-change backup at
+  docs/notes/DropZone.py.bak4-*.
+- Item 10 is `[~]` — code done, still owes an iPhone field confirm (small files,
+  individual downloads, no `(1)` copies).
+- Corrected the stale dev-copy path (was the travel-laptop `D:\\ClauDev_20260822\\
+  DropZone`); this session edits `D:\\ClauDev\\DropZone`.
+- Not done (deliberately): the Android triple-fire (client list re-render churning
+  the anchor) and a `do_HEAD` for `/api/download` — logged as follow-ups.
+
+## Last session — 2026-08-30 (later 6)
+- BACKLOG 1 CLOSED by field test (v0.2.09): single 2.4/2.6/1.8 GB files + a 4.4 GB
+  2-file batch, all byte-exact, RSS flat 12-16 MB, no freeze/OOM/traceback. The
+  "single ~2 GB file" half of the DoD is now covered. Ticked in BACKLOG.md.
+- Upload failures from device .94 were Android battery saver cutting the client
+  radio (3x ConnectionResetError, 0 files, clean single-line log — no traceback,
+  RSS low). Not a DropZone bug; server robustness worked. Upload completed after
+  the browser was excluded from battery optimisation.
+- "Everything felt slow" = the wifi path, NOT the app. Loopback (127.0.0.1) ran
+  90-290 MB/s; real wifi devices ran 1.6-3.7 MB/s on the SAME server/disk/code.
+  Cause: the host phone was the hotspot this round (serving + routing on one
+  radio; dual-band selected but power-save likely engaged), and it was a
+  different network (10.150.157.x vs the usual 192.168.7.x). Environmental.
+- BACKLOG 10: re-fire CONFIRMED (same `[id]` 3x, 2 cancelled) but no `(1)` dupes
+  on gigabyte files. Small-file race identified as the repro path (see Current
+  focus). Still needs the small-file test to see the user-visible dupe.
+
+## Last session — 2026-08-30 (later 5)
+- Backlog cleanup from Gabe's field results: dropped BACKLOG 5 (long-list scroll)
+  and BACKLOG 12 (light/dark theme). Item 5 tested clean at 1100 files (all
+  listed, scrolls to bottom); item 12 was a browser forced-night-mode setting,
+  not our bug. Both marked `[-]` in BACKLOG.md with the reason.
 
 ## Last session — 2026-08-30 (later 4)
 - Added tests/ safety net (dependency-free; items 1/6/13) with README; wired
@@ -34,9 +77,9 @@ host connected-users panel (BACKLOG 4).
 - Attempted CSS fixes for theme (12) + list scroll (5) as v0.2.10, but they were
   speculative (couldn't reproduce either bug). Gabe asked to REVERT them — done;
   build is back to v0.2.09. Between-session theme persistence is NOT wanted.
-- Next theme lead (Gabe's): check whether the light/dark sets truly differ, or
-  whether one state falls through to the OS default (dark on his system) — does
-  the toggle actually swap the applied variables.
+- Theme (12): CLOSED — the reported bug was a browser setting forcing night mode
+  on the device, not a DropZone defect. Dropped from the backlog. (Prior lead
+  about the sets falling through to the OS default is moot.)
 - Versioning: number is major.beta.nightly; VERSION_STAGE label redundant
   (candidate cleanup). Hold at 0.2.xx. Git: Gabe commits manually (2.06-2.09 in).
 
@@ -125,7 +168,7 @@ host connected-users panel (BACKLOG 4).
 
 ## Open questions / watch-outs
 - Two machines: this session edits the PC dev copy at
-  `D:\\ClauDev_20260822\\DropZone`. The phone's Termux runs a separate copy
+  `D:\\ClauDev\\DropZone`. The phone's Termux runs a separate copy
   (traceback showed `/storage/emulated/0/Backups/DropZone/DropZone_v2.py`).
   Edits here do NOT reach the phone by themselves.
 - Deploy transport = Syncthing (LAN). Target workflow: sync the PC dev folder to

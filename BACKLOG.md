@@ -15,7 +15,7 @@ Priority tiers:
 
 ## P0 — Fix first
 
-### 1. [~] Upload freezes near completion on large files  (BUG)
+### 1. [x] Upload freezes near completion on large files  (BUG)  — closed, field-confirmed v0.2.09
 The freeze that makes big uploads unusable. Symptoms from the field:
 - Uploads run fast, then freeze at ~80–90% and never finish.
 - Even a single large file freezes at ~80%.
@@ -56,9 +56,13 @@ parses the body from the socket in `UPLOAD_CHUNK` (4 MB) blocks and writes
 each file straight to disk; `do_POST` no longer reads the whole body. Verified in the container — a
 1.2 GB upload peaked at ~23 MB server RSS and all files saved byte-exact
 (size + sha256).
-**Next (to close DoD):** field-test on the phone — a single ~2 GB file and a
-multi-user ~1 GB-per-user run — confirm no freeze, bounded memory, and that the
-listed size matches the real file size.
+**Closed (2026-08-30, field, v0.2.09):** DoD met on the phone. Single files of
+2.4 GB, 2.6 GB and 1.8 GB, plus a 4.4 GB two-file batch, all uploaded byte-exact
+with server RSS flat at 12-16 MB (memory did not track file size). No freeze, no
+OOM, no traceback. Separately, a battery-saver client (device .94) reset mid-
+upload 3x — logged cleanly as ConnectionResetError, 0 files, RSS low, no
+traceback (robustness holds); it completed once the browser was excluded from
+Android battery optimisation. Raw evidence in `DropZone.log`.
 
 ---
 
@@ -98,7 +102,7 @@ showing name and a live activity/status indicator; guests are unaffected.
 
 ## P2 — Improvements & fixes
 
-### 5. [ ] Bug: long combined file list cannot scroll to the bottom  (BUG)
+### 5. [-] Bug: long combined file list cannot scroll to the bottom  (BUG)  — dropped, not reproducible
 With many files uploaded by several people, the page stops short and the bottom
 of the list is cut off; you cannot reach the end. Likely a CSS height/overflow
 constraint on a container (investigate the `.card`, `.main`, and list wrappers
@@ -106,6 +110,10 @@ in the CSS block). Small, high-annoyance win.
 
 **Definition of done:** with a long multi-user list, the whole list scrolls into
 view on both phone and desktop widths.
+
+**Dropped (2026-08-30):** re-tested with 1100 uploaded files — all are listed and
+the list scrolls to the bottom. No defect. Reopen only with a concrete repro
+(file count, browser/width, screenshot of the cut-off).
 
 ### 6. [~] Bug: no feedback (and possibly no service) when a download is queued  (BUG)
 A second user clicking download while someone else pulls a ZIP sees nothing —
@@ -187,7 +195,7 @@ visibly stops at the real point rather than sitting near 100%.
 `upload.onprogress` (true bytes sent, with bytes + ETA). Field note: confirm on
 the phone that it visibly halts at the stall point during a large upload.
 
-### 10. [ ] Investigate duplicate / double downloads  (BUG)
+### 10. [~] Investigate duplicate / double downloads  (BUG)  — fix shipped v0.2.10, awaiting iPhone field confirm
 Field report: selecting each file once still produced many OS-suffixed
 duplicates ("name (1).ext") in the download folder. Two candidate causes: (a) a
 real double-fire — the same request sent twice; or (b) not a bug — distinct
@@ -199,6 +207,47 @@ single-file downloads by user or offering a per-user zip.
 **Update (v0.2.09):** the spool delay that made people re-click bulk downloads
 is gone (zips now stream instantly), which should remove the biggest source of
 accidental duplicate downloads. Re-test to see what, if anything, remains.
+**Field evidence (2026-08-30, v0.2.09):** the re-fire is REAL and client-side —
+individual downloads logged the same `[id]` three times (request, cancel, cancel,
+done). On gigabyte files the two superseded requests are cancelled before they
+commit a file, so NO `(1)` duplicate appeared (confirmed: no dupes on the big-
+file downloads). The duplicate symptom is a race that only shows on SMALL files:
+there each fire completes before the next cancel, so 2-3 completions write
+`name.ext`, `name (1).ext`, `name (2).ext`. One download (The Insult) fired only
+once, so the re-fire is browser/timing-dependent, not universal. Prime suspect:
+the hidden download anchor is clicked more than once (possibly re-triggered by
+the activity-panel re-render or the 1 s `/api/state` poll).
+**Still to reproduce:** download several SMALL individual files (a few MB each),
+one click each, and confirm from the log (same `[id]` with multiple `download
+done`) + the Downloads folder (`(1)` files). The fix — debounce/guard the anchor
+so one click = one request — is the same regardless and can proceed on the
+evidence already logged.
+**Field evidence (2026-08-30, v0.2.09):** the re-fire is REAL and client-side —
+individual downloads logged the same `[id]` three times (request, cancel, cancel,
+done). On gigabyte files the two superseded requests are cancelled before they
+commit a file, so NO `(1)` duplicate appeared (confirmed: no dupes on the big-
+file downloads). The duplicate symptom is a race that only shows on SMALL files:
+there each fire completes before the next cancel, so 2-3 completions write
+`name.ext`, `name (1).ext`, `name (2).ext`. One download fired only once, so the
+re-fire is browser/timing-dependent, not universal. Prime suspect: the hidden
+download anchor is clicked more than once (possibly re-triggered by the activity-
+panel re-render or the 1 s `/api/state` poll).
+**Still to reproduce:** download several SMALL individual files (a few MB each),
+one click each, and confirm from the log (same `[id]` with multiple `download
+done`) + the Downloads folder (`(1)` files). The fix — debounce/guard the anchor
+so one click = one request — is the same regardless and can proceed on the
+evidence already logged.
+**Cause + fix (v0.2.10):** identified as iOS Safari probing the download with a
+Range request and re-fetching because `/api/download` only ever replied `200`
+(no `Accept-Ranges`/`206`), so the probe and the save became two files (`name
+(1).ext`). Android takes the single `200` cleanly — hence Android-to-Android
+never reproduced it. Fix: single-file downloads now speak HTTP Range (206 +
+`Content-Range`, `Accept-Ranges`/`ETag`/`Last-Modified`, `If-Range`, `416` past
+EOF); see docs/commits/0012 and tests/test_download_range.py. Zips unchanged.
+**Field confirm still owed:** on an iPhone, download several small files
+individually (one tap each) and check they land once each — no `(1)` copies.
+Separately, the Android triple-fire (same `[id]` 3x ~ the 1 s poll) is a distinct
+lower-priority client issue (list re-render churns the anchor); not fixed here.
 **Definition of done:** cause identified from logs; fix or a clear "working as
 intended, here is the better UX" decision recorded.
 
@@ -210,7 +259,7 @@ compression, v0.2.03), the packed size is predictable, which makes sizing exact.
 **Definition of done:** a large "everything" download yields several parts each
 at/under the cap, each a valid zip; the UI lists the parts.
 
-### 12. [ ] Light/dark theme regression  (BUG, P2)
+### 12. [-] Light/dark theme regression  (BUG, P2)  — dropped, external cause
 Field report (v0.2.06): light/dark theme modes are misbehaving. The theme code —
 the `:root` / `[data-theme]` CSS variables (~L491), the
 `@media(prefers-color-scheme:dark)` fallback (~L508), and `initTheme()` (~L952,
@@ -234,6 +283,10 @@ bad state, which browser/OS, and exactly what is wrong). One true behavioural
 note: the OS theme is read only on load — there is no matchMedia change listener,
 so flipping the OS theme while the page is open does not live-update (and, per
 Gabe, cross-session persistence is intentionally not wanted).
+**Dropped (2026-08-30):** root cause found — it was a browser setting forcing
+night mode on the device, overriding the page. Not a DropZone bug; the code is
+correct (see investigation above). Reopen only if the issue recurs with that
+browser setting off.
 
 ### 13. [x] Stream the "download everything"/zip as it is built  (IMPROVEMENT)  — shipped v0.2.09
 Replace spool-whole-then-send with streaming the STORE archive straight to the
