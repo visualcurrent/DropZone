@@ -28,6 +28,18 @@ field confirmation on the phone.
 Then next code target: the duplicate-downloads decision (BACKLOG 10), then the
 host connected-users panel (BACKLOG 4).
 
+## Last session — 2026-08-30 (later 4)
+- Added tests/ safety net (dependency-free; items 1/6/13) with README; wired
+  into DEVELOPMENT.md. `python3 tests/run_all.py`.
+- Attempted CSS fixes for theme (12) + list scroll (5) as v0.2.10, but they were
+  speculative (couldn't reproduce either bug). Gabe asked to REVERT them — done;
+  build is back to v0.2.09. Between-session theme persistence is NOT wanted.
+- Next theme lead (Gabe's): check whether the light/dark sets truly differ, or
+  whether one state falls through to the OS default (dark on his system) — does
+  the toggle actually swap the applied variables.
+- Versioning: number is major.beta.nightly; VERSION_STAGE label redundant
+  (candidate cleanup). Hold at 0.2.xx. Git: Gabe commits manually (2.06-2.09 in).
+
 ## Last session — 2026-08-30 (later 3)
 - v0.2.09: ZIP downloads STREAM as built (BACKLOG 13 done). Hand-rolled,
   uniformly-zip64 STORE streamer with an exact-size formula, so downloads start
@@ -101,6 +113,9 @@ host connected-users panel (BACKLOG 4).
 - Pre-change backups in `docs/notes/DropZone.py.bak*`.
 
 ## Decisions
+- Tests live in `tests/` (dependency-free; `python3 tests/run_all.py`). Run after
+  any change to upload / download-ZIP / transfer / `/api/state` code. Covers
+  backlog items 1, 6, 13. Added 2026-08-30.
 - Workflow: docs-driven loop, one backlog item per session (see DEVELOPMENT.md).
 - Versioning: `release.beta.incremental` (e.g. v0.2.01). Baseline v0.2.00;
   next shipped app change v0.2.01.

@@ -31,6 +31,8 @@ and writes down what changed. Nothing else is required.
   here and replayed later (see "Committing" below).
 - **docs/notes/** — supporting material: logs, investigation notes, findings
   that a backlog item depends on.
+- **tests/** — a lightweight, dependency-free test suite that starts the real
+  server and checks it over the wire. Run `python3 tests/run_all.py`.
 
 ## The session loop
 
@@ -43,10 +45,13 @@ Each working session follows the same five steps:
 3. **Do the work.** Make the change. Keep it minimal and in the spirit of the
    existing code (single file, standard library only, no new dependencies unless
    a backlog item explicitly approves one).
-4. **Verify.** Run the task's "Definition of done" check. DropZone has no unit
-   tests yet, so most checks are a short manual script (start the server, do the
-   action, confirm the result). If a check is worth automating, add it as its
-   own backlog item.
+4. **Verify.** Run the task's "Definition of done" check. There is a small test
+   suite in `tests/` (no framework, standard library only) — run
+   `python3 tests/run_all.py`, and run it after any change to the upload,
+   download/ZIP, transfer-registry, or `/api/state` code. It currently covers
+   backlog items 1, 6, and 13; see `tests/README.md`. For behaviour it does not
+   cover, a short manual script (start the server, do the action, confirm) is
+   fine — and if a check is worth keeping, add a `test_*.py` beside the others.
 5. **Record.** Update SESSION.md (what changed, what is next), tick the item off
    in BACKLOG.md, add a CHANGELOG.md entry if a user-visible change shipped, and
    write a commit note in docs/commits/.

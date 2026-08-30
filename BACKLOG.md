@@ -223,6 +223,17 @@ and whether it is the initial load or the toggle click that misbehaves.
 **Definition of done:** on both the host and remote pages, the page follows the
 OS light/dark setting on load and the toggle flips it; the regression's cause is
 identified and fixed, with a one-line note on what it was.
+**Investigation (2026-08-30, headless Chromium against v0.2.09):** the two
+themes ARE distinct and the toggle works. Measured body colours: dark = bg
+luminance 22 / text 207; light = bg 243 / text 37. On a dark OS one click flips
+to genuinely light (bg 243) and back; the toggle button is visible and within
+the viewport at desktop (900px) and mobile (380px) widths. So there is no theme
+defect in the code — neither state 'falls through' to the OS default. Whatever
+was seen is device/browser specific; NEEDS a concrete repro (screenshot of the
+bad state, which browser/OS, and exactly what is wrong). One true behavioural
+note: the OS theme is read only on load — there is no matchMedia change listener,
+so flipping the OS theme while the page is open does not live-update (and, per
+Gabe, cross-session persistence is intentionally not wanted).
 
 ### 13. [x] Stream the "download everything"/zip as it is built  (IMPROVEMENT)  — shipped v0.2.09
 Replace spool-whole-then-send with streaming the STORE archive straight to the
