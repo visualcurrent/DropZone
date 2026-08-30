@@ -4,7 +4,7 @@ Read this first at the start of every session. Update it last.
 See `docs/DEVELOPMENT.md` for how the workflow runs, `BACKLOG.md` for what's next.
 
 ## Current focus
-Running build is **v0.2.06 (nightly)** (deploy to the phone via Syncthing
+Running build is **v0.2.07 (nightly)** (deploy to the phone via Syncthing
 -> Downloads -> /storage/emulated/0/Backups/DropZone). DEBUG=True is on.
 
 Logs persist to `DropZone.log` beside the script (survives a Termux crash), so
@@ -27,6 +27,24 @@ field confirmation on the phone.
 
 Then next code target: the duplicate-downloads decision (BACKLOG 10), then the
 host connected-users panel (BACKLOG 4).
+
+## Last session — 2026-08-30 (later)
+- Field run confirmed the streaming upload holds up: a 1.2 GB upload stayed at
+  ~20 MB RSS and multi-file batches at 13-18 MB; a 3-device / 3-simultaneous
+  1 GB+ zip-download pressure test completed with every cancel logged cleanly
+  (no unhandled traceback). Note: transfers are NOT one-at-a-time —
+  MAX_CONCURRENT_TRANSFERS=4 runs up to four at once; the felt delay is the
+  silent spool-to-disk phase before the first byte is sent.
+- v0.2.07: live transfer activity feedback (BACKLOG 6, feedback half). Every
+  page shows a "Host activity" banner (phase + queue position) fed by the
+  /api/state poll. Verified in the container (sem forced to 1: one sending, two
+  queued #1/#2, drains clean).
+- Investigated streaming the zip as it is built (BACKLOG 13): feasible, keeps an
+  exact Content-Length, but the length calc must branch on the 4 GiB zip64
+  thresholds. Findings in docs/notes/streaming-zip-findings.md; deferred as its
+  own item.
+- Reported: light/dark theme regression (BACKLOG 12) — not caused by the recent
+  work (theme code unchanged vs backups); needs repro details to pin.
 
 ## Last session — 2026-08-30
 - Confirmed the upload-freeze cause from the v0.2.04 field log: server RSS tracked

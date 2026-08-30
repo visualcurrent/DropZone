@@ -19,7 +19,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.06"        # running build
+__version__   = "0.2.07"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -41,6 +41,37 @@ THREADED                 = True                # set False to force single-threa
 SPEEDTEST_PAYLOAD = bytes(SPEEDTEST_BYTES)
 transfer_sem = threading.BoundedSemaphore(MAX_CONCURRENT_TRANSFERS)
 state_lock   = threading.Lock()                # guards users / shared_files mutation
+
+# ── Live transfer registry ───────────────────────────────────────────────────
+# Every heavy download/zip registers here so /api/state can report current
+# activity to ALL pages (BACKLOG 6). Feedback rides the 1-per-2.5s state poll —
+# a separate request — so a device sees progress even while its own download
+# request is blocked waiting for a slot. Phases: queued -> building -> sending.
+transfers      = {}                            # tid -> transfer dict
+transfers_lock = threading.Lock()
+_transfer_seq  = 0
+def transfer_start(kind, name, size, owner_sid, owner_name):
+    global _transfer_seq
+    with transfers_lock:
+        _transfer_seq += 1
+        tid = _transfer_seq
+        transfers[tid] = {"tid":tid,"kind":kind,"name":name,"size":size,
+                          "phase":"queued","sid":owner_sid,"owner":owner_name}
+    return tid
+def transfer_set(tid, phase):
+    with transfers_lock:
+        if tid in transfers: transfers[tid]["phase"] = phase
+def transfer_end(tid):
+    with transfers_lock:
+        transfers.pop(tid, None)
+def transfers_public(viewer_sid):
+    with transfers_lock:
+        items = sorted(transfers.values(), key=lambda t: t["tid"])
+    queued = [t for t in items if t["phase"] == "queued"]
+    pos = {t["tid"]: i + 1 for i, t in enumerate(queued)}
+    return [{"name":t["name"], "size_str":fmt_size(t["size"]), "phase":t["phase"],
+             "owner":t["owner"], "mine":bool(viewer_sid) and t["sid"] == viewer_sid,
+             "pos":pos.get(t["tid"]), "queued_total":len(queued)} for t in items]
 
 # ── Diagnostics ──────────────────────────────────────────────────────────────
 # Instrumentation for the upload-freeze investigation (BACKLOG item 1).
@@ -95,6 +126,12 @@ def get_or_create_user(sid):
         if sid not in users:
             users[sid] = {"name": gen_name(), "files": []}
         return users[sid]
+
+def user_display(sid, fallback):
+    "Display name for a requester (their chosen name, else their IP)."
+    with state_lock:
+        u = users.get(sid)
+    return u["name"] if u else fallback
 
 def dedup_name(seen, name):
     "Return a unique archive name within `seen`, suffixing ' (n)' on clashes."
@@ -268,39 +305,47 @@ class Handler(BaseHTTPRequestHandler):
         # faster on a phone and keeps the archive size predictable.
         total = sum(sz for _, _, sz in entries)
         client = self.client_address[0]
+        sid = self.get_session()
         log(f"zip requested: {zipname} <- {len(entries)} file(s), {fmt_size(total)} (from {client})")
-        with transfer_sem:
-            if total <= STREAM_THRESHOLD:
-                log(f"zip building in RAM (store, no compression): {zipname}")
-                buf = io.BytesIO()
-                with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
-                    for arc, src, _ in entries: zf.write(src, arc)
-                data = buf.getvalue()
-                self._zip_headers(zipname, len(data))
-                log(f"zip sending: {zipname} {fmt_size(len(data))}")
-                try:
-                    self.wfile.write(data)
-                    log(f"zip done: {zipname}")
-                except (BrokenPipeError, ConnectionResetError):
-                    log(f"zip cancelled by {client}: {zipname}")
-            else:
-                log(f"zip spooling to disk (store, no compression): {zipname}")
-                tmp = UPLOAD_DIR / ("_zip_" + uuid.uuid4().hex)
-                try:
-                    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as zf:
+        tid = transfer_start("zip", zipname, total, sid, user_display(sid, client))
+        try:
+            with transfer_sem:
+                transfer_set(tid, "building")
+                if total <= STREAM_THRESHOLD:
+                    log(f"zip building in RAM (store, no compression): {zipname}")
+                    buf = io.BytesIO()
+                    with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
                         for arc, src, _ in entries: zf.write(src, arc)
-                    zsize = tmp.stat().st_size
-                    self._zip_headers(zipname, zsize)
-                    log(f"zip sending: {zipname} {fmt_size(zsize)}")
-                    with open(tmp, "rb") as fh:
-                        try:
-                            shutil.copyfileobj(fh, self.wfile, 256 * 1024)
-                            log(f"zip done: {zipname}")
-                        except (BrokenPipeError, ConnectionResetError):
-                            log(f"zip cancelled by {client}: {zipname}")
-                finally:
-                    try: tmp.unlink()
-                    except OSError: pass
+                    data = buf.getvalue()
+                    self._zip_headers(zipname, len(data))
+                    transfer_set(tid, "sending")
+                    log(f"zip sending: {zipname} {fmt_size(len(data))}")
+                    try:
+                        self.wfile.write(data)
+                        log(f"zip done: {zipname}")
+                    except (BrokenPipeError, ConnectionResetError):
+                        log(f"zip cancelled by {client}: {zipname}")
+                else:
+                    log(f"zip spooling to disk (store, no compression): {zipname}")
+                    tmp = UPLOAD_DIR / ("_zip_" + uuid.uuid4().hex)
+                    try:
+                        with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as zf:
+                            for arc, src, _ in entries: zf.write(src, arc)
+                        zsize = tmp.stat().st_size
+                        self._zip_headers(zipname, zsize)
+                        transfer_set(tid, "sending")
+                        log(f"zip sending: {zipname} {fmt_size(zsize)}")
+                        with open(tmp, "rb") as fh:
+                            try:
+                                shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                                log(f"zip done: {zipname}")
+                            except (BrokenPipeError, ConnectionResetError):
+                                log(f"zip cancelled by {client}: {zipname}")
+                    finally:
+                        try: tmp.unlink()
+                        except OSError: pass
+        finally:
+            transfer_end(tid)
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -317,6 +362,7 @@ class Handler(BaseHTTPRequestHandler):
                     for sid2, u in users.items() if u["files"]
                 ]
             self.send_json({"session":sid,"user":user,"all_users":all_users,
+                            "transfers":transfers_public(sid),
                             "local_ip":LOCAL_IP,"port":PORT,
                             "warn_bytes":WARN_THRESHOLD})
             return
@@ -345,15 +391,25 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("Content-Disposition", f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}')
             self.send_header("Content-Length", size)
             self.end_headers()
-            try:
-                if size <= STREAM_THRESHOLD:
+            if size <= STREAM_THRESHOLD:
+                try:
                     self.wfile.write(fp.read_bytes())
-                else:
+                    log(f"download done: '{f['name']}' [{fid}]")
+                except (BrokenPipeError, ConnectionResetError):
+                    log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
+            else:
+                sid = self.get_session()
+                tid = transfer_start("file", f["name"], size, sid,
+                                     user_display(sid, self.client_address[0]))
+                try:
                     with transfer_sem, open(fp, "rb") as fh:
+                        transfer_set(tid, "sending")
                         shutil.copyfileobj(fh, self.wfile, 256 * 1024)
-                log(f"download done: '{f['name']}' [{fid}]")
-            except (BrokenPipeError, ConnectionResetError):
-                log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
+                    log(f"download done: '{f['name']}' [{fid}]")
+                except (BrokenPipeError, ConnectionResetError):
+                    log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
+                finally:
+                    transfer_end(tid)
             return
 
         if path == "/api/download_all":
@@ -728,12 +784,44 @@ async function fetchState(){
 }
 
 function startPolling(){
-  setInterval(async()=>{
+  const tick=async()=>{
     const s = await fetchState();
     if(s.warn_bytes) warnBytes = s.warn_bytes;
     renderMyFiles(s.user?.files||[]);
     renderAllUsers(s.all_users||[]);
-  }, 2500);
+    renderActivity(s.transfers||[], s.session);
+  };
+  tick();                 // paint immediately, then keep polling
+  setInterval(tick, 2500);
+}
+
+function escHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>(
+    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// Ambient "host activity" banner, fed by the /api/state poll. Shows every
+// in-flight download/zip and its phase; a queued transfer shows its position.
+function renderActivity(transfers, session){
+  const el=document.getElementById('activity');
+  if(!el) return;
+  if(!transfers||!transfers.length){ el.innerHTML=''; return; }
+  const rows=transfers.map(t=>{
+    const icon = t.phase==='sending'?'⬇' : t.phase==='building'?'⏳' : '⋯';
+    let stat;
+    if(t.phase==='queued')        stat = t.pos ? `waiting · #${t.pos} of ${t.queued_total}` : 'waiting…';
+    else if(t.phase==='building') stat = 'preparing…';
+    else                          stat = 'sending…';
+    const who = t.mine ? 'you' : (t.owner||'someone');
+    return `<div style="display:flex;justify-content:space-between;gap:12px;padding:3px 0;${t.mine?'font-weight:600;':''}">`
+      +`<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${icon} ${escHtml(t.name)}</span>`
+      +`<span style="color:var(--muted);white-space:nowrap">${escHtml(t.size_str)} · ${stat} · ${escHtml(who)}</span></div>`;
+  }).join('');
+  const n=transfers.length;
+  el.innerHTML=`<div style="background:var(--surf2);border:1px solid var(--off);border-radius:12px;padding:10px 13px;margin-bottom:14px">`
+    +`<div style="font-size:.78rem;font-weight:600;letter-spacing:.02em;color:var(--txt);margin-bottom:5px">`
+    +`Host activity — ${n} transfer${n>1?'s':''} in progress</div>`
+    +`<div style="font-size:.8rem;color:var(--txt)">${rows}</div></div>`;
 }
 
 function fileIcon(name){
@@ -1072,6 +1160,7 @@ def make_page(badge, tagline, body, init_script):
   {tagline_html}
 </header>
 <main class="main">
+<div id="activity"></div>
 {body}
 </main>
 <script>

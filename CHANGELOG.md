@@ -6,8 +6,18 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 
 ## [Unreleased]
 - Investigate duplicate/double downloads (now that per-file [id] logging exists).
+- Stream the ZIP as it is built to remove the spool delay (BACKLOG 13; findings
+  in docs/notes/streaming-zip-findings.md).
 - Field-test the v0.2.05 streaming upload on the phone (a ~2 GB single file and a
   multi-user run) to fully close BACKLOG 1's Definition of done.
+
+## [0.2.07] — nightly
+- Live transfer activity feedback (BACKLOG 6, feedback half): every page now
+  shows an ambient "Host activity" banner listing in-flight downloads/zips
+  with phase (queued / preparing / sending) and, for queued transfers, a
+  position ("#N of M"). Fed by the existing /api/state poll, so a waiting
+  device sees progress even while its own download request is blocked. No
+  change to the download mechanism itself.
 
 ## [0.2.06] — nightly
 - Upload read-chunk hoisted to a named `UPLOAD_CHUNK` constant (in the

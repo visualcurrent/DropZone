@@ -107,7 +107,7 @@ in the CSS block). Small, high-annoyance win.
 **Definition of done:** with a long multi-user list, the whole list scrolls into
 view on both phone and desktop widths.
 
-### 6. [ ] Bug: no feedback (and possibly no service) when a download is queued  (BUG)
+### 6. [~] Bug: no feedback (and possibly no service) when a download is queued  (BUG)
 A second user clicking download while someone else pulls a ZIP sees nothing —
 no start, no error, no position. Two things to address:
 - Feedback: if the transfer is waiting on a slot (`MAX_CONCURRENT_TRANSFERS`,
@@ -140,6 +140,10 @@ which every page already polls each second. Waiting devices then get an ambient
 archive's phase, and if the semaphore ever queues (5+ heavy transfers) it shows a
 position. Feedback rides the independent poll, so it works even while a device's
 own download request is blocked.
+**Shipped (v0.2.07):** the activity banner and /api/state "transfers" list are
+live — queued/preparing/sending with a queue position. The "deeper" streaming
+plan is split out as item 13. Remaining here: nothing further unless the
+banner needs polish from field use.
 **Plan (deeper, optional):** stream the STORE zip as it is built (headers +
 bytes) instead of spooling the whole thing first, so the browser starts receiving
 immediately and shows native download progress — removes the spool wait itself.
@@ -216,6 +220,19 @@ and whether it is the initial load or the toggle click that misbehaves.
 **Definition of done:** on both the host and remote pages, the page follows the
 OS light/dark setting on load and the toggle flips it; the regression's cause is
 identified and fixed, with a one-line note on what it was.
+
+### 13. [ ] Stream the "download everything"/zip as it is built  (IMPROVEMENT)
+Replace spool-whole-then-send with streaming the STORE archive straight to the
+socket, removing the silent spool delay and the temp-file disk cost. Investigated
+2026-08-30 (docs/notes/streaming-zip-findings.md): feasible, data descriptors are
+fine, and the exact archive size is computable in advance so the real progress
+bar is preserved — but the length calculator MUST branch on the 4 GiB zip64
+thresholds (per file and whole archive). Recommend a hand-rolled STORE streamer
+so one code path owns both layout and length.
+**Definition of done:** a large "everything" download starts sending immediately
+(no spool wait), uses no temp file, shows a real browser progress bar, and the
+archive opens correctly on Windows, macOS, and Android — including a case that
+crosses the 4 GiB zip64 boundary.
 
 ## Notes on ordering
 Item 1 is fixed first by explicit request and because it makes the app unusable
