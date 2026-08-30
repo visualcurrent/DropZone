@@ -4,7 +4,7 @@ Read this first at the start of every session. Update it last.
 See `docs/DEVELOPMENT.md` for how the workflow runs, `BACKLOG.md` for what's next.
 
 ## Current focus
-Running build is **v0.2.07 (nightly)** (deploy to the phone via Syncthing
+Running build is **v0.2.08 (nightly)** (deploy to the phone via Syncthing
 -> Downloads -> /storage/emulated/0/Backups/DropZone). DEBUG=True is on.
 
 Logs persist to `DropZone.log` beside the script (survives a Termux crash), so
@@ -27,6 +27,18 @@ field confirmation on the phone.
 
 Then next code target: the duplicate-downloads decision (BACKLOG 10), then the
 host connected-users panel (BACKLOG 4).
+
+## Last session — 2026-08-30 (later 2)
+- Fixed a field-reported host-page bug: bulk ZIP clicks navigated the whole
+  page to the download URL (confirmBulk did window.location.href; smaller zips
+  let the plain anchor navigate), so the page went blank during the spool and a
+  refresh re-fired the download (the log shows one host zip fired 8x). Downloads
+  now go through a hidden `download` anchor — no navigation, no refresh-dupe.
+- Host activity panel now floats bottom-centre, out of flow: always visible and
+  no page jump on update. v0.2.08.
+- Deferred (BACKLOG 14): optionally merge the upload progress bar and the host
+  activity into one status area, per field feedback ('combine with the progress
+  bar'). Floating panel is the interim.
 
 ## Last session — 2026-08-30 (later)
 - Field run confirmed the streaming upload holds up: a 1.2 GB upload stayed at

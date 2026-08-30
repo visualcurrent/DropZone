@@ -19,7 +19,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.07"        # running build
+__version__   = "0.2.08"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -818,7 +818,7 @@ function renderActivity(transfers, session){
       +`<span style="color:var(--muted);white-space:nowrap">${escHtml(t.size_str)} · ${stat} · ${escHtml(who)}</span></div>`;
   }).join('');
   const n=transfers.length;
-  el.innerHTML=`<div style="background:var(--surf2);border:1px solid var(--off);border-radius:12px;padding:10px 13px;margin-bottom:14px">`
+  el.innerHTML=`<div style="pointer-events:auto;background:var(--surf2);border:1px solid var(--off);border-radius:12px;padding:10px 13px;max-height:42vh;overflow-y:auto;box-shadow:0 6px 24px rgba(0,0,0,.20)">`
     +`<div style="font-size:.78rem;font-weight:600;letter-spacing:.02em;color:var(--txt);margin-bottom:5px">`
     +`Host activity — ${n} transfer${n>1?'s':''} in progress</div>`
     +`<div style="font-size:.8rem;color:var(--txt)">${rows}</div></div>`;
@@ -872,7 +872,7 @@ function renderAllUsers(all_users){
   const totalFiles=others.reduce((n,u)=>n+u.files.length,0);
   const totalBytes=others.reduce((n,u)=>n+u.files.reduce((m,f)=>m+(f.size||0),0),0);
   const everyBar=(totalFiles>0)?`
-    <a class="dl-every" href="${API}/api/download_everything"
+    <a class="dl-every" href="${API}/api/download_everything" download
        onclick="return confirmBulk(event,this.href,${totalBytes})"
        title="Download every file from everyone as one ZIP, organized into a subfolder per user">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
@@ -886,7 +886,7 @@ function renderAllUsers(all_users){
       <div class="u-hdr">
         <div class="u-av">${escHtml(u.name[0].toUpperCase())}</div>
         <span class="u-nm">${escHtml(u.name)}${u.is_me?' <span style="color:var(--hint);font-weight:400">(you)</span>':''}</span>
-        ${u.files.length>1?`<a class="dl-all" href="${API}/api/download_all?user=${encodeURIComponent(u.id)}"
+        ${u.files.length>1?`<a class="dl-all" href="${API}/api/download_all?user=${encodeURIComponent(u.id)}" download
              onclick="return confirmBulk(event,this.href,${ub})"
              title="Download all ${u.files.length} of ${escAttr(u.name)}'s files as one ZIP">
              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
@@ -1012,14 +1012,30 @@ async function probeSpeed(){
   }catch(e){}
   return measuredBps;
 }
+// Start a download WITHOUT navigating the page. A bare `download` anchor clicked
+// programmatically downloads in the background (using the server's filename) and
+// leaves the current page untouched — so a slow, still-spooling zip no longer
+// blanks the page, and a refresh no longer re-fires the download (BUG: host page
+// navigated to /api/download_all and duplicated on reload).
+function triggerDownload(url){
+  const a=document.createElement('a');
+  a.href=url; a.download='';
+  a.style.display='none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(()=>a.remove(), 2000);
+}
+
 async function confirmBulk(ev, url, totalBytes){
-  if(!totalBytes || totalBytes<=warnBytes) return true;   // small enough: proceed
-  ev.preventDefault();
-  const bps=await probeSpeed();
-  const eta = bps>0 ? fmtTime(totalBytes/bps) : 'an unknown amount of time';
-  const speed = bps>0 ? ` (~${fmtBytes(bps)}/s on this network)` : '';
-  if(confirm(`This download is ${fmtBytes(totalBytes)} and will take ${eta}${speed}.\n\nStart the download?`))
-    window.location.href=url;
+  ev.preventDefault();                       // never let the anchor navigate
+  if(totalBytes && totalBytes>warnBytes){
+    const bps=await probeSpeed();
+    const eta = bps>0 ? fmtTime(totalBytes/bps) : 'an unknown amount of time';
+    const speed = bps>0 ? ` (~${fmtBytes(bps)}/s on this network)` : '';
+    if(!confirm(`This download is ${fmtBytes(totalBytes)} and will take ${eta}${speed}.\n\nStart the download?`))
+      return false;
+  }
+  triggerDownload(url);
   return false;
 }
 function escHtml(s){
@@ -1160,9 +1176,11 @@ def make_page(badge, tagline, body, init_script):
   {tagline_html}
 </header>
 <main class="main">
-<div id="activity"></div>
 {body}
 </main>
+<!-- Floating, out of normal flow: always visible (no scroll to the top) and its
+     show/hide never shifts the page content below it. Empty => invisible. -->
+<div id="activity" style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,calc(100vw - 20px));z-index:60;pointer-events:none"></div>
 <script>
 {JS}
 {init_script}

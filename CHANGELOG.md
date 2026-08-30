@@ -11,6 +11,16 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 - Field-test the v0.2.05 streaming upload on the phone (a ~2 GB single file and a
   multi-user run) to fully close BACKLOG 1's Definition of done.
 
+## [0.2.08] — nightly
+- Fix: bulk ZIP downloads no longer navigate the page. Clicking "All N files"
+  or "Download everything" used to send the whole page to the download URL —
+  which sat blank while the archive spooled, and re-fired (duplicate) on a
+  refresh. Downloads now trigger a background `download` anchor and leave the
+  page in place.
+- Host activity panel now floats at the bottom, out of normal flow: always
+  visible without scrolling to the top, and its updates no longer shift the
+  page content below it.
+
 ## [0.2.07] — nightly
 - Live transfer activity feedback (BACKLOG 6, feedback half): every page now
   shows an ambient "Host activity" banner listing in-flight downloads/zips

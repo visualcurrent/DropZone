@@ -234,6 +234,17 @@ so one code path owns both layout and length.
 archive opens correctly on Windows, macOS, and Android — including a case that
 crosses the 4 GiB zip64 boundary.
 
+### 14. [ ] Unify upload progress + host activity into one status area  (IMPROVEMENT, P3)
+Field feedback: the host-activity list and the upload progress bar are separate
+and in different places. Consider one persistent status area that shows both
+your own upload progress and the host's live download/queue activity, so there
+is a single place to watch. v0.2.08 made the activity a floating always-visible
+panel (out of flow, no page jump) as an interim; this item is the fuller merge
+if wanted.
+**Definition of done:** one status region shows in-flight uploads (real bytes,
+pairs with item 9) and host download/queue activity; no page-content jump as it
+updates; reachable without scrolling on phone and desktop widths.
+
 ## Notes on ordering
 Item 1 is fixed first by explicit request and because it makes the app unusable
 for its core purpose. Items 2–4 are small and build foundations (a correctness

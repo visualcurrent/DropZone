@@ -172,3 +172,147 @@ BrokenPipeError: [Errno 32] Broken pipe
 [2026-08-30 11:32:42] zip done: DropZone-Sr1.zip
 [2026-08-30 11:32:47] zip done: DropZone-glaptop1.zip
 [2026-08-30 11:37:10] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 12:10:06] === DropZone v0.2.07 (nightly) starting; pid=24807 ===
+[2026-08-30 12:11:45] upload start: Content-Length=1289968075 (1.2 GB) from 192.168.7.187; RSS=24.0 MB
+[2026-08-30 12:12:01] upload start: Content-Length=1347012884 (1.3 GB) from 127.0.0.1; RSS=26.9 MB
+[2026-08-30 12:12:02] upload saved: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [ed75057e] 352.3 MB; RSS=29.9 MB
+[2026-08-30 12:12:05] upload saved: 'The.Mosquito.Coast.S01E01.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [39340ca3] 404.2 MB; RSS=31.7 MB
+[2026-08-30 12:12:08] upload saved: 'The.Mosquito.Coast.S01E02.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [55c7e1c9] 309.9 MB; RSS=20.9 MB
+[2026-08-30 12:12:11] upload saved: 'The.Mosquito.Coast.S01E03.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [a8697962] 285.3 MB; RSS=18.8 MB
+[2026-08-30 12:12:13] upload saved: 'The.Mosquito.Coast.S01E04.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [f1e68226] 285.2 MB; RSS=15.9 MB
+[2026-08-30 12:12:13] upload done: 4 file(s) saved; RSS=15.9 MB
+[2026-08-30 12:12:15] upload saved: '[YakuboEncodes] Cowboy Bebop - 02 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [6715da21] 308.2 MB; RSS=19.5 MB
+[2026-08-30 12:12:26] upload saved: '[YakuboEncodes] Cowboy Bebop - 03 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [deb0d895] 247.5 MB; RSS=19.4 MB
+[2026-08-30 12:12:27] upload start: Content-Length=315674924 (301.1 MB) from 192.168.7.110; RSS=23.3 MB
+[2026-08-30 12:12:34] upload saved: 'Mr.and.Mrs.Smith.2024.S01E01.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [4a6872ff] 301.1 MB; RSS=16.9 MB
+[2026-08-30 12:12:34] upload done: 1 file(s) saved; RSS=16.9 MB
+[2026-08-30 12:12:38] upload start: Content-Length=968541159 (923.7 MB) from 192.168.7.110; RSS=23.5 MB
+[2026-08-30 12:12:43] upload saved: 'Mr.and.Mrs.Smith.2024.S01E02.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [d30f5f76] 207.5 MB; RSS=17.5 MB
+[2026-08-30 12:12:47] upload saved: 'Mr.and.Mrs.Smith.2024.S01E03.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [c48eeb24] 201.5 MB; RSS=21.2 MB
+[2026-08-30 12:12:51] upload saved: 'Mr.and.Mrs.Smith.2024.S01E04.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [4c30f806] 231.3 MB; RSS=20.0 MB
+[2026-08-30 12:12:57] upload saved: 'Mr.and.Mrs.Smith.2024.S01E05.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [b9bbf0af] 283.4 MB; RSS=16.1 MB
+[2026-08-30 12:12:57] upload done: 4 file(s) saved; RSS=16.3 MB
+[2026-08-30 12:13:05] upload saved: '[YakuboEncodes] Cowboy Bebop - 04 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [b11066f0] 322.2 MB; RSS=15.8 MB
+[2026-08-30 12:13:05] upload done: 4 file(s) saved; RSS=15.8 MB
+[2026-08-30 12:15:35] zip requested: DropZone-S7.zip <- 4 file(s), 1.3 GB (from 192.168.7.110)
+[2026-08-30 12:15:35] zip spooling to disk (store, no compression): DropZone-S7.zip
+[2026-08-30 12:15:35] zip requested: DropZone-X7.zip <- 5 file(s), 1.2 GB (from 127.0.0.1)
+[2026-08-30 12:15:35] zip spooling to disk (store, no compression): DropZone-X7.zip
+[2026-08-30 12:15:39] zip requested: DropZone-all-files.zip <- 9 file(s), 2.5 GB (from 192.168.7.187)
+[2026-08-30 12:15:39] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 12:16:00] zip sending: DropZone-X7.zip 1.2 GB
+[2026-08-30 12:16:00] zip cancelled by 127.0.0.1: DropZone-X7.zip
+[2026-08-30 12:16:01] zip sending: DropZone-S7.zip 1.3 GB
+[2026-08-30 12:16:01] zip cancelled by 192.168.7.110: DropZone-S7.zip
+[2026-08-30 12:16:03] zip requested: DropZone-X7.zip <- 5 file(s), 1.2 GB (from 127.0.0.1)
+[2026-08-30 12:16:03] zip spooling to disk (store, no compression): DropZone-X7.zip
+[2026-08-30 12:16:05] zip requested: DropZone-S7.zip <- 4 file(s), 1.3 GB (from 192.168.7.110)
+[2026-08-30 12:16:05] zip spooling to disk (store, no compression): DropZone-S7.zip
+[2026-08-30 12:16:28] zip sending: DropZone-all-files.zip 2.5 GB
+[2026-08-30 12:16:28] zip sending: DropZone-X7.zip 1.2 GB
+[2026-08-30 12:16:28] zip cancelled by 127.0.0.1: DropZone-X7.zip
+[2026-08-30 12:16:30] zip sending: DropZone-S7.zip 1.3 GB
+[2026-08-30 12:16:30] zip cancelled by 192.168.7.110: DropZone-S7.zip
+[2026-08-30 12:16:51] zip requested: DropZone-X7.zip <- 5 file(s), 1.2 GB (from 127.0.0.1)
+[2026-08-30 12:16:51] zip spooling to disk (store, no compression): DropZone-X7.zip
+[2026-08-30 12:17:01] zip sending: DropZone-X7.zip 1.2 GB
+[2026-08-30 12:17:01] zip cancelled by 127.0.0.1: DropZone-X7.zip
+[2026-08-30 12:17:03] zip requested: DropZone-X7.zip <- 5 file(s), 1.2 GB (from 127.0.0.1)
+[2026-08-30 12:17:03] zip spooling to disk (store, no compression): DropZone-X7.zip
+[2026-08-30 12:17:12] zip sending: DropZone-X7.zip 1.2 GB
+[2026-08-30 12:17:12] zip cancelled by 127.0.0.1: DropZone-X7.zip
+[2026-08-30 12:17:12] zip requested: DropZone-X7.zip <- 5 file(s), 1.2 GB (from 127.0.0.1)
+[2026-08-30 12:17:12] zip spooling to disk (store, no compression): DropZone-X7.zip
+[2026-08-30 12:17:21] zip sending: DropZone-X7.zip 1.2 GB
+[2026-08-30 12:17:26] zip done: DropZone-X7.zip
+[2026-08-30 12:18:15] zip done: DropZone-all-files.zip
+[2026-08-30 13:09:57] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 13:11:19] === DropZone v0.2.08 (nightly) starting; pid=15345 ===
+[2026-08-30 13:16:04] upload start: Content-Length=1284216039 (1.2 GB) from 192.168.7.110; RSS=24.1 MB
+[2026-08-30 13:16:10] upload saved: 'Mr.and.Mrs.Smith.2024.S01E01.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [962294bb] 301.1 MB; RSS=28.0 MB
+[2026-08-30 13:16:14] upload saved: 'Mr.and.Mrs.Smith.2024.S01E02.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [a435a5ec] 207.5 MB; RSS=28.3 MB
+[2026-08-30 13:16:18] upload start: Content-Length=1506269585 (1.4 GB) from 192.168.7.187; RSS=27.3 MB
+[2026-08-30 13:16:18] upload saved: 'Mr.and.Mrs.Smith.2024.S01E03.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [12a6b437] 201.5 MB; RSS=26.1 MB
+[2026-08-30 13:16:24] upload saved: 'Mr.and.Mrs.Smith.2024.S01E04.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [29725a67] 231.3 MB; RSS=31.0 MB
+[2026-08-30 13:16:31] upload saved: 'Mr.and.Mrs.Smith.2024.S01E05.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [d3292a7c] 283.4 MB; RSS=27.7 MB
+[2026-08-30 13:16:31] upload done: 5 file(s) saved; RSS=27.7 MB
+[2026-08-30 13:16:36] upload start: Content-Length=1674678880 (1.6 GB) from 127.0.0.1; RSS=24.6 MB
+[2026-08-30 13:16:40] upload saved: 'The.Mosquito.Coast.S01E01.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [7852bcb5] 404.2 MB; RSS=28.1 MB
+[2026-08-30 13:16:43] upload saved: 'The.Mosquito.Coast.S01E02.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [98776a4d] 309.9 MB; RSS=23.3 MB
+[2026-08-30 13:16:44] upload saved: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [51a18afa] 352.3 MB; RSS=25.4 MB
+[2026-08-30 13:16:46] upload saved: 'The.Mosquito.Coast.S01E03.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [e93a53d4] 285.3 MB; RSS=23.0 MB
+[2026-08-30 13:16:49] upload saved: 'The.Mosquito.Coast.S01E04.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [a1364f2f] 285.2 MB; RSS=25.8 MB
+[2026-08-30 13:16:52] upload saved: 'The.Mosquito.Coast.S01E05.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [7c21ca97] 312.5 MB; RSS=28.9 MB
+[2026-08-30 13:16:52] upload done: 5 file(s) saved; RSS=21.1 MB
+[2026-08-30 13:16:56] upload saved: '[YakuboEncodes] Cowboy Bebop - 02 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [5d9da92f] 308.2 MB; RSS=25.0 MB
+[2026-08-30 13:17:07] upload saved: '[YakuboEncodes] Cowboy Bebop - 03 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [ea0e4c7d] 247.5 MB; RSS=25.2 MB
+[2026-08-30 13:17:19] upload saved: '[YakuboEncodes] Cowboy Bebop - 04 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [fa554b6c] 322.2 MB; RSS=23.0 MB
+[2026-08-30 13:17:27] upload saved: '[YakuboEncodes] Cowboy Bebop - 05 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [9dd54af6] 206.3 MB; RSS=21.2 MB
+[2026-08-30 13:17:27] upload done: 5 file(s) saved; RSS=21.2 MB
+[2026-08-30 13:21:41] zip requested: DropZone-all-files.zip <- 10 file(s), 3.0 GB (from 192.168.7.110)
+[2026-08-30 13:21:41] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 13:21:42] zip requested: DropZone-all-files.zip <- 10 file(s), 2.6 GB (from 127.0.0.1)
+[2026-08-30 13:21:42] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 13:21:47] zip requested: DropZone-all-files.zip <- 10 file(s), 2.8 GB (from 192.168.7.187)
+[2026-08-30 13:21:47] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 13:22:37] zip sending: DropZone-all-files.zip 2.6 GB
+[2026-08-30 13:22:37] zip cancelled by 127.0.0.1: DropZone-all-files.zip
+[2026-08-30 13:22:39] zip requested: DropZone-all-files.zip <- 10 file(s), 2.6 GB (from 127.0.0.1)
+[2026-08-30 13:22:39] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 13:22:44] zip sending: DropZone-all-files.zip 3.0 GB
+[2026-08-30 13:22:44] zip cancelled by 192.168.7.110: DropZone-all-files.zip
+[2026-08-30 13:22:46] zip requested: DropZone-all-files.zip <- 10 file(s), 3.0 GB (from 192.168.7.110)
+[2026-08-30 13:22:46] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 13:22:48] zip sending: DropZone-all-files.zip 2.8 GB
+[2026-08-30 13:23:16] zip requested: DropZone-flip8.zip <- 5 file(s), 1.4 GB (from 192.168.7.110)
+[2026-08-30 13:23:16] zip spooling to disk (store, no compression): DropZone-flip8.zip
+[2026-08-30 13:23:22] zip sending: DropZone-all-files.zip 2.6 GB
+[2026-08-30 13:23:22] zip cancelled by 127.0.0.1: DropZone-all-files.zip
+[2026-08-30 13:23:33] zip sending: DropZone-all-files.zip 3.0 GB
+[2026-08-30 13:23:33] zip cancelled by 192.168.7.110: DropZone-all-files.zip
+[2026-08-30 13:23:34] zip requested: DropZone-flip8.zip <- 5 file(s), 1.4 GB (from 127.0.0.1)
+[2026-08-30 13:23:34] zip spooling to disk (store, no compression): DropZone-flip8.zip
+[2026-08-30 13:23:41] zip sending: DropZone-flip8.zip 1.4 GB
+[2026-08-30 13:23:41] zip cancelled by 192.168.7.110: DropZone-flip8.zip
+[2026-08-30 13:23:50] zip sending: DropZone-flip8.zip 1.4 GB
+[2026-08-30 13:23:50] zip cancelled by 127.0.0.1: DropZone-flip8.zip
+[2026-08-30 13:24:11] zip requested: DropZone-flip8.zip <- 5 file(s), 1.4 GB (from 127.0.0.1)
+[2026-08-30 13:24:11] zip spooling to disk (store, no compression): DropZone-flip8.zip
+[2026-08-30 13:24:14] zip requested: DropZone-flip8.zip <- 5 file(s), 1.4 GB (from 192.168.7.110)
+[2026-08-30 13:24:14] zip spooling to disk (store, no compression): DropZone-flip8.zip
+[2026-08-30 13:24:31] zip sending: DropZone-flip8.zip 1.4 GB
+[2026-08-30 13:24:31] zip cancelled by 127.0.0.1: DropZone-flip8.zip
+[2026-08-30 13:24:33] zip sending: DropZone-flip8.zip 1.4 GB
+[2026-08-30 13:24:34] zip cancelled by 192.168.7.110: DropZone-flip8.zip
+[2026-08-30 13:24:34] zip requested: DropZone-flip8.zip <- 5 file(s), 1.4 GB (from 192.168.7.110)
+[2026-08-30 13:24:34] zip spooling to disk (store, no compression): DropZone-flip8.zip
+[2026-08-30 13:24:48] zip sending: DropZone-flip8.zip 1.4 GB
+[2026-08-30 13:24:51] zip done: DropZone-all-files.zip
+[2026-08-30 13:25:04] zip done: DropZone-flip8.zip
+[2026-08-30 13:29:07] zip requested: DropZone-X8.zip <- 5 file(s), 1.2 GB (from 192.168.7.187)
+[2026-08-30 13:29:07] zip spooling to disk (store, no compression): DropZone-X8.zip
+[2026-08-30 13:29:16] zip sending: DropZone-X8.zip 1.2 GB
+[2026-08-30 13:30:10] zip done: DropZone-X8.zip
+[2026-08-30 13:31:15] UNHANDLED server error from ('192.168.7.110', 59548):
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 447, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 415, in handle_one_request
+    self.raw_requestline = self.rfile.readline(65537)
+                           ~~~~~~~~~~~~~~~~~~~^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 104] Connection reset by peer
+
+[2026-08-30 13:31:55] === DropZone stopped (Ctrl+C) ===
