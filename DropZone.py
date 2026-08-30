@@ -17,6 +17,11 @@ shared_files = {}
 UPLOAD_DIR   = Path(tempfile.mkdtemp(prefix="dropzone_"))
 PORT         = 7070
 
+# ── Version ──────────────────────────────────────────────────────────────────
+# Format: release.beta.incremental (see docs/DEVELOPMENT.md).
+__version__   = "0.2.06"        # running build
+VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
+
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
 ANIMALS    = ["Fox","Wolf","Hawk","Bear","Lynx","Deer","Crow","Orca","Ibis","Puma"]
 import random
@@ -27,6 +32,7 @@ import threading, socketserver
 # Content-Length so browsers show a progress bar). Above it, data is streamed
 # from disk so peak memory stays bounded no matter how large the transfer is.
 STREAM_THRESHOLD         = 64 * 1024 * 1024    # 64 MB
+UPLOAD_CHUNK             = 4 * 1024 * 1024     # read uploads off the socket in 4 MB chunks (caps peak RAM/upload)
 WARN_THRESHOLD           = 512 * 1024 * 1024   # 512 MB: confirm (size + ETA) first
 MAX_CONCURRENT_TRANSFERS = 4                   # backstop on simultaneous heavy transfers
 SPEEDTEST_BYTES          = 3 * 1024 * 1024     # sample the client times to estimate speed
@@ -35,6 +41,38 @@ THREADED                 = True                # set False to force single-threa
 SPEEDTEST_PAYLOAD = bytes(SPEEDTEST_BYTES)
 transfer_sem = threading.BoundedSemaphore(MAX_CONCURRENT_TRANSFERS)
 state_lock   = threading.Lock()                # guards users / shared_files mutation
+
+# ── Diagnostics ──────────────────────────────────────────────────────────────
+# Instrumentation for the upload-freeze investigation (BACKLOG item 1).
+# DEBUG controls console echo. log() ALWAYS appends to a file beside the script
+# (flushed per line) so records survive a Termux crash. rss_mb() reports
+# resident memory, to see whether the whole upload body is held in RAM.
+import time, traceback
+DEBUG    = True
+LOG_FILE = Path(__file__).resolve().parent / "DropZone.log"
+_log_lock = threading.Lock()
+def log(msg):
+    line = f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] {msg}"
+    if DEBUG:
+        print(line, flush=True)
+    try:
+        with _log_lock, open(LOG_FILE, "a", encoding="utf-8") as fh:
+            fh.write(line + "\n")
+    except OSError:
+        pass
+def rss_mb():
+    try:
+        with open("/proc/self/status") as fh:
+            for line in fh:
+                if line.startswith("VmRSS:"):
+                    return int(line.split()[1]) / 1024.0   # KB -> MB
+    except OSError:
+        pass
+    try:
+        import resource
+        return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024.0
+    except Exception:
+        return -1.0
 
 def get_local_ip():
     try:
@@ -84,6 +122,95 @@ def parse_multipart(data, boundary):
                 hdrs[k.strip().lower()] = v.strip()
         parts.append((hdrs, body))
     return parts
+
+# ─── Streaming multipart parser (bounded memory) ──────────────────────────────
+# Reads a multipart/form-data body straight from the socket in fixed-size chunks
+# and writes each file part directly to disk, so peak memory stays flat no matter
+# how large the upload is (BACKLOG item 1). Never holds the whole body — or a
+# whole part — in RAM. Peak buffer ~= one chunk + the boundary length.
+def stream_multipart(rfile, boundary, length, open_dest, chunk=UPLOAD_CHUNK):
+    """Parse a multipart body read from rfile.
+
+    boundary  : boundary token (str or bytes) without leading dashes.
+    length    : Content-Length — bytes available to read from rfile.
+    open_dest : callable(headers) -> a writable binary file for a file part.
+    Yields (headers, dest_or_None, nbytes) per part. For file parts dest is the
+    object open_dest returned (already written, not yet closed); for non-file
+    form fields dest is None and the bytes are discarded (this app uses none).
+    """
+    if isinstance(boundary, str):
+        boundary = boundary.encode()
+    delim = b"--" + boundary
+    sep   = b"\r\n" + delim          # data is terminated by CRLF + boundary
+    buf   = bytearray()
+    remaining = [length]
+
+    def fill(minbytes):
+        while len(buf) < minbytes and remaining[0] > 0:
+            data = rfile.read(min(chunk, remaining[0]))
+            if not data:
+                remaining[0] = 0
+                break
+            remaining[0] -= len(data)
+            buf.extend(data)
+        return len(buf) >= minbytes
+
+    def read_line():
+        # One line without its trailing CRLF (bytes), or None at end of stream.
+        while b"\r\n" not in buf:
+            if not fill(len(buf) + 1):
+                if not buf: return None
+                line = bytes(buf); buf.clear(); return line
+        i = buf.index(b"\r\n")
+        line = bytes(buf[:i]); del buf[:i+2]; return line
+
+    def stream_body(dest):
+        # Write body bytes to dest until the next `sep`. Return (cont, nbytes)
+        # where cont is b"\r\n" (another part follows) or b"--" (end of body).
+        n = 0
+        while True:
+            i = buf.find(sep)
+            if i >= 0:
+                if dest is not None: dest.write(buf[:i])
+                n += i
+                del buf[:i+len(sep)]
+                while len(buf) < 2:
+                    if not fill(2): break
+                cont = bytes(buf[:2]); del buf[:2]
+                return cont, n
+            keep = len(sep) - 1               # a `sep` might straddle the tail
+            if len(buf) > keep:
+                out = len(buf) - keep
+                if dest is not None: dest.write(buf[:out])
+                n += out
+                del buf[:out]
+            if not fill(len(buf) + 1):         # stream ended with no closing sep
+                if buf:
+                    if dest is not None: dest.write(buf)
+                    n += len(buf); buf.clear()
+                return b"--", n
+
+    first = read_line()                        # body opens with the bare delim
+    if first is None or delim not in first or first.rstrip().endswith(b"--"):
+        return
+    while True:
+        headers = {}
+        while True:
+            line = read_line()
+            if not line: break                 # None or blank line ends headers
+            s = line.decode("latin-1", "replace")
+            if ":" in s:
+                k, v = s.split(":", 1)
+                headers[k.strip().lower()] = v.strip()
+        if "filename" in headers.get("content-disposition", ""):
+            dest = open_dest(headers)
+            cont, n = stream_body(dest)
+            yield headers, dest, n
+        else:
+            cont, n = stream_body(None)        # non-file field: discard
+            yield headers, None, n
+        if cont != b"\r\n":
+            break
 
 def get_filename(cd):
     for pat in [r'filename\*=UTF-8\'\'(.+)', r'filename="([^"]+)"', r'filename=([^\s;]+)']:
@@ -136,25 +263,41 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     def stream_zip(self, entries, zipname):
-        # entries: list of (arcname, src_path, size). Decide RAM vs disk-spool by
-        # cumulative pre-compression size, then bound memory either way.
+        # entries: list of (arcname, src_path, size). ZIP_STORED = wrap only, no
+        # compression: files are usually already compressed, and storing is far
+        # faster on a phone and keeps the archive size predictable.
         total = sum(sz for _, _, sz in entries)
+        client = self.client_address[0]
+        log(f"zip requested: {zipname} <- {len(entries)} file(s), {fmt_size(total)} (from {client})")
         with transfer_sem:
             if total <= STREAM_THRESHOLD:
+                log(f"zip building in RAM (store, no compression): {zipname}")
                 buf = io.BytesIO()
-                with zipfile.ZipFile(buf, "w", zipfile.ZIP_DEFLATED) as zf:
+                with zipfile.ZipFile(buf, "w", zipfile.ZIP_STORED) as zf:
                     for arc, src, _ in entries: zf.write(src, arc)
                 data = buf.getvalue()
                 self._zip_headers(zipname, len(data))
-                self.wfile.write(data)
+                log(f"zip sending: {zipname} {fmt_size(len(data))}")
+                try:
+                    self.wfile.write(data)
+                    log(f"zip done: {zipname}")
+                except (BrokenPipeError, ConnectionResetError):
+                    log(f"zip cancelled by {client}: {zipname}")
             else:
+                log(f"zip spooling to disk (store, no compression): {zipname}")
                 tmp = UPLOAD_DIR / ("_zip_" + uuid.uuid4().hex)
                 try:
-                    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zf:
+                    with zipfile.ZipFile(tmp, "w", zipfile.ZIP_STORED) as zf:
                         for arc, src, _ in entries: zf.write(src, arc)
-                    self._zip_headers(zipname, tmp.stat().st_size)
+                    zsize = tmp.stat().st_size
+                    self._zip_headers(zipname, zsize)
+                    log(f"zip sending: {zipname} {fmt_size(zsize)}")
                     with open(tmp, "rb") as fh:
-                        shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                        try:
+                            shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                            log(f"zip done: {zipname}")
+                        except (BrokenPipeError, ConnectionResetError):
+                            log(f"zip cancelled by {client}: {zipname}")
                 finally:
                     try: tmp.unlink()
                     except OSError: pass
@@ -195,17 +338,22 @@ class Handler(BaseHTTPRequestHandler):
             fp = Path(f["tmp_path"])
             if not fp.exists(): self.send_json({"error":"File missing"},404); return
             size  = fp.stat().st_size
+            log(f"download: '{f['name']}' [{fid}] {fmt_size(size)} to {self.client_address[0]}")
             fsafe = urllib.parse.quote(f["name"])
             self.send_response(200)
             self.send_header("Content-Type", mimetypes.guess_type(f["name"])[0] or "application/octet-stream")
             self.send_header("Content-Disposition", f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}')
             self.send_header("Content-Length", size)
             self.end_headers()
-            if size <= STREAM_THRESHOLD:
-                self.wfile.write(fp.read_bytes())
-            else:
-                with transfer_sem, open(fp, "rb") as fh:
-                    shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+            try:
+                if size <= STREAM_THRESHOLD:
+                    self.wfile.write(fp.read_bytes())
+                else:
+                    with transfer_sem, open(fp, "rb") as fh:
+                        shutil.copyfileobj(fh, self.wfile, 256 * 1024)
+                log(f"download done: '{f['name']}' [{fid}]")
+            except (BrokenPipeError, ConnectionResetError):
+                log(f"download cancelled by {self.client_address[0]}: '{f['name']}' [{fid}]")
             return
 
         if path == "/api/download_all":
@@ -271,24 +419,40 @@ class Handler(BaseHTTPRequestHandler):
             m = re.search(r'boundary=(.+)', ct)
             if not m: self.send_json({"error":"No boundary"},400); return
             boundary = m.group(1).strip()
-            body  = self.rfile.read(length)
-            parts = parse_multipart(body, boundary)
+            log(f"upload start: Content-Length={length} ({fmt_size(length)}) "
+                f"from {self.client_address[0]}; RSS={rss_mb():.1f} MB")
             if not sid: self.send_json({"error":"No session"},400); return
             user = get_or_create_user(sid)
             uploaded = []
-            for hdrs, data in parts:
-                cd = hdrs.get("content-disposition","")
-                if "filename" not in cd: continue
-                fname = get_filename(cd)
-                fid   = str(uuid.uuid4())[:8]
-                tmp   = UPLOAD_DIR / fid
-                tmp.write_bytes(data)
-                entry = {"id":fid,"name":fname,"tmp_path":str(tmp),
-                         "size":len(data),"size_str":fmt_size(len(data))}
-                with state_lock:
-                    user["files"].append(entry)
-                    shared_files[fid] = {**entry,"owner_id":sid,"owner_name":user["name"]}
-                uploaded.append({"id":fid,"name":fname,"size_str":fmt_size(len(data))})
+            open_handles = {}   # id(fh) -> (fid, fname, tmp, fh)
+            def open_dest(headers):
+                fid  = str(uuid.uuid4())[:8]
+                tmp  = UPLOAD_DIR / fid
+                fh   = open(tmp, "wb")
+                open_handles[id(fh)] = (fid, get_filename(headers.get("content-disposition","")), tmp, fh)
+                return fh
+            try:
+                # Body is streamed to disk in chunks; peak RSS stays flat (item 1).
+                for headers, dest, n in stream_multipart(self.rfile, boundary, length, open_dest):
+                    if dest is None: continue          # non-file form field
+                    fid, fname, tmp, fh = open_handles.pop(id(dest))
+                    fh.close()
+                    entry = {"id":fid,"name":fname,"tmp_path":str(tmp),
+                             "size":n,"size_str":fmt_size(n)}
+                    with state_lock:
+                        user["files"].append(entry)
+                        shared_files[fid] = {**entry,"owner_id":sid,"owner_name":user["name"]}
+                    uploaded.append({"id":fid,"name":fname,"size_str":fmt_size(n)})
+                    log(f"upload saved: '{fname}' [{fid}] {fmt_size(n)}; RSS={rss_mb():.1f} MB")
+            except Exception as e:
+                for _fid, _fn, _tmp, _fh in open_handles.values():
+                    try: _fh.close()
+                    except OSError: pass
+                log(f"upload FAILED after {len(uploaded)} file(s): {e!r}; RSS={rss_mb():.1f} MB")
+                try: self.send_json({"error":"Upload failed on server"},500)
+                except OSError: pass
+                return
+            log(f"upload done: {len(uploaded)} file(s) saved; RSS={rss_mb():.1f} MB")
             self.send_json({"ok":True,"files":uploaded})
             return
 
@@ -684,16 +848,43 @@ async function uploadFiles(fileList){
   const err=document.getElementById('upload-err');
   err.classList.remove('on');
   prog.classList.add('on');
+  bar.style.width='0%';
   const fd=new FormData();
   Array.from(fileList).forEach(f=>fd.append('file',f,f.name));
-  lbl.textContent=`Uploading ${fileList.length} file${fileList.length>1?'s':''}…`;
-  let fake=0;
-  const t=setInterval(()=>{if(fake<82){fake+=Math.random()*10;bar.style.width=fake+'%';}},180);
+  const n=fileList.length;
+  const noun=`${n} file${n>1?'s':''}`;
+  lbl.textContent=`Uploading ${noun}…`;
+  const t0=performance.now();
   try{
-    const r=await fetch(`${API}/api/upload`,{method:'POST',body:fd});
-    clearInterval(t);
-    const d=await r.json();
-    if(d.error){err.textContent=d.error;err.classList.add('on');}
+    // Real progress: XHR reports true bytes sent (fetch cannot). On a stall the
+    // bar stops at the actual point instead of creeping to ~100% (item 9).
+    const d=await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',`${API}/api/upload`);
+      xhr.upload.onprogress=(e)=>{
+        if(!e.lengthComputable) return;
+        const pct=Math.min(100,e.loaded/e.total*100);
+        bar.style.width=pct.toFixed(1)+'%';
+        const secs=(performance.now()-t0)/1000;
+        const bps=secs>0?e.loaded/secs:0;
+        const eta=bps>0?(e.total-e.loaded)/bps:0;
+        lbl.textContent=`Uploading ${noun}… ${Math.floor(pct)}% · `
+          +`${fmtBytes(e.loaded)}/${fmtBytes(e.total)}`
+          +(eta>0?` · ${fmtTime(eta)} left`:'');
+      };
+      // All bytes sent; the server is now writing them to disk and replying.
+      xhr.upload.onload=()=>{bar.style.width='100%';lbl.textContent=`Saving ${noun}…`;};
+      xhr.onload=()=>{
+        if(xhr.status>=200&&xhr.status<300){
+          try{resolve(JSON.parse(xhr.responseText));}
+          catch(_){reject(new Error('bad server response'));}
+        }else reject(new Error('server returned '+xhr.status));
+      };
+      xhr.onerror=()=>reject(new Error('network error'));
+      xhr.onabort=()=>reject(new Error('cancelled'));
+      xhr.send(fd);
+    });
+    if(d.error){err.textContent=d.error;err.classList.add('on');prog.classList.remove('on');}
     else{
       bar.style.width='100%';
       lbl.textContent=`✓ ${d.files.length} file${d.files.length>1?'s':''} shared!`;
@@ -703,9 +894,9 @@ async function uploadFiles(fileList){
     renderMyFiles(s.user?.files||[]);
     renderAllUsers(s.all_users||[]);
   }catch(e){
-    clearInterval(t);
     err.textContent='Upload failed: '+e.message;
     err.classList.add('on');
+    prog.classList.remove('on');
   }
   const fi=document.getElementById('file-input');
   if(fi) fi.value='';
@@ -874,6 +1065,7 @@ def make_page(badge, tagline, body, init_script):
     <a href="/" class="logo">{LOGO_SVG} DropZone</a>
     <span class="badge">{badge}</span>
     <div class="hdr-right">
+      <span style="font-size:.72rem;font-weight:500;color:var(--hint);letter-spacing:.02em" title="Running build">v{__version__} &middot; {VERSION_STAGE}</span>
       <button class="tt-btn" data-tt aria-label="Toggle theme">{MOON_ICO}</button>
     </div>
   </div>
@@ -947,11 +1139,21 @@ HOST_PAGE   = make_page("Host",   "",              HOST_BODY,   HOST_INIT)
 REMOTE_PAGE = make_page("Remote", REMOTE_TAGLINE,  REMOTE_BODY, REMOTE_INIT)
 
 # ─── Run ──────────────────────────────────────────────────────────────────────
-class ThreadingServer(socketserver.ThreadingMixIn, HTTPServer):
+class _LogErrors:
+    """Route otherwise-silent per-request crashes into the log file, so a Termux
+    crash still leaves a record. Benign client disconnects are already caught in
+    the handlers and never reach here."""
+    def handle_error(self, request, client_address):
+        log(f"UNHANDLED server error from {client_address}:\n{traceback.format_exc()}")
+
+class ThreadingServer(_LogErrors, socketserver.ThreadingMixIn, HTTPServer):
     """Serve each request in its own daemon thread so one big transfer never
     blocks the room. transfer_sem caps how many heavy transfers run at once;
     light requests (state polling) stay snappy."""
     daemon_threads = True
+
+class SingleServer(_LogErrors, HTTPServer):
+    pass
 
 def make_server():
     if THREADED:
@@ -959,21 +1161,34 @@ def make_server():
             return ThreadingServer(("0.0.0.0", PORT), Handler)
         except Exception as e:
             print(f"  (threaded server unavailable: {e} - falling back to single-threaded)")
-    return HTTPServer(("0.0.0.0", PORT), Handler)
+    return SingleServer(("0.0.0.0", PORT), Handler)
 
 if __name__ == "__main__":
+    # Keep the log from growing without bound across sessions (simple 1-file roll).
+    try:
+        if LOG_FILE.exists() and LOG_FILE.stat().st_size > 5 * 1024 * 1024:
+            LOG_FILE.replace(LOG_FILE.with_suffix(".log.1"))
+    except OSError:
+        pass
+    log(f"=== DropZone v{__version__} ({VERSION_STAGE}) starting; pid={os.getpid()} ===")
     server = make_server()
     print(f"\n  ╔══════════════════════════════════════════╗")
     print(f"  ║         DropZone is running!             ║")
+    print(f"  ║  build v{__version__}  ·  {VERSION_STAGE}")
     print(f"  ╠══════════════════════════════════════════╣")
     print(f"  ║  Host page  →  http://localhost:{PORT}    ║")
     print(f"  ║  Remote URL →  http://{LOCAL_IP}:{PORT}/remote")
     print(f"  ╠══════════════════════════════════════════╣")
     print(f"  ║  Ctrl+C to stop (cleans up temp files)  ║")
-    print(f"  ╚══════════════════════════════════════════╝\n")
+    print(f"  ╚══════════════════════════════════════════╝")
+    print(f"  Log file →  {LOG_FILE}\n")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
         print("\n  Stopping — cleaning up uploads…")
         shutil.rmtree(UPLOAD_DIR, ignore_errors=True)
+        log("=== DropZone stopped (Ctrl+C) ===")
         print("  Done. Goodbye.")
+    except Exception:
+        log(f"FATAL in serve_forever:\n{traceback.format_exc()}")
+        raise

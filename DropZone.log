@@ -1,0 +1,174 @@
+[2026-08-29 12:50:02] === DropZone v0.2.04 (nightly) starting; pid=28121 ===
+[2026-08-29 12:54:00] upload start: Content-Length=3068564391 (2.9 GB) from 192.168.1.20; RSS=9.2 MB
+[2026-08-29 12:55:17] upload start: Content-Length=1544090412 (1.4 GB) from 192.168.1.20; RSS=154.3 MB
+[2026-08-29 12:57:13] upload body read: 225508865 bytes; RSS=317.7 MB
+[2026-08-29 12:57:13] upload body read: 97943041 bytes; RSS=318.1 MB
+[2026-08-29 12:57:13] upload parsed: 1 part(s); RSS=532.9 MB
+[2026-08-29 12:57:13] upload parsed: 1 part(s); RSS=626.3 MB
+[2026-08-29 12:57:14] upload done: 1 file(s) saved; RSS=626.4 MB
+[2026-08-29 12:57:14] upload done: 1 file(s) saved; RSS=439.6 MB
+[2026-08-29 12:57:21] === DropZone stopped (Ctrl+C) ===
+[2026-08-29 12:57:46] === DropZone v0.2.04 (nightly) starting; pid=32744 ===
+[2026-08-29 12:58:23] upload start: Content-Length=285016319 (271.8 MB) from 192.168.1.20; RSS=23.6 MB
+[2026-08-29 13:00:03] UNHANDLED server error from ('192.168.1.20', 52929):
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 447, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 435, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/storage/emulated/0/Backups/DropZone/DropZone.py", line 334, in do_POST
+    body  = self.rfile.read(length)
+  File "/data/data/com.termux/files/usr/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionAbortedError: [Errno 103] Software caused connection abort
+
+[2026-08-29 13:00:59] === DropZone stopped (Ctrl+C) ===
+[2026-08-29 13:01:04] === DropZone v0.2.04 (nightly) starting; pid=3453 ===
+[2026-08-29 13:02:18] === DropZone stopped (Ctrl+C) ===
+[2026-08-29 13:02:49] === DropZone v0.2.04 (nightly) starting; pid=4623 ===
+[2026-08-29 13:04:38] upload start: Content-Length=285016319 (271.8 MB) from 10.97.75.142; RSS=23.1 MB
+[2026-08-29 13:04:43] upload body read: 285016319 bytes; RSS=288.6 MB
+[2026-08-29 13:04:45] upload parsed: 1 part(s); RSS=555.7 MB
+[2026-08-29 13:04:45] upload done: 1 file(s) saved; RSS=555.7 MB
+[2026-08-29 13:05:01] upload start: Content-Length=567399249 (541.1 MB) from 10.97.75.142; RSS=12.2 MB
+[2026-08-29 13:05:10] upload body read: 567399249 bytes; RSS=553.3 MB
+[2026-08-29 13:05:14] upload parsed: 1 part(s); RSS=548.1 MB
+[2026-08-29 13:05:15] upload done: 1 file(s) saved; RSS=549.1 MB
+[2026-08-29 13:05:21] upload start: Content-Length=691674960 (659.6 MB) from 10.97.75.142; RSS=8.2 MB
+[2026-08-29 13:05:31] upload body read: 691674960 bytes; RSS=667.7 MB
+[2026-08-29 13:05:38] upload parsed: 1 part(s); RSS=883.6 MB
+[2026-08-29 13:05:38] UNHANDLED server error from ('28.175.213.253', 45434):
+Traceback (most recent call last):
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 697, in process_request_thread
+    self.finish_request(request, client_address)
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 362, in finish_request
+    self.RequestHandlerClass(request, client_address, self)
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 766, in __init__
+    self.handle()
+    ~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 447, in handle
+    self.handle_one_request()
+    ~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/http/server.py", line 435, in handle_one_request
+    method()
+    ~~~~~~^^
+  File "/storage/emulated/0/Backups/DropZone/DropZone.py", line 229, in do_GET
+    self.send_json({"session":sid,"user":user,"all_users":all_users,
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    "local_ip":LOCAL_IP,"port":PORT,
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    "warn_bytes":WARN_THRESHOLD})
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/storage/emulated/0/Backups/DropZone/DropZone.py", line 142, in send_json
+    self.wfile.write(body)
+    ~~~~~~~~~~~~~~~~^^^^^^
+  File "/data/data/com.termux/files/usr/lib/python3.13/socketserver.py", line 845, in write
+    self._sock.sendall(b)
+    ~~~~~~~~~~~~~~~~~~^^^
+BrokenPipeError: [Errno 32] Broken pipe
+
+[2026-08-29 13:05:39] upload done: 1 file(s) saved; RSS=889.8 MB
+[2026-08-29 13:06:13] upload start: Content-Length=50493924 (48.2 MB) from 28.175.213.253; RSS=13.0 MB
+[2026-08-29 13:06:13] upload body read: 50493924 bytes; RSS=61.2 MB
+[2026-08-29 13:06:13] upload parsed: 1 part(s); RSS=109.4 MB
+[2026-08-29 13:06:13] upload done: 1 file(s) saved; RSS=109.4 MB
+[2026-08-29 13:06:42] download: 'rhino_en-us_8.20.25157.13001.exe' [de6fc89c] 659.6 MB to 28.175.213.253
+[2026-08-29 13:06:49] download done: 'rhino_en-us_8.20.25157.13001.exe' [de6fc89c]
+[2026-08-29 13:07:01] zip requested: DropZone-flippp.zip <- 3 file(s), 1.4 GB (from 28.175.213.253)
+[2026-08-29 13:07:01] zip spooling to disk (store, no compression): DropZone-flippp.zip
+[2026-08-29 13:07:14] zip sending: DropZone-flippp.zip 1.4 GB
+[2026-08-29 13:07:26] zip done: DropZone-flippp.zip
+[2026-08-29 13:07:48] upload start: Content-Length=390880518 (372.8 MB) from 10.97.75.142; RSS=13.8 MB
+[2026-08-29 13:07:54] upload body read: 390880518 bytes; RSS=386.5 MB
+[2026-08-29 13:07:56] upload parsed: 2 part(s); RSS=759.2 MB
+[2026-08-29 13:07:57] upload done: 2 file(s) saved; RSS=759.2 MB
+[2026-08-29 13:08:23] upload start: Content-Length=734161458 (700.2 MB) from 10.97.75.142; RSS=13.8 MB
+[2026-08-29 13:08:36] upload body read: 734161458 bytes; RSS=714.0 MB
+[2026-08-29 13:10:02] === DropZone v0.2.04 (nightly) starting; pid=13722 ===
+[2026-08-29 13:10:55] upload start: Content-Length=3748813808 (3.5 GB) from 10.97.75.142; RSS=23.4 MB
+[2026-08-29 13:11:49] upload body read: 3748813808 bytes; RSS=2573.6 MB
+[2026-08-30 11:11:40] === DropZone v0.2.06 (nightly) starting; pid=12024 ===
+[2026-08-30 11:14:37] upload start: Content-Length=1235922875 (1.2 GB) from 192.168.7.187; RSS=23.4 MB
+[2026-08-30 11:15:38] upload saved: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8] 1.2 GB; RSS=19.9 MB
+[2026-08-30 11:15:38] upload done: 1 file(s) saved; RSS=19.9 MB
+[2026-08-30 11:20:35] zip requested: DropZone-all-files.zip <- 1 file(s), 1.2 GB (from 192.168.7.110)
+[2026-08-30 11:20:35] zip spooling to disk (store, no compression): DropZone-all-files.zip
+[2026-08-30 11:20:38] zip sending: DropZone-all-files.zip 1.2 GB
+[2026-08-30 11:20:38] zip cancelled by 192.168.7.110: DropZone-all-files.zip
+[2026-08-30 11:21:21] upload start: Content-Length=952168636 (908.1 MB) from 192.168.7.187; RSS=13.5 MB
+[2026-08-30 11:21:37] upload saved: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [e367d58d] 352.3 MB; RSS=17.5 MB
+[2026-08-30 11:21:53] upload saved: '[YakuboEncodes] Cowboy Bebop - 02 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [17159ff3] 308.2 MB; RSS=17.8 MB
+[2026-08-30 11:22:06] upload saved: '[YakuboEncodes] Cowboy Bebop - 03 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [604dfff4] 247.5 MB; RSS=13.7 MB
+[2026-08-30 11:22:06] upload done: 3 file(s) saved; RSS=13.7 MB
+[2026-08-30 11:22:23] zip requested: DropZone-glaptop1.zip <- 4 file(s), 2.0 GB (from 192.168.7.110)
+[2026-08-30 11:22:23] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:22:28] zip sending: DropZone-glaptop1.zip 2.0 GB
+[2026-08-30 11:22:28] zip cancelled by 192.168.7.110: DropZone-glaptop1.zip
+[2026-08-30 11:22:36] zip requested: DropZone-glaptop1.zip <- 4 file(s), 2.0 GB (from 192.168.7.110)
+[2026-08-30 11:22:36] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:22:40] zip sending: DropZone-glaptop1.zip 2.0 GB
+[2026-08-30 11:22:40] zip cancelled by 192.168.7.110: DropZone-glaptop1.zip
+[2026-08-30 11:22:40] zip requested: DropZone-glaptop1.zip <- 4 file(s), 2.0 GB (from 192.168.7.110)
+[2026-08-30 11:22:40] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:22:44] zip sending: DropZone-glaptop1.zip 2.0 GB
+[2026-08-30 11:23:13] zip done: DropZone-glaptop1.zip
+[2026-08-30 11:24:45] download: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8] 1.2 GB to 127.0.0.1
+[2026-08-30 11:24:45] download cancelled by 127.0.0.1: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8]
+[2026-08-30 11:24:47] download: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8] 1.2 GB to 127.0.0.1
+[2026-08-30 11:24:47] download cancelled by 127.0.0.1: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8]
+[2026-08-30 11:24:47] download: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8] 1.2 GB to 127.0.0.1
+[2026-08-30 11:24:51] download done: 'Andor.S02E09.1080p.WEBRip.x265-KONTRAST.mkv' [e097d9c8]
+[2026-08-30 11:27:19] upload start: Content-Length=987098222 (941.4 MB) from 192.168.7.110; RSS=13.5 MB
+[2026-08-30 11:27:26] upload saved: 'Mr.and.Mrs.Smith.2024.S01E01.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [7a497acc] 301.1 MB; RSS=17.5 MB
+[2026-08-30 11:27:30] upload saved: 'Mr.and.Mrs.Smith.2024.S01E02.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [015c8baa] 207.5 MB; RSS=17.2 MB
+[2026-08-30 11:27:33] upload saved: 'Mr.and.Mrs.Smith.2024.S01E03.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [50965b88] 201.5 MB; RSS=14.9 MB
+[2026-08-30 11:27:37] upload saved: 'Mr.and.Mrs.Smith.2024.S01E04.720p.AMZN.WEBRip.x264-GalaxyTV.mkv' [865f6497] 231.3 MB; RSS=13.0 MB
+[2026-08-30 11:27:37] upload done: 4 file(s) saved; RSS=13.0 MB
+[2026-08-30 11:29:49] upload start: Content-Length=1047933113 (999.4 MB) from 127.0.0.1; RSS=13.0 MB
+[2026-08-30 11:29:54] upload saved: 'The.Mosquito.Coast.S01E01.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [48b165d7] 404.2 MB; RSS=17.0 MB
+[2026-08-30 11:29:57] upload saved: 'The.Mosquito.Coast.S01E02.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [270a7013] 309.9 MB; RSS=14.7 MB
+[2026-08-30 11:30:00] upload saved: 'The.Mosquito.Coast.S01E03.720p.ATVP.WEBRip.x264-GalaxyTV.mkv' [8aecb759] 285.3 MB; RSS=12.7 MB
+[2026-08-30 11:30:00] upload done: 3 file(s) saved; RSS=12.7 MB
+[2026-08-30 11:31:34] zip requested: DropZone-Sr1.zip <- 3 file(s), 999.4 MB (from 192.168.7.110)
+[2026-08-30 11:31:34] zip spooling to disk (store, no compression): DropZone-Sr1.zip
+[2026-08-30 11:31:37] zip requested: DropZone-Xr1.zip <- 4 file(s), 941.4 MB (from 192.168.7.187)
+[2026-08-30 11:31:37] zip spooling to disk (store, no compression): DropZone-Xr1.zip
+[2026-08-30 11:31:39] zip requested: DropZone-glaptop1.zip <- 2 file(s), 1.4 GB (from 127.0.0.1)
+[2026-08-30 11:31:39] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:31:49] zip sending: DropZone-Sr1.zip 999.4 MB
+[2026-08-30 11:31:49] zip cancelled by 192.168.7.110: DropZone-Sr1.zip
+[2026-08-30 11:31:53] zip sending: DropZone-Xr1.zip 941.4 MB
+[2026-08-30 11:31:58] zip sending: DropZone-glaptop1.zip 1.4 GB
+[2026-08-30 11:31:58] zip cancelled by 127.0.0.1: DropZone-glaptop1.zip
+[2026-08-30 11:32:00] zip requested: DropZone-Sr1.zip <- 3 file(s), 999.4 MB (from 192.168.7.110)
+[2026-08-30 11:32:00] zip spooling to disk (store, no compression): DropZone-Sr1.zip
+[2026-08-30 11:32:03] zip requested: DropZone-glaptop1.zip <- 2 file(s), 1.4 GB (from 127.0.0.1)
+[2026-08-30 11:32:03] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:32:10] zip sending: DropZone-Sr1.zip 999.4 MB
+[2026-08-30 11:32:10] zip cancelled by 192.168.7.110: DropZone-Sr1.zip
+[2026-08-30 11:32:10] zip requested: DropZone-Sr1.zip <- 3 file(s), 999.4 MB (from 192.168.7.110)
+[2026-08-30 11:32:10] zip spooling to disk (store, no compression): DropZone-Sr1.zip
+[2026-08-30 11:32:22] zip sending: DropZone-glaptop1.zip 1.4 GB
+[2026-08-30 11:32:22] zip cancelled by 127.0.0.1: DropZone-glaptop1.zip
+[2026-08-30 11:32:22] zip requested: DropZone-glaptop1.zip <- 2 file(s), 1.4 GB (from 127.0.0.1)
+[2026-08-30 11:32:22] zip spooling to disk (store, no compression): DropZone-glaptop1.zip
+[2026-08-30 11:32:23] zip sending: DropZone-Sr1.zip 999.4 MB
+[2026-08-30 11:32:34] zip sending: DropZone-glaptop1.zip 1.4 GB
+[2026-08-30 11:32:35] zip done: DropZone-Xr1.zip
+[2026-08-30 11:32:42] zip done: DropZone-Sr1.zip
+[2026-08-30 11:32:47] zip done: DropZone-glaptop1.zip
+[2026-08-30 11:37:10] === DropZone stopped (Ctrl+C) ===
