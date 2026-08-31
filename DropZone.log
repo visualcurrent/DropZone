@@ -1995,3 +1995,336 @@ ConnectionResetError: [Errno 104] Connection reset by peer
 [2026-08-30 21:17:36] zip sending (streamed): DropZone-S12.zip 18.8 MB
 [2026-08-30 21:17:37] zip done: DropZone-S12.zip
 [2026-08-30 21:17:55] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 21:24:34] === DropZone v0.2.12 (nightly) starting; pid=2895 ===
+[2026-08-30 21:32:26] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 21:45:45] === DropZone v0.2.13 (nightly) starting; pid=10890 ===
+[2026-08-30 21:45:49] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 21:45:54] === DropZone v0.2.13 (nightly) starting; pid=11054 ===
+[2026-08-30 21:46:18] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 21:46:26] === DropZone v0.2.13 (nightly) starting; pid=11354 ===
+[2026-08-30 21:48:40] upload start: Content-Length=2123590 (2.0 MB) from 127.0.0.1; RSS=24.6 MB
+[2026-08-30 21:48:40] upload saved: 'Screenshot_20260319_235252_Bumble.jpg' [734dd1c4] 470.7 KB; RSS=26.7 MB
+[2026-08-30 21:48:40] upload saved: 'Screenshot_20260326_011133_Instagram.jpg' [6470c67f] 878.0 KB; RSS=25.4 MB
+[2026-08-30 21:48:40] upload saved: 'Screenshot_20260328_001832_Facebook.jpg' [f799ac60] 724.6 KB; RSS=24.7 MB
+[2026-08-30 21:48:40] upload done: 3 file(s) saved; RSS=24.7 MB
+[2026-08-30 21:49:32] upload start: Content-Length=10082793 (9.6 MB) from 127.0.0.1; RSS=24.6 MB
+[2026-08-30 21:49:32] upload saved: '1ac12566ac99ee48b2db77f319435807.jpeg' [66ce24a3] 83.3 KB; RSS=28.6 MB
+[2026-08-30 21:49:32] upload saved: 'Compressor-1.5.7.apk' [aa8628b1] 9.5 MB; RSS=24.7 MB
+[2026-08-30 21:49:32] upload done: 2 file(s) saved; RSS=24.7 MB
+[2026-08-30 21:50:18] upload start: Content-Length=2500101 (2.4 MB) from 192.168.1.93; RSS=24.8 MB
+[2026-08-30 21:50:19] upload saved: 'IMG_20260805_180715.jpg' [b6fe57f1] 1.8 MB; RSS=25.5 MB
+[2026-08-30 21:50:19] upload saved: 'Screenshot_2026-07-23-02-51-22-889_com.miui.home.jpg' [001a8ceb] 493.7 KB; RSS=25.0 MB
+[2026-08-30 21:50:19] upload saved: 'WWW.YIFY-TORRENTS.COM.jpg' [e954beb5] 127.6 KB; RSS=25.0 MB
+[2026-08-30 21:50:19] upload done: 3 file(s) saved; RSS=25.0 MB
+[2026-08-30 21:51:00] upload start: Content-Length=614272 (599.9 KB) from 192.168.1.159; RSS=25.2 MB
+[2026-08-30 21:51:00] upload saved: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB; RSS=25.4 MB
+[2026-08-30 21:51:00] upload saved: 'WhrCXK6I.jpg' [ee02ab6f] 128.8 KB; RSS=25.4 MB
+[2026-08-30 21:51:00] upload done: 2 file(s) saved; RSS=25.4 MB
+[2026-08-30 21:51:10] download: 'Screenshot_20260319_235252_Bumble.jpg' [734dd1c4] 470.7 KB to 192.168.1.159
+[2026-08-30 21:51:10] download done: 'Screenshot_20260319_235252_Bumble.jpg' [734dd1c4]
+[2026-08-30 21:51:16] download: 'Screenshot_20260326_011133_Instagram.jpg' [6470c67f] 878.0 KB to 192.168.1.159
+[2026-08-30 21:51:16] download done: 'Screenshot_20260326_011133_Instagram.jpg' [6470c67f]
+[2026-08-30 21:51:41] download: 'IMG_20260805_180715.jpg' [b6fe57f1] 1.8 MB to 192.168.1.159
+[2026-08-30 21:51:41] download done: 'IMG_20260805_180715.jpg' [b6fe57f1]
+[2026-08-30 21:51:45] download: 'Screenshot_2026-07-23-02-51-22-889_com.miui.home.jpg' [001a8ceb] 493.7 KB to 192.168.1.159
+[2026-08-30 21:51:45] download done: 'Screenshot_2026-07-23-02-51-22-889_com.miui.home.jpg' [001a8ceb]
+[2026-08-30 21:52:07] upload start: Content-Length=369428378 (352.3 MB) from 192.168.1.159; RSS=25.8 MB
+[2026-08-30 21:52:19] download: 'WhrCXK6I.jpg' [ee02ab6f] 128.8 KB to 127.0.0.1
+[2026-08-30 21:52:19] download done: 'WhrCXK6I.jpg' [ee02ab6f]
+[2026-08-30 21:52:24] download: 'IMG_20260805_180715.jpg' [b6fe57f1] 1.8 MB to 127.0.0.1
+[2026-08-30 21:52:24] download done: 'IMG_20260805_180715.jpg' [b6fe57f1]
+[2026-08-30 21:52:27] download: 'WWW.YIFY-TORRENTS.COM.jpg' [e954beb5] 127.6 KB to 127.0.0.1
+[2026-08-30 21:52:27] download done: 'WWW.YIFY-TORRENTS.COM.jpg' [e954beb5]
+[2026-08-30 21:52:42] upload saved: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB; RSS=25.9 MB
+[2026-08-30 21:52:42] upload done: 1 file(s) saved; RSS=25.9 MB
+[2026-08-30 21:52:45] download: 'Screenshot_20260328_001832_Facebook.jpg' [f799ac60] 724.6 KB to 192.168.1.93
+[2026-08-30 21:52:45] download done: 'Screenshot_20260328_001832_Facebook.jpg' [f799ac60]
+[2026-08-30 21:52:48] download: 'Compressor-1.5.7.apk' [aa8628b1] 9.5 MB to 192.168.1.93
+[2026-08-30 21:52:50] download done: 'Compressor-1.5.7.apk' [aa8628b1]
+[2026-08-30 21:53:02] download: '1ac12566ac99ee48b2db77f319435807.jpeg' [66ce24a3] 83.3 KB to 192.168.1.93
+[2026-08-30 21:53:02] download done: '1ac12566ac99ee48b2db77f319435807.jpeg' [66ce24a3]
+[2026-08-30 21:53:29] download: 'Screenshot_20260328_001832_Facebook.jpg' [f799ac60] 724.6 KB to 192.168.1.93
+[2026-08-30 21:53:29] download done: 'Screenshot_20260328_001832_Facebook.jpg' [f799ac60]
+[2026-08-30 21:53:31] download: 'Compressor-1.5.7.apk' [aa8628b1] 9.5 MB to 192.168.1.93
+[2026-08-30 21:53:33] download done: 'Compressor-1.5.7.apk' [aa8628b1]
+[2026-08-30 21:55:37] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 192.168.1.93
+[2026-08-30 21:55:37] download cancelled by 192.168.1.93: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 192.168.1.93
+[2026-08-30 21:55:39] download cancelled by 192.168.1.93: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 138535533-184714043/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 92357022-138535532/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 277071066-323249576/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 230892555-277071065/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 323249577-369428088/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 0-46178510/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 46178511-92357021/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:39] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 184714044-230892554/369428089 (partial) 44.0 MB to 192.168.1.93
+[2026-08-30 21:55:44] download: 'WhrCXK6I.jpg' [ee02ab6f] 128.8 KB to 192.168.1.93
+[2026-08-30 21:55:44] download done: 'WhrCXK6I.jpg' [ee02ab6f]
+[2026-08-30 21:55:51] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 192.168.1.93
+[2026-08-30 21:55:51] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:56:00] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 192.168.1.93
+[2026-08-30 21:56:00] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:56:11] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 192.168.1.93
+[2026-08-30 21:56:11] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:56:17] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] bytes 0-481946/481947 (partial) 470.7 KB to 192.168.1.93
+[2026-08-30 21:56:17] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:56:19] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:56:27] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:56:32] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:56:46] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:57:04] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:57:12] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:57:18] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:57:20] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:57:23] zip requested: DropZone-S13.zip <- 5 file(s), 11.6 MB (from 192.168.1.93)
+[2026-08-30 21:57:23] zip sending (streamed): DropZone-S13.zip 11.6 MB
+[2026-08-30 21:57:23] download: 'Screenshot_20260326_011133_Instagram.jpg' [6470c67f] 878.0 KB to 192.168.1.93
+[2026-08-30 21:57:23] download done: 'Screenshot_20260326_011133_Instagram.jpg' [6470c67f]
+[2026-08-30 21:57:24] zip cancelled by 192.168.1.93: DropZone-S13.zip
+[2026-08-30 21:57:25] zip requested: DropZone-S13.zip <- 5 file(s), 11.6 MB (from 192.168.1.93)
+[2026-08-30 21:57:25] zip sending (streamed): DropZone-S13.zip 11.6 MB
+[2026-08-30 21:57:25] zip cancelled by 192.168.1.93: DropZone-S13.zip
+[2026-08-30 21:57:25] zip requested: DropZone-S13.zip <- 5 file(s), 11.6 MB (from 192.168.1.93)
+[2026-08-30 21:57:25] zip sending (streamed): DropZone-S13.zip 11.6 MB
+[2026-08-30 21:57:25] zip cancelled by 192.168.1.93: DropZone-S13.zip
+[2026-08-30 21:57:25] zip requested: DropZone-S13.zip <- 5 file(s), 11.6 MB (from 192.168.1.93)
+[2026-08-30 21:57:25] zip sending (streamed): DropZone-S13.zip 11.6 MB
+[2026-08-30 21:57:27] zip done: DropZone-S13.zip
+[2026-08-30 21:57:57] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 127.0.0.1
+[2026-08-30 21:57:57] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:58:12] download: 'IMG_20260805_180715.jpg' [b6fe57f1] 1.8 MB to 127.0.0.1
+[2026-08-30 21:58:12] download done: 'IMG_20260805_180715.jpg' [b6fe57f1]
+[2026-08-30 21:58:14] download: 'Screenshot_2026-07-23-02-51-22-889_com.miui.home.jpg' [001a8ceb] 493.7 KB to 127.0.0.1
+[2026-08-30 21:58:14] download done: 'Screenshot_2026-07-23-02-51-22-889_com.miui.home.jpg' [001a8ceb]
+[2026-08-30 21:58:17] download: 'WWW.YIFY-TORRENTS.COM.jpg' [e954beb5] 127.6 KB to 127.0.0.1
+[2026-08-30 21:58:17] download done: 'WWW.YIFY-TORRENTS.COM.jpg' [e954beb5]
+[2026-08-30 21:59:00] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 127.0.0.1
+[2026-08-30 21:59:00] download cancelled by 127.0.0.1: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 127.0.0.1
+[2026-08-30 21:59:01] download cancelled by 127.0.0.1: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 46178511-92357021/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 0-46178510/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 92357022-138535532/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 138535533-184714043/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 230892555-277071065/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 323249577-369428088/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 277071066-323249576/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:01] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 184714044-230892554/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:02] download: 'WhrCXK6I.jpg' [ee02ab6f] 128.8 KB to 127.0.0.1
+[2026-08-30 21:59:02] download done: 'WhrCXK6I.jpg' [ee02ab6f]
+[2026-08-30 21:59:02] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:04] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 127.0.0.1
+[2026-08-30 21:59:04] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 21:59:28] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 127.0.0.1
+[2026-08-30 21:59:28] download cancelled by 127.0.0.1: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] 352.3 MB to 127.0.0.1
+[2026-08-30 21:59:29] download cancelled by 127.0.0.1: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 323249577-369428088/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 46178511-92357021/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 0-46178510/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 138535533-184714043/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 184714044-230892554/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 230892555-277071065/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:29] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 277071066-323249576/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580] bytes 92357022-138535532/369428089 (partial) 44.0 MB to 127.0.0.1
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 21:59:30] download done: '[YakuboEncodes] Cowboy Bebop - 01 [BD 1080p 10bit][x265 HEVC][Dual Audio 5.1].mkv' [24711580]
+[2026-08-30 22:00:24] upload start: Content-Length=2538197131 (2.4 GB) from 192.168.1.159; RSS=17.6 MB
+[2026-08-30 22:03:56] upload saved: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] 2.4 GB; RSS=16.7 MB
+[2026-08-30 22:03:56] upload done: 1 file(s) saved; RSS=16.7 MB
+[2026-08-30 22:05:09] upload start: Content-Length=214279002 (204.4 MB) from 192.168.1.159; RSS=16.7 MB
+[2026-08-30 22:05:16] upload saved: 'LRV_20250614_215427_01_005.insv' [bc801902] 61.1 MB; RSS=20.7 MB
+[2026-08-30 22:05:20] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] 2.4 GB to 127.0.0.1
+[2026-08-30 22:05:20] download cancelled by 127.0.0.1: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] 2.4 GB to 127.0.0.1
+[2026-08-30 22:05:23] download cancelled by 127.0.0.1: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 317274606-634549211/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 951823818-1269098423/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 634549212-951823817/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 2220922242-2538196847/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 0-317274605/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 1903647636-2220922241/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 1586373030-1903647635/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:23] download: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239] 470.7 KB to 127.0.0.1
+[2026-08-30 22:05:23] download done: 'Screenshot_20260319_235252_Bumble.jpg' [680eb239]
+[2026-08-30 22:05:24] download: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e] bytes 1269098424-1586373029/2538196848 (partial) 302.6 MB to 127.0.0.1
+[2026-08-30 22:05:24] upload saved: 'VID_20250614_215606_00_006.insv' [e6a420a1] 62.1 MB; RSS=18.7 MB
+[2026-08-30 22:05:26] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:26] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:26] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:26] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:30] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:30] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:30] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:30] download done: 'The Peripheral (2022) - S01E01 - Pilot (1080p AMZN WEB-DL x265 Ghost).mkv' [6ea3115e]
+[2026-08-30 22:05:35] upload saved: 'LRV_20250614_223418_01_011.insv' [a8a996b1] 81.1 MB; RSS=17.4 MB
+[2026-08-30 22:05:35] upload done: 3 file(s) saved; RSS=17.4 MB
+[2026-08-30 22:06:20] download: 'VID_20250614_215606_00_006.insv' [e6a420a1] 62.1 MB to 127.0.0.1
+[2026-08-30 22:06:20] download done: 'VID_20250614_215606_00_006.insv' [e6a420a1]
+[2026-08-30 22:06:22] download: 'LRV_20250614_215427_01_005.insv' [bc801902] 61.1 MB to 127.0.0.1
+[2026-08-30 22:06:23] download done: 'LRV_20250614_215427_01_005.insv' [bc801902]
+[2026-08-30 22:06:27] download: 'VID_20250614_215606_00_006.insv' [e6a420a1] 62.1 MB to 127.0.0.1
+[2026-08-30 22:06:27] download done: 'VID_20250614_215606_00_006.insv' [e6a420a1]
+[2026-08-30 22:06:32] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] 81.1 MB to 127.0.0.1
+[2026-08-30 22:06:32] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] 81.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 10634543-21269085/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 31903629-42538171/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 0-10634542/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 42538172-53172714/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 74441801-85076344/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 63807258-74441800/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 21269086-31903628/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 53172715-63807257/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:33] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:34] download: 'VID_20250614_215606_00_006.insv' [e6a420a1] 62.1 MB to 127.0.0.1
+[2026-08-30 22:06:34] download done: 'VID_20250614_215606_00_006.insv' [e6a420a1]
+[2026-08-30 22:06:36] download: 'LRV_20250614_215427_01_005.insv' [bc801902] 61.1 MB to 127.0.0.1
+[2026-08-30 22:06:36] download done: 'LRV_20250614_215427_01_005.insv' [bc801902]
+[2026-08-30 22:06:40] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] 81.1 MB to 127.0.0.1
+[2026-08-30 22:06:40] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] 81.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 42538172-53172714/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 0-10634542/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 53172715-63807257/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 21269086-31903628/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 10634543-21269085/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 31903629-42538171/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 63807258-74441800/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:41] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:06:42] download: 'LRV_20250614_223418_01_011.insv' [a8a996b1] bytes 74441801-85076344/85076345 (partial) 10.1 MB to 127.0.0.1
+[2026-08-30 22:06:42] download done: 'LRV_20250614_223418_01_011.insv' [a8a996b1]
+[2026-08-30 22:08:05] === DropZone stopped (Ctrl+C) ===
+[2026-08-30 22:24:28] === DropZone v0.2.14 (nightly) starting; pid=21592 ===
+[2026-08-30 22:26:05] upload start: Content-Length=1909050 (1.8 MB) from 192.168.1.93; RSS=24.6 MB
+[2026-08-30 22:26:05] upload saved: 'IMG_20260819_232806.jpg' [ebb46533] 1.8 MB; RSS=24.6 MB
+[2026-08-30 22:26:05] upload done: 1 file(s) saved; RSS=24.6 MB
+[2026-08-30 22:26:07] upload start: Content-Length=1863531 (1.8 MB) from 192.168.1.93; RSS=24.6 MB
+[2026-08-30 22:26:07] upload saved: 'IMG_20260805_180715.jpg' [801d18a8] 1.8 MB; RSS=24.6 MB
+[2026-08-30 22:26:07] upload done: 1 file(s) saved; RSS=24.6 MB
+[2026-08-30 22:26:26] upload start: Content-Length=130876 (127.8 KB) from 192.168.1.93; RSS=24.7 MB
+[2026-08-30 22:26:26] upload saved: 'WWW.YIFY-TORRENTS.COM.jpg' [542d5a2e] 127.6 KB; RSS=24.7 MB
+[2026-08-30 22:26:26] upload done: 1 file(s) saved; RSS=24.7 MB
+[2026-08-30 22:26:48] upload start: Content-Length=64052984 (61.1 MB) from 192.168.1.93; RSS=24.7 MB
+[2026-08-30 22:27:00] upload start: Content-Length=64052984 (61.1 MB) from 192.168.1.93; RSS=28.7 MB
+[2026-08-30 22:27:16] upload saved: 'LRV_20250614_215427_01_005.insv' [75b734cc] 61.1 MB; RSS=27.4 MB
+[2026-08-30 22:27:16] upload done: 1 file(s) saved; RSS=27.4 MB
+[2026-08-30 22:27:18] upload saved: 'LRV_20250614_215427_01_005.insv' [2e624e51] 61.1 MB; RSS=24.8 MB
+[2026-08-30 22:27:18] upload done: 1 file(s) saved; RSS=24.8 MB
+[2026-08-30 22:29:06] upload start: Content-Length=85076564 (81.1 MB) from 192.168.1.93; RSS=24.9 MB
+[2026-08-30 22:29:22] upload saved: 'LRV_20250614_223418_01_011.insv' [a56b6517] 81.1 MB; RSS=24.8 MB
+[2026-08-30 22:29:22] upload done: 1 file(s) saved; RSS=24.8 MB
+[2026-08-30 22:30:52] upload start: Content-Length=44075938 (42.0 MB) from 192.168.1.93; RSS=24.8 MB
+[2026-08-30 22:32:12] upload saved: 'VID_20250614_222048_00_008.insv' [392d4b56] 42.0 MB; RSS=24.9 MB
+[2026-08-30 22:32:12] upload done: 1 file(s) saved; RSS=24.9 MB
+[2026-08-30 22:33:03] upload start: Content-Length=193205458 (184.3 MB) from 192.168.1.159; RSS=24.8 MB
+[2026-08-30 22:33:12] upload saved: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB; RSS=26.8 MB
+[2026-08-30 22:33:18] upload saved: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB; RSS=25.7 MB
+[2026-08-30 22:33:20] upload start: Content-Length=21437642 (20.4 MB) from 192.168.1.159; RSS=26.3 MB
+[2026-08-30 22:33:23] upload saved: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB; RSS=26.6 MB
+[2026-08-30 22:33:23] upload done: 1 file(s) saved; RSS=26.6 MB
+[2026-08-30 22:33:26] upload saved: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB; RSS=24.8 MB
+[2026-08-30 22:33:26] upload done: 3 file(s) saved; RSS=24.8 MB
+[2026-08-30 22:34:25] upload start: Content-Length=19842444 (18.9 MB) from 127.0.0.1; RSS=24.8 MB
+[2026-08-30 22:34:25] upload saved: '20260630_002937.jpg' [e26468a1] 2.2 MB; RSS=26.5 MB
+[2026-08-30 22:34:25] upload saved: '20260630_143515.mp4' [5e007a17] 16.7 MB; RSS=24.8 MB
+[2026-08-30 22:34:25] upload done: 2 file(s) saved; RSS=24.8 MB
+[2026-08-30 22:34:41] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 127.0.0.1
+[2026-08-30 22:34:41] download cancelled by 127.0.0.1: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:34:42] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 127.0.0.1
+[2026-08-30 22:34:42] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 127.0.0.1
+[2026-08-30 22:34:42] download cancelled by 127.0.0.1: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:34:42] download done: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:34:42] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 127.0.0.1
+[2026-08-30 22:34:42] download cancelled by 127.0.0.1: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:34:43] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 127.0.0.1
+[2026-08-30 22:34:43] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 127.0.0.1
+[2026-08-30 22:34:43] download cancelled by 127.0.0.1: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:34:43] download done: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:34:44] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:44] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:34:45] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:45] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:34:45] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:45] download done: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:34:46] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 127.0.0.1
+[2026-08-30 22:34:46] download cancelled by 127.0.0.1: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:34:47] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 127.0.0.1
+[2026-08-30 22:34:47] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 127.0.0.1
+[2026-08-30 22:34:47] download cancelled by 127.0.0.1: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:34:47] download done: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:34:49] download: 'IMG_20260819_232806.jpg' [ebb46533] 1.8 MB to 127.0.0.1
+[2026-08-30 22:34:49] download cancelled by 127.0.0.1: 'IMG_20260819_232806.jpg' [ebb46533]
+[2026-08-30 22:34:50] download: 'IMG_20260819_232806.jpg' [ebb46533] 1.8 MB to 127.0.0.1
+[2026-08-30 22:34:50] download cancelled by 127.0.0.1: 'IMG_20260819_232806.jpg' [ebb46533]
+[2026-08-30 22:34:50] download: 'IMG_20260819_232806.jpg' [ebb46533] 1.8 MB to 127.0.0.1
+[2026-08-30 22:34:50] download done: 'IMG_20260819_232806.jpg' [ebb46533]
+[2026-08-30 22:34:54] download: 'LRV_20250614_223418_01_011.insv' [a56b6517] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:54] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a56b6517]
+[2026-08-30 22:34:54] download: 'LRV_20250614_223418_01_011.insv' [a56b6517] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:54] download cancelled by 127.0.0.1: 'LRV_20250614_223418_01_011.insv' [a56b6517]
+[2026-08-30 22:34:54] download: 'LRV_20250614_223418_01_011.insv' [a56b6517] 81.1 MB to 127.0.0.1
+[2026-08-30 22:34:55] download done: 'LRV_20250614_223418_01_011.insv' [a56b6517]
+[2026-08-30 22:35:14] zip requested: DropZone-S14.zip <- 2 file(s), 18.9 MB (from 192.168.1.93)
+[2026-08-30 22:35:14] zip sending (streamed): DropZone-S14.zip 18.9 MB
+[2026-08-30 22:35:14] zip cancelled by 192.168.1.93: DropZone-S14.zip
+[2026-08-30 22:35:15] zip requested: DropZone-S14.zip <- 2 file(s), 18.9 MB (from 192.168.1.93)
+[2026-08-30 22:35:15] zip sending (streamed): DropZone-S14.zip 18.9 MB
+[2026-08-30 22:35:15] zip cancelled by 192.168.1.93: DropZone-S14.zip
+[2026-08-30 22:35:15] zip requested: DropZone-S14.zip <- 2 file(s), 18.9 MB (from 192.168.1.93)
+[2026-08-30 22:35:15] zip sending (streamed): DropZone-S14.zip 18.9 MB
+[2026-08-30 22:35:18] zip done: DropZone-S14.zip
+[2026-08-30 22:35:19] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 192.168.1.93
+[2026-08-30 22:35:19] download cancelled by 192.168.1.93: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:35:20] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 192.168.1.93
+[2026-08-30 22:35:20] download: 'LRV_20250614_230437_01_019.insv' [91777fad] 20.4 MB to 192.168.1.93
+[2026-08-30 22:35:20] download cancelled by 192.168.1.93: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:35:21] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 192.168.1.93
+[2026-08-30 22:35:22] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 192.168.1.93
+[2026-08-30 22:35:23] download cancelled by 192.168.1.93: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:35:23] download cancelled by 192.168.1.93: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:35:24] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 192.168.1.93
+[2026-08-30 22:35:25] download cancelled by 192.168.1.93: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:35:25] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 192.168.1.93
+[2026-08-30 22:35:25] download: 'LRV_20250614_223418_01_011.insv' [459d1c0a] 81.1 MB to 192.168.1.93
+[2026-08-30 22:35:25] download done: 'LRV_20250614_230437_01_019.insv' [91777fad]
+[2026-08-30 22:35:26] download cancelled by 192.168.1.93: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:35:27] download: 'LRV_20250614_215427_01_005.insv' [a1e66c94] 61.1 MB to 192.168.1.93
+[2026-08-30 22:35:29] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 192.168.1.93
+[2026-08-30 22:35:29] download cancelled by 192.168.1.93: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:35:30] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 192.168.1.93
+[2026-08-30 22:35:30] download cancelled by 192.168.1.93: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:35:30] download: 'VID_20250614_222048_00_008.insv' [49389556] 42.0 MB to 192.168.1.93
+[2026-08-30 22:35:40] download done: 'VID_20250614_222048_00_008.insv' [49389556]
+[2026-08-30 22:36:07] download done: 'LRV_20250614_215427_01_005.insv' [a1e66c94]
+[2026-08-30 22:36:17] download done: 'LRV_20250614_223418_01_011.insv' [459d1c0a]
+[2026-08-30 22:36:26] === DropZone stopped (Ctrl+C) ===

@@ -16,7 +16,7 @@ batch, all uploaded byte-exact with server RSS flat at 12-16 MB. No freeze, no
 OOM, no traceback. The streaming fix (v0.2.05) holds at real >2 GB single-file
 sizes.
 
-**Running build now v0.2.12 (nightly).** BACKLOG 10 fixes in:
+**Running build now v0.2.14 (nightly).** BACKLOG 10 fixes in:
 - v0.2.10 — HTTP Range support on `/api/download` (206 + `Content-Range`,
   `Accept-Ranges`/`ETag`/`Last-Modified`/`If-Range`, `416` past EOF). Fixes the iOS
   Safari duplicate (Safari probes with a Range request and re-fetched against a
@@ -29,23 +29,83 @@ sizes.
 Whole test suite green; embedded JS `node --check`s clean; boot smoke confirms the
 served page carries the new code.
 
-**v0.2.12 (nightly) — the important one:** the app shell had NO cache headers, so
-the phone kept running a CACHED old client across deploys. That is why the v0.2.11
-field run still showed the re-fire storm even though the v0.2.11 *server* was live
-(the log carried the new `206` range replies). `send_html` is now `no-store`;
-client changes take effect on load.
+**v0.2.12** no-stored the app shell so client changes actually deploy. With that
+confirmed on the phone (header showed v0.2.12, cache cleared) the small-file
+duplicates PERSISTED — proving the root cause: the **browser's** download manager
+issues a probe request + the real one, so a small file completes 2-3x and the OS
+saves duplicates. A JS debounce (v0.2.11) can't stop browser-issued requests.
 
-**Next — field-confirm BACKLOG 10 on Android (deploy v0.2.12 via Syncthing):**
-1. Load the page ONCE on a fresh cache — clear the site's data or append `?v=12` to
-   the URL — to get past the currently cached old page. After that no-store keeps
-   it current automatically.
-2. Then: one tap = one logical download, and the zip button = one request (no
-   cancel/re-request storm). A single-file download may still show multiple `206`
-   range lines — that is the browser segmenting one download into parts, which
-   assembles into ONE file. Only multiple full `200` completions would be a real
-   duplicate. iPhone dupe check still waits for an iPhone.
+**v0.2.13 blob was REVERTED** — it fixed the dupe (one fetch = one file, proven in
+the log) but the UX was unacceptable: it buffered the whole file with no feedback,
+so downloads felt dead and re-taps stacked multiple save dialogs.
+
+**v0.2.14 — the keeper:** root cause is advertising `Accept-Ranges` (v0.2.10, for
+Safari) — it makes Chrome start/cancel/re-segment, so a small file completes twice
+(saved twice) while a large file gets cancelled (one file). Fix: `/api/download`
+no longer advertises `Accept-Ranges`, so the browser does ONE plain download (one
+file) with the instant native UI Gabe wants; an explicit `Range` request is still
+honored with `206` (Safari/resume). Downloads are native for all sizes again. Also
+clears the `\*`-regex SyntaxWarning from the reverted blob code.
+
+**v0.2.14 field log (2026-08-30) looks fixed:** downloads show NO range
+segmentation (no `(partial)` lines) and exactly ONE completed download per file
+(extra attempts are cancelled) — i.e. one saved file, no dupes. Strong indication
+BACKLOG 10 is resolved on Android; the only confirmation left is an eyeball of the
+Downloads folder (no `name (1).ext`). iPhone check still waits for an iPhone.
 
 Then next code target: the host connected-users panel (BACKLOG 4).
+
+## Last session — 2026-08-30 (later 12)
+- Checked v0.2.14 field log for the upload "hang": NOT a regression — the upload
+  path is untouched since BACKLOG 1. A 61 MB upload on public wifi showed no moving
+  bar for several seconds (slow first byte before `upload.onprogress` fires), so it
+  was re-selected -> the SAME file uploaded twice (two `upload start`, two saves,
+  same name / different id) and the single shared progress bar bounced between the
+  two. Logged as BACKLOG 15 (upload dedup + earlier feedback + per-upload progress).
+- Wrote `docs/notes/audit-guide-downloads.md` for the eventual audit (BACKLOG 8):
+  the download saga (v0.2.10-0.2.14) invariants NOT to break (no Accept-Ranges
+  advertisement; no-store shell; keep-or-remove Range wholesale), what to keep,
+  what to scrutinize, and what NOT to resurrect (blob). BACKLOG 8 now points to it.
+- No code changed this session — analysis + notes only. Running build stays v0.2.14.
+
+## Last session — 2026-08-30 (later 11)
+- v0.2.13's in-page blob download fixed the dupe (log: one fetch per small file)
+  but had unacceptable UX (no feedback while buffering; re-taps stacked save
+  dialogs). REVERTED.
+- Final root cause: advertising `Accept-Ranges` (added v0.2.10 for Safari) makes
+  Chrome start/cancel/re-segment a download; small files complete the first plain
+  attempt before the cancel => saved twice; large files get cancelled => one file.
+- Shipped **v0.2.14**: `/api/download` no longer advertises `Accept-Ranges` (416
+  keeps its own), so the browser does ONE plain native download (instant UI, one
+  file). Still honors an explicit `Range` with `206` (Safari/resume) — parse_range
+  etc. unchanged. Client reverted to native (`downloadOne`->`triggerDownload`);
+  debounce kept for double-tap. Removing the blob regex also cleared the startup
+  `SyntaxWarning: invalid escape sequence '\*'`.
+- Verified: no SyntaxWarning (warnings-as-errors compile), node --check, full suite
+  green (test_download_range now asserts the 200 omits Accept-Ranges while a Range
+  request still returns 206), boot smoke. Commit note docs/commits/0016. Backup
+  docs/notes/DropZone.py.bak8-*.
+- Trade-off accepted: single-file downloads are single-connection + non-resumable
+  on the plain 200 (fine for LAN one-shots; explicit-Range clients still get 206).
+- Item 10 `[~]`: v0.2.14 should be the keeper; needs the Android field check.
+
+## Last session — 2026-08-30 (later 10)
+- Confirmed the download re-fire is the BROWSER's download manager, not our code:
+  with v0.2.12 verified running on the phone (header + cleared cache), small files
+  still completed 2-3x. A tap => browser probe request + real request; small files
+  complete both => duplicate saves (matches the original "small files only"
+  report). JS debounce can't stop browser-issued requests — v0.2.11 was the wrong
+  tool.
+- Shipped **v0.2.13** (client only): `startDownload(url,size)` routes small
+  downloads (<=64 MB) through `blobSave` — `fetch()` the file and save once via a
+  blob URL (one request, one file, no browser probe/segmentation). Large files
+  keep the native path. Single files pass `f.size`; small zips use it via
+  `confirmBulk`. Server download path unchanged.
+- Verified: `node --check` on JS/HOST_INIT/REMOTE_INIT, full suite green, boot
+  smoke shows the page carries `blobSave`/`startDownload`/`BLOB_DL_MAX` + no-store.
+  Commit note docs/commits/0015. Backup docs/notes/DropZone.py.bak7-*.
+- Item 10 `[~]`: v0.2.13 is the expected fix; needs the Android field check (small
+  file saves once, single full `200` in the log). iPhone dupe check still pending.
 
 ## Last session — 2026-08-30 (later 9)
 - Read the v0.2.11 field log: the Android re-fire was NOT fixed in the field — but
@@ -125,7 +185,14 @@ Then next code target: the host connected-users panel (BACKLOG 4).
   on the device, not a DropZone defect. Dropped from the backlog. (Prior lead
   about the sets falling through to the OS default is moot.)
 - Versioning: number is major.beta.nightly; VERSION_STAGE label redundant
-  (candidate cleanup). Hold at 0.2.xx. Git: Gabe commits manually (2.06-2.09 in).
+  (candidate cleanup). Hold at 0.2.xx. Git: Gabe commits manually.
+- GIT STATE (2026-08-30): HEAD committed at **0.2.12** (includes commit notes
+  0012-0014). UNCOMMITTED in the working tree: the net 0.2.13->0.2.14 code
+  (DropZone.py now 0.2.14), the doc updates (BACKLOG/CHANGELOG/SESSION/
+  test_download_range), and commit notes 0015-0016 + audit-guide-downloads.md.
+  Commit the working tree as a single **0.2.14** — v0.2.13 (blob) was reverted
+  within the tree, so the net diff from 0.2.12 is just the 0.2.14 state. Commit
+  note 0015 documents that reverted blob (history only).
 
 ## Last session — 2026-08-30 (later 3)
 - v0.2.09: ZIP downloads STREAM as built (BACKLOG 13 done). Hand-rolled,

@@ -5,10 +5,35 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
 `docs/DEVELOPMENT.md`).
 
 ## [Unreleased]
-- Field-confirm BACKLOG 10 on Android once the phone loads the fresh (uncached)
-  page: the zip re-fire storm should collapse to one request per click, and a
-  single-file download should be one logical download (the browser may still
-  split it into parallel `206` range parts — that assembles into one file).
+- Field-confirm BACKLOG 10 on Android (v0.2.14): small files download once each
+  with the instant native download UI — no `name (1).ext`, no delay, no stacked
+  save dialogs.
+
+## [0.2.14] — nightly
+- Fix duplicate downloads the right way, and revert v0.2.13's blob approach (it
+  had unacceptable UX: it buffered the whole file with no feedback, so downloads
+  felt dead and re-taps stacked up multiple save dialogs). Root cause: advertising
+  `Accept-Ranges` made Chrome start a download, cancel it, and re-fetch in parallel
+  ranges — a small file finished the first attempt before the cancel landed, so it
+  saved twice. Fix: `/api/download` no longer advertises `Accept-Ranges`, so the
+  browser does one plain download (one file, instant native download UI); an
+  explicit `Range` request is still honored with `206` for iOS Safari and resume.
+  Downloads are back to native for all sizes. Also removes the SyntaxWarning from
+  the blob code's regex.
+
+## [0.2.13] — nightly
+- Actually fix the small-file duplicate downloads (BACKLOG 10). v0.2.11's debounce
+  did not help: with the fresh v0.2.12 client confirmed running (header showed
+  v0.2.12, cache cleared), small files STILL completed 2-3x — proving the repeats
+  come from the browser's own download manager (a probe request + the real one,
+  plus range segmentation), not from our code or a double tap, so a JS debounce
+  cannot stop them. Fix: for files at/below `BLOB_DL_MAX` (64 MB), the page now
+  fetches the file itself and saves it once via a blob URL (`blobSave`). A
+  `fetch()` is a single request the browser does not probe or split, so exactly
+  one request and one saved file. Larger files keep the native download (the
+  browser may segment it into parallel `206` ranges, which assemble into one
+  file). Small "download all"/zip bulk downloads go through the same path.
+  Client-only; server download path unchanged.
 
 ## [0.2.12] — nightly
 - Serve the app shell with `Cache-Control: no-store` (+ `Pragma`/`Expires`). The

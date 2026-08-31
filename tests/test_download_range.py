@@ -4,7 +4,8 @@ Motivation: iOS Safari probes a download with a Range request and, if the server
 answers a plain 200 instead of 206, re-fetches — producing an OS-suffixed
 duplicate ("name (1).ext"). This verifies the server now speaks Range correctly:
 
-  * a full GET is 200 with Accept-Ranges/ETag/Last-Modified and the exact body,
+  * a full GET is 200 with ETag/Last-Modified and the exact body, and does NOT
+    advertise Accept-Ranges (so browsers don't segment/duplicate — BACKLOG 10),
   * byte ranges (closed, open-ended, suffix) return 206 with the right
     Content-Range and the correct slice (offset-sensitive, patterned body),
   * a range past EOF returns 416 with Content-Range: bytes */size,
@@ -105,7 +106,7 @@ def main():
         # 1) full GET: 200, advertises range support, exact body
         s, h, b = dl(sfid, sess)
         check("full GET is 200", s == 200)
-        check("Accept-Ranges: bytes", h.get("accept-ranges") == "bytes")
+        check("full 200 does NOT advertise Accept-Ranges (anti-segmentation)", h.get("accept-ranges") is None)
         check("ETag present", bool(h.get("etag")))
         check("Last-Modified present", bool(h.get("last-modified")))
         check("full Content-Length == size", int(h.get("content-length","0")) == SMALL)

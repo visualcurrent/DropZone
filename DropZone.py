@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.12"        # running build
+__version__   = "0.2.14"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -525,7 +525,10 @@ class Handler(BaseHTTPRequestHandler):
                 label = f"[{fid}]"
             self.send_header("Content-Type", ctype)
             self.send_header("Content-Disposition", cdisp)
-            self.send_header("Accept-Ranges", "bytes")
+            # Deliberately NOT advertising Accept-Ranges: it made Chrome do a
+            # start/cancel/re-segment dance that duplicated small files (BACKLOG
+            # 10). We still HONOR an explicit Range request with 206 below (Safari,
+            # resume); we just don't invite segmentation on the plain 200.
             self.send_header("ETag", etag)
             self.send_header("Last-Modified", lastmod)
             self.end_headers()
@@ -1180,18 +1183,18 @@ async function probeSpeed(){
 // leaves the current page untouched — so a slow, still-spooling zip no longer
 // blanks the page, and a refresh no longer re-fires the download (BUG: host page
 // navigated to /api/download_all and duplicated on reload).
-const _dlLast = new Map();   // download URL -> ms of last trigger (debounce)
-// Ignore a repeat of the SAME download fired within this window. Kills the
-// Android re-fire (BACKLOG 10): a re-tap, or the list re-render destroying the
-// button mid-click and the browser retrying, otherwise sends the same GET 2-3x
-// (log showed one [id] fired thrice, two cancelled). One click = one request.
+const _dlLast = new Map();   // download URL -> ms of last fire (debounce double-taps)
 const DL_DEBOUNCE_MS = 1500;
+// Native browser download via a detached, self-removing anchor on <body> (NOT the
+// polled file list, so a re-render cannot abort it). This gives the browser's
+// instant download UI. The duplicate-download fix is SERVER-SIDE: /api/download no
+// longer advertises Accept-Ranges, so the browser stops its start/cancel/
+// re-segment dance that duplicated small files. This debounce only guards against
+// an accidental rapid double-tap. See BACKLOG 10.
 function triggerDownload(url){
   const now=Date.now();
-  if(now-(_dlLast.get(url)||0) < DL_DEBOUNCE_MS) return;   // duplicate within window
+  if(now-(_dlLast.get(url)||0) < DL_DEBOUNCE_MS) return;   // ignore a rapid repeat
   _dlLast.set(url, now);
-  // Detached, self-removing anchor appended to <body> (NOT the polled file list),
-  // so a re-render of the list can never abort this download mid-flight.
   const a=document.createElement('a');
   a.href=url; a.download='';
   a.style.display='none';
@@ -1199,9 +1202,8 @@ function triggerDownload(url){
   a.click();
   setTimeout(()=>a.remove(), 2000);
 }
-// Single-file download button. preventDefault so the anchor never navigates on
-// its own; the debounced trigger owns the request. href stays as a no-JS
-// fallback, and the server's Content-Disposition supplies the filename.
+// Single-file button. preventDefault so the anchor never navigates on its own;
+// triggerDownload owns the request. href/download stay as a no-JS fallback.
 function downloadOne(ev, id){
   ev.preventDefault();
   triggerDownload(`${API}/api/download?id=${encodeURIComponent(id)}`);

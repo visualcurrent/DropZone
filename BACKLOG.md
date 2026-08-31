@@ -178,6 +178,10 @@ code about to be rewritten. Keep the single-file, zero-dependency shape.
 
 **Definition of done:** a short findings note listing concrete simplifications;
 low-risk ones applied; anything larger split into its own backlog item.
+**Start here:** `docs/notes/audit-guide-downloads.md` — the download/upload saga
+(v0.2.10-0.2.14) left load-bearing choices next to removable cruft. That guide
+lists the invariants NOT to break, what to keep, and the one big simplification
+available (dropping Range support if Safari/resume are not needed).
 
 ---
 
@@ -195,7 +199,7 @@ visibly stops at the real point rather than sitting near 100%.
 `upload.onprogress` (true bytes sent, with bytes + ETA). Field note: confirm on
 the phone that it visibly halts at the stall point during a large upload.
 
-### 10. [~] Investigate duplicate / double downloads  (BUG)  — fixes shipped v0.2.10 (Safari Range) + v0.2.11 (Android re-fire) + v0.2.12 (no-store shell), awaiting field confirm
+### 10. [~] Investigate duplicate / double downloads  (BUG)  — v0.2.14: stop advertising Accept-Ranges (kills Chrome's re-segment dupe); native UI kept; awaiting Android field confirm
 Field report: selecting each file once still produced many OS-suffixed
 duplicates ("name (1).ext") in the download folder. Two candidate causes: (a) a
 real double-fire — the same request sent twice; or (b) not a bug — distinct
@@ -251,13 +255,16 @@ v0.2.11: the single-file button routes through one detached, debounced trigger a
 the file lists skip no-op re-renders, so the re-render can't abort/retry a download
 and a re-tap can't double-fire. Android field check: one tap = one `download [id]`
 in the log (no cancel/re-request storm).
-**v0.2.11 field run showed the re-fire UNCHANGED — because the phone ran a CACHED
-old page** (the log had the new server's `206` range replies but the old client's
-re-fire). v0.2.12 fixes the real blocker: the app shell is now `no-store`, so
-client changes take effect on load. Re-test on Android after loading the page on a
-fresh cache. NOTE: with Range now supported, a browser may split one download into
-parallel `206` range parts — that is one file, not a duplicate; only multiple full
-`200` completions would be a real duplicate.
+**Root cause (final):** advertising `Accept-Ranges` (v0.2.10, for Safari) made
+Chrome start a download, cancel it, and re-fetch in parallel `206` ranges. Small
+files finish the first plain attempt before the cancel -> saved twice; large files
+get cancelled -> one file. **v0.2.13** proved a blob (in-page fetch) makes one
+request per file, but its UX was unacceptable (no feedback, stacked save dialogs)
+— REVERTED. **v0.2.14 (the keeper):** `/api/download` no longer advertises
+`Accept-Ranges`, so the browser does ONE plain download (one file) with the
+instant native UI; an explicit `Range` request is still honored with `206`
+(Safari/resume). Android field check: a small file downloads once, instantly, no
+`name (1).ext`, no stacked dialogs.
 **Definition of done:** cause identified from logs; fix or a clear "working as
 intended, here is the better UX" decision recorded.
 
@@ -321,6 +328,25 @@ if wanted.
 **Definition of done:** one status region shows in-flight uploads (real bytes,
 pairs with item 9) and host download/queue activity; no page-content jump as it
 updates; reachable without scrolling on phone and desktop widths.
+
+### 15. [ ] Upload: prevent duplicate/concurrent submits + earlier feedback  (BUG/UX)
+Field (v0.2.14, public wifi): a 61 MB upload showed no moving progress bar for
+several seconds (slow first byte on public wifi -> `upload.onprogress` had not
+fired yet), so it looked dead and was re-selected. Result: the SAME file uploaded
+twice (log: two `upload start`, two saves same name / different id -- `75b734cc` &
+`2e624e51`), and the single shared progress bar "bounced" between the two
+concurrent uploads. NOT caused by the download work (upload path untouched since
+BACKLOG 1). Three concrete gaps in `uploadFiles`:
+- No guard against starting a second upload while one is in flight (or re-adding a
+  file already uploading) -- disable the picker / queue instead of running both.
+- No immediate "upload started / preparing" state before the first progress event,
+  so a slow connection start reads as a dead UI.
+- One shared `#prog-bar` cannot represent concurrent uploads -- show per-upload
+  progress, or serialize.
+**Definition of done:** re-selecting the same file (or a rapid second pick) while
+an upload is in flight does not create a duplicate; the user sees immediate
+feedback that the upload started even before bytes flow; concurrent uploads (if
+allowed) each show their own progress instead of one bar fighting itself.
 
 ## Notes on ordering
 Item 1 is fixed first by explicit request and because it makes the app unusable
