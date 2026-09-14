@@ -1,0 +1,30 @@
+# PLAN — DropZone
+
+Ordered milestones with gates, then the backlog. Folded from the old BACKLOG.md (every version number and finding preserved). Status keys: `[ ]` todo · `[~]` in progress · `[x]` done · `[-]` dropped.
+
+## M0 — Core LAN sharing app, hardened
+Single-file host + browser guests: upload, per-file and bulk-zip download, QR join, memory-safe transfers. Built and shipped through v0.2.14.
+**Gate:** `python3 tests/run_all.py` green (covers upload memory / queue feedback / zip streaming / download range) AND the two field bugs closed — upload freeze (BACKLOG 1) and duplicate downloads (BACKLOG 10).
+**Status:** test suite green (last run 2026-08-30); BACKLOG 1 PASSED field-confirmed v0.2.09; BACKLOG 10 fix shipped v0.2.14, Android field-confirm pending, iPhone check pending. Run: `python3 tests/run_all.py`.
+
+## Backlog — active
+- [ ] **2. Test: does a remote user's file-delete actually remove the file?** Code path `POST /api/remove_file` unlinks the temp file only when `owner_id == sid`. DoD: a written finding in a note stating observed behaviour (list entry dropped AND temp file unlinked, no orphans); if broken, a new item with the fix.
+- [ ] **4. Host view: panel of all connected users + status.** Today a user appears only once they upload (`/api/state` filters `if u["files"]`). DoD: host page lists connected sessions even with no files, showing name and a live activity/status indicator; guests unaffected. This is the next code target after the v0.2.14 field confirm.
+- [~] **6. Download queue feedback + robustness.** Feedback half shipped v0.2.07 (activity banner + `/api/state` transfers list, with queue position); cancelled downloads no longer print a traceback. The remaining "deeper" streaming half (send the STORE zip as built rather than spool-first) was delivered separately as item 13. DoD: a queued download shows clear waiting feedback; a cancelled download prints no traceback; two users can request downloads without one silently getting nothing. Remaining: only banner polish if field use asks for it.
+- [ ] **8. Code audit for simplicity/maintainability.** Do AFTER the bug fixes land, to audit stable code; keep the single-file zero-dependency shape. DoD: a short findings note listing concrete simplifications; low-risk ones applied; larger ones split out. Start from the archived `audit-guide-downloads.md` — it lists the invariants NOT to break (now in ARCHITECTURE "Contracts to preserve"), what to keep, and the one big simplification available (dropping Range support if Safari/resume are not needed).
+- [ ] **15. Upload: prevent duplicate/concurrent submits + earlier feedback.** Field (v0.2.14, public wifi): a 61 MB upload showed no moving bar for several seconds (slow first byte before `upload.onprogress` fired), was re-selected, and the SAME file uploaded twice (two `upload start`, two saves same name / different id `75b734cc` & `2e624e51`); the single shared bar bounced between them. NOT a regression from the download work. Three gaps in `uploadFiles`: no guard against a second in-flight upload; no "upload started" state before the first progress event; one shared `#prog-bar` can't represent concurrent uploads. DoD: a rapid second pick of the same file makes no duplicate; the user sees immediate "started" feedback before bytes flow; concurrent uploads each show their own progress or are serialized.
+
+## Backlog — larger features (scoped, deferred)
+See UNEXPLORED_IDEAS.md: U1 thumbnails toggle (old item 7), U2 size-capped "download everything" parts (old item 11), U3 unified upload+activity status area (old item 14).
+
+## Done / dropped (record — do not re-derive)
+- [x] **1. Upload freeze on large files** — CLOSED field-confirmed v0.2.09. Cause: whole body read into RAM + `parse_multipart` copy → ~2–3× RSS → phone OOM. Fix v0.2.05 `stream_multipart()` (socket → disk in `UPLOAD_CHUNK`). Field: 2.4/2.6/1.8 GB singles + 4.4 GB batch byte-exact, RSS flat 12–16 MB, no freeze/OOM/traceback. Raw evidence in `_archive/DropZone.log` and `_archive/upload-freeze-log.md`.
+- [x] **3. Version constant + show it on the host page** — shipped v0.2.01 (`__version__` + `VERSION_STAGE`; header + startup banner show the running build).
+- [x] **9. Real upload progress bar** — shipped v0.2.05 (`XMLHttpRequest` `upload.onprogress`, true bytes + ETA; halts at a stall) replacing the fake `setInterval` timer.
+- [x] **10. Duplicate / double downloads** — resolved v0.2.14. Root cause: advertising `Accept-Ranges` (added v0.2.10 for Safari) made Chrome start/cancel/re-segment; small files saved twice. Journey: v0.2.10 Range support; v0.2.11 anchor debounce; v0.2.12 `no-store` shell (so client fixes actually deploy); v0.2.13 blob (deduped but bad UX — REVERTED); v0.2.14 stop advertising `Accept-Ranges` (one plain native download; explicit `Range` still 206). Marked `[~]` in the old backlog pending the Android/iPhone field eyeball; tracked in M0 gate + SESSION.
+- [-] **5. Long combined file list cannot scroll** — dropped, not reproducible; re-tested clean at 1100 files. Reopen only with a concrete repro.
+- [-] **12. Light/dark theme regression** — dropped, external cause: a browser setting forcing night mode on the device, not a DropZone defect (code measured correct in headless Chromium). Between-session theme persistence is intentionally not wanted.
+- [x] **13. Stream "download everything" as it is built** — shipped v0.2.09. Hand-rolled uniform-zip64 STORE streamer with an exact-size formula: TTFB ~1 ms (was tens of seconds), no temp file, real progress bar, flat memory; byte-exact incl. >4 GiB. Design + evidence in `_archive/streaming-zip-findings.md`; contract in ARCHITECTURE.
+
+## Notes on ordering
+Item 4 is the next code target; items 2/8/15 follow; the U-series features come once the core is stable. Re-order freely as priorities shift.
