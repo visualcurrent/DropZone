@@ -11,7 +11,7 @@
 
 ## Open user questions
 - Keep or remove the wake lock + WiFi lock the app holds while the server runs (added without a request)? [assumed: keep]
-- Retire `PROJECTS\DropZone-Android` and the GitHub repo `visualcurrent/DropZone-Android` (nothing uses them now).
+- DropZone-Android is retired and checked as safe to delete. Gabe deletes `PROJECTS\DropZone-Android` (Windows locked it on 2026-11-11) and the GitHub repo `visualcurrent/DropZone-Android` (browser shows 404; see LOG 2026-11-11 Retire). [verified: LOG entry]
 - Audit decision (BACKLOG 8): keep or remove Range support wholesale — depends on whether Safari/resume matters. [assumed: pending]
 
 ## Resume

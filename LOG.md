@@ -2,6 +2,12 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-11 — Retire DropZone-Android
+- Checked before retiring: the `PROJECTS\DropZone-Android` repo is clean with nothing unpushed (`master` 60014fa, also on GitHub). Every file is in `android\` or was changed on purpose in the merge (DropZone.py 0.2.14→0.2.15, `_patch_header_encoding` removed, Gradle `rootProject.name`). [verified: `git status`, `git ls-remote`, `diff -rq` against `android\`]
+- Removed from GitHub Desktop by Gabe. Moving the folder to `_to_delete\` failed: Windows reports it in use and does not name the process. Gabe deletes the folder later. [verified: `mv` and `Move-Item` both refused, 2026-11-11]
+- GitHub repo `visualcurrent/DropZone-Android`: `git ls-remote` reaches it, but the browser returns 404 while logged in. Cause not found. [verified: ls-remote output; Gabe's report]
+- Next (user): delete the local folder; delete or archive the GitHub repo.
+
 ## 2026-11-11 — Session 1: v0.2.15 filename fix (step 1 of merging in the Android app)
 - Decided (Gabe, 2026-11-11): merge the separate DropZone-Android project into this one as a new milestone; the "do not touch the DropZone directory" rule set that morning ends; "single-file, zero-dependency" is scoped to `DropZone.py` and how it runs; the DropZone-Android repo is retired. Plan in four steps; this entry is step 1 only. [verified: user approval in session]
 - Diagnosed: single-file download of a name outside latin-1 dies in `send_header("Content-Disposition", ...)` with `UnicodeEncodeError`; zip unaffected. [verified: 9 tracebacks in the Android app's `DropZone.log`, 2026-11-11 09:28-09:29, for a name with an emoji and one with a curly apostrophe]
