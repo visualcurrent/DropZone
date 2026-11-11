@@ -3,21 +3,20 @@
 > Read first, update last. Current-state block under 15 lines. It is a prompt, not a history.
 
 ## Current state
-- Build **v0.2.15 (nightly)**: fixes single-file download of names outside latin-1 (BACKLOG 16). [verified: `tests/test_download_filename.py` 17/17 + `test_download_range.py` PASS on Windows via a scratch shim, 2026-11-11] The full `tests/run_all.py` has NOT been run on v0.2.15 (needs Linux/Termux). [assumed: other three tests unaffected]
-- Merging the Android app in (decided 2026-11-11): steps 1-2 of 4 done — the fix, and the Android project now lives in `android\` and builds `0.1.02-dz0.2.15` from the repo's own `DropZone.py`. [verified: build + odd-filename round trip on PC and phone, 2026-11-11] Step 3 pending (fold docs: M1 in PLAN.md, CLAUDE.md, ARCHITECTURE.md, `UNINSTALL.md`, archive DropZone-Android docs, `~Projects.md`); step 4 (rebuild + re-verify) was done as part of step 2. Plan and decisions: LOG.md top entry.
-- v0.2.14 state before this session: the whole test suite was green and the served page carried the new client. [verified: node --check + boot smoke, last work session 2026-08-30]
-- BACKLOG 1 (upload freeze) CLOSED — field-confirmed on the phone. [verified: 2026-08-30 field run — 2.4/2.6/1.8 GB singles + 4.4 GB batch byte-exact, RSS flat 12–16 MB]
-- BACKLOG 10 (duplicate downloads) fix shipped v0.2.14 (stop advertising `Accept-Ranges`); the v0.2.14 Android field log shows one completed download per file and no range segmentation. [est_ from field log 2026-08-30] An Android eyeball of the Downloads folder and an iPhone check are still owed.
-- Migrated into AI-dev on 2026-09-11; full git history (17 commits) and `origin` carried by copy. [verified: git log/fsck in the copy]
+- Core **v0.2.15 (nightly)**: fixes single-file download of names outside latin-1 (BACKLOG 16). [verified: `tests/test_download_filename.py` 17/17, 2026-11-11] Pushed and on the Termux phone. [verified: Gabe's report]
+- Tests on v0.2.15: 4 of 5 pass on Windows through a scratch shim; `test_zip_streaming.py` not run (cannot run on Windows); memory not measured (needs Linux). [verified: shim runs 2026-11-11] No Linux/Termux run of `tests/run_all.py` on v0.2.15 yet. [assumed: would pass — zip and upload code untouched]
+- M1 Android app merged in (2026-11-11): `android\build.bat` builds `0.1.02-dz0.2.15` from the repo's own `DropZone.py`; installed and running on phone `fc0f334f`. [verified: build + odd-filename round trip on PC and phone]
+- M1 field so far: one phone, by script — 2.6 GB up and down byte-exact with the screen off, app memory flat. [verified: sha256, 2026-11-11] Second phone and browser-driven checks pending. [assumed: pending]
+- BACKLOG 10 (duplicate downloads, v0.2.14): Android Downloads-folder eyeball and iPhone check still owed. [assumed: pending]
 
 ## Open user questions
-- Confirm on Android that a small file lands once (no `name (1).ext`), and likewise on an iPhone. [assumed: pending]
+- Keep or remove the wake lock + WiFi lock the app holds while the server runs (added without a request)? [assumed: keep]
+- Retire `PROJECTS\DropZone-Android` and the GitHub repo `visualcurrent/DropZone-Android` (nothing uses them now).
 - Audit decision (BACKLOG 8): keep or remove Range support wholesale — depends on whether Safari/resume matters. [assumed: pending]
 
 ## Resume
-- Next action: merge step 3 (fold the docs; sources are the five `.md` files in `PROJECTS\DropZone-Android`). Parked behind the merge: field-confirm BACKLOG 10 on Android; host connected-users panel (BACKLOG 4).
-- Pending gate: `python3 tests/run_all.py` on the Termux phone at v0.2.15 — all five tests PASS. [assumed: pending]
-- Read: PLAN.md > M0 core app, and the Backlog section.
-- Read: SCRIPT_INDEX.md > DropZone.py map for the download/upload/zip entry points before touching them.
-- Read: ARCHITECTURE.md > Contracts to preserve before any change to `/api/download` or `send_html`.
-- Pending gate: v0.2.14 Android field-confirm of BACKLOG 10 — [assumed: pending] a small file downloads once, no `name (1).ext`.
+- Next action: take Gabe's field result for the second phone; then the first M1 open item (guard test for `dz_host.py`'s core names), then BACKLOG 4 (host connected-users panel).
+- Read: PLAN.md > M1 — Android app (sideloadable APK).
+- Read: ARCHITECTURE.md > Contracts to preserve (7-9 are the Android ones) before any change to module-level names in `DropZone.py`.
+- Read: SCRIPT_INDEX.md > `android/...` rows for the wrapper and build files.
+- Pending gate: M1 field gate, user-run — on each test phone a multi-GB upload and download byte-exact with the screen off, app not killed, each file downloads once in the browser.

@@ -7,6 +7,22 @@ Single-file host + browser guests: upload, per-file and bulk-zip download, QR jo
 **Gate:** `python3 tests/run_all.py` green (covers upload memory / queue feedback / zip streaming / download range) AND the two field bugs closed — upload freeze (BACKLOG 1) and duplicate downloads (BACKLOG 10).
 **Status:** test suite green (last run 2026-08-30); BACKLOG 1 PASSED field-confirmed v0.2.09; BACKLOG 10 fix shipped v0.2.14, Android field-confirm pending, iPhone check pending. Run: `python3 tests/run_all.py`.
 
+## M1 — Android app (sideloadable APK)
+The same `DropZone.py`, unedited, running inside an Android app in `android\`: embedded Python (Chaquopy), a foreground service that runs the server, one screen with Start/Stop, the remote address, and "Open host page" (launches the phone's browser). Started as the separate project DropZone-Android on 2026-11-11 and merged in the same day (its records: `_archive\DropZone-Android-*.md`).
+**Gate (build):** `android\build.bat` exits 0 and the APK's version name carries the current core version.
+**Gate (launch):** on a device, Start brings the server up; `/`, `/remote`, `/api/state` return 200; Stop frees the port and deletes the session's uploads.
+**Gate (field, user-run):** on each test phone, a multi-GB upload and download are byte-exact with the screen off, the app is not killed, and each file downloads once in the browser.
+**Status:** build gate PASSED (`0.1.02-dz0.2.15`, 2026-11-11). Launch gate PASSED on the Android 15 emulator and on phone `fc0f334f` (Android 16). Field gate: one phone done by script, not by browser — 2.6 GB up (108 s) and down (514 s) byte-exact, screen off, app memory flat at 239-247 MB; the second phone and the browser-driven checks are PENDING (Gabe).
+Open items:
+- [ ] Guard test for the wrapper's dependence on core names (`SCRIPT_INDEX.md` > `dz_host.py` lists them) — DoD: a dependency-free test in `tests/` starts and stops the server through `dz_host.py` and round-trips one file, so a core rename fails the suite instead of failing on a phone.
+- [ ] Shared files not appearing until the page is reopened (reported once, 2026-11-11, app 0.1.00; not reproduced; nothing in the server log) — DoD: reproduced with the browser console captured, or closed as not reproducible after the field run.
+- [ ] Download from the phone ran about 5x slower than upload (5 vs 24 MB/s, same with the screen on) — DoD: the same transfer timed against Termux on the same phone and network, so the cause is placed in the link or in the app.
+- [ ] Wake lock + WiFi lock while the server runs were added without a request — DoD: Gabe's keep/remove decision recorded.
+- [ ] Release signing key kept outside the toolchain folder — DoD: an APK built after the toolchain is removed and restored still installs over the previous build.
+- [ ] 32-bit phones (APK is arm64-v8a + x86_64 only) — DoD: only if a test phone refuses the APK.
+- [ ] Read `DropZone.log` from the phone without `adb` — DoD: a button shares or exports the log.
+- [-] Host page inside the app (WebView) — deferred by decision 2026-11-11; the browser already handles file picking and multi-GB downloads.
+
 ## Backlog — active
 - [ ] **2. Test: does a remote user's file-delete actually remove the file?** Code path `POST /api/remove_file` unlinks the temp file only when `owner_id == sid`. DoD: a written finding in a note stating observed behaviour (list entry dropped AND temp file unlinked, no orphans); if broken, a new item with the fix.
 - [ ] **4. Host view: panel of all connected users + status.** Today a user appears only once they upload (`/api/state` filters `if u["files"]`). DoD: host page lists connected sessions even with no files, showing name and a live activity/status indicator; guests unaffected. This is the next code target after the v0.2.14 field confirm.
