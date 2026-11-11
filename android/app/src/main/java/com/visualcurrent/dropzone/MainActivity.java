@@ -16,6 +16,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
@@ -51,11 +53,11 @@ public class MainActivity extends Activity {
     private static final int FILLED = 0, OUTLINE = 1, TONAL = 2, DISABLED = 3;
 
     // Palette (filled in by loadPalette for light or dark mode).
-    private int cBg, cSurf, cOff, cBorder, cDiv, cTxt, cMuted, cPri, cPriHl, cOnPri, cErr, cDotOff;
+    private int cBg, cSurf, cOff, cBorder, cDiv, cTxt, cMuted, cPri, cPriHl, cOnPri, cErr, cErrBg, cDotOff;
     private float density;   // pixels per dp on this screen
 
     // Widgets that change between Stopped and Running.
-    private View serverDot;
+    private View serverDot, batteryCard;
     private TextView serverState, serverSub, hostMain, hostSub, joinMain, joinSub, stopNote, step1Num, step1Text;
     private Button serverBtn, openBtn, copyBtn;
 
@@ -141,14 +143,14 @@ public class MainActivity extends Activity {
             cTxt = 0xFFD0CFC9; cMuted = 0xFF8A8880;
             cPri = 0xFF4F98A3; cPriHl = 0x244F98A3;   // 0x24 = 14% opacity
             cOnPri = 0xFF171614;                      // dark text on the lighter teal, for contrast
-            cErr = 0xFFD163A7; cDotOff = 0xFF8A8880;
+            cErr = 0xFFD163A7; cErrBg = 0xFF2D1A28; cDotOff = 0xFF8A8880;
         } else {
             cBg = 0xFFF4F3EF; cSurf = 0xFFF9F8F5; cOff = 0xFFEDEAE5;
             cBorder = 0xFFD4D1CA; cDiv = 0xFFDCD9D5;
             cTxt = 0xFF28251D; cMuted = 0xFF6B6A66;
             cPri = 0xFF01696F; cPriHl = 0x1F01696F;   // 0x1F = 12% opacity
             cOnPri = Color.WHITE;
-            cErr = 0xFFA12C7B; cDotOff = 0xFFA09D96;
+            cErr = 0xFFA12C7B; cErrBg = 0xFFFCE8F4; cDotOff = 0xFFA09D96;
         }
     }
 
@@ -388,10 +390,51 @@ public class MainActivity extends Activity {
         LinearLayout body = new LinearLayout(this);
         body.setOrientation(LinearLayout.VERTICAL);
         body.setPadding(px(16), px(20), px(16), px(20));
+        body.addView(buildBatteryCard());
         body.addView(card);
         body.addView(stopNote);
         body.addView(how);
         return body;
+    }
+
+    /**
+     * A notice shown only while the phone is allowed to restrict this app's
+     * battery use. Why it matters: some phones (seen on a Xiaomi, 2026-11-11)
+     * freeze a restricted app in the background even though its server is
+     * running, and every upload and download then hangs until the app is
+     * thawed. The button opens the phone's own "App info" page, where the
+     * setting lives (on the Xiaomi: Power -> No restrictions). refresh() hides
+     * the notice once the restriction is lifted.
+     */
+    private View buildBatteryCard() {
+        TextView title = text("This phone may pause DropZone", 15, cTxt, false);
+        title.setPadding(0, px(3), 0, px(3));
+        TextView how = text("Transfers stall when it does. In App info, set the battery "
+                + "or power option to No restrictions.", 13, cMuted, false);
+
+        Button settings = button("Settings");
+        styleButton(settings, OUTLINE);
+        settings.setOnClickListener(v -> startActivity(new Intent(
+                Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                Uri.parse("package:" + getPackageName()))));
+
+        LinearLayout notice = row(settings, caption("Battery"), title, how);
+        notice.setBackground(shape(cErrBg, cErr, 14));
+
+        // Wrapper only adds the 16 dp gap below the notice, so the gap
+        // disappears together with it.
+        LinearLayout wrap = new LinearLayout(this);
+        wrap.setOrientation(LinearLayout.VERTICAL);
+        wrap.setPadding(0, 0, 0, px(16));
+        wrap.addView(notice);
+        batteryCard = wrap;
+        return wrap;
+    }
+
+    /** True while the phone may still restrict (and so possibly freeze) this app. */
+    private boolean batteryRestricted() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        return !pm.isIgnoringBatteryOptimizations(getPackageName());
     }
 
     private View buildFooter() {
@@ -416,9 +459,12 @@ public class MainActivity extends Activity {
     private void refresh() {
         boolean on = ServerService.running;
         String error = ServerService.lastError;
-        String state = on + "|" + ServerService.remoteUrl + "|" + error;
+        boolean restricted = batteryRestricted();
+        String state = on + "|" + ServerService.remoteUrl + "|" + error + "|" + restricted;
         if (state.equals(shownState)) return;
         shownState = state;
+
+        batteryCard.setVisibility(restricted ? View.VISIBLE : View.GONE);
 
         // Row 1: server
         GradientDrawable dot = new GradientDrawable();
