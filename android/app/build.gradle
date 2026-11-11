@@ -19,9 +19,12 @@ if (!coreDst.exists() || coreSrc.bytes != coreDst.bytes) {
 // version name always says which DropZone build is inside it.
 def coreMatch = (coreDst.getText('UTF-8') =~ /(?m)^__version__\s*=\s*"([^"]+)"/)
 def coreVersion = coreMatch.find() ? coreMatch.group(1) : 'unknown'
+// Same for the stage label (line: VERSION_STAGE = "nightly"); shown in the app's footer.
+def stageMatch = (coreDst.getText('UTF-8') =~ /(?m)^VERSION_STAGE\s*=\s*"([^"]+)"/)
+def coreStage = stageMatch.find() ? stageMatch.group(1) : ''
 
 // Wrapper's own version (release.beta.incremental, same scheme as DropZone).
-def wrapperVersion = '0.1.02'
+def wrapperVersion = '0.1.03'
 
 android {
     namespace 'com.visualcurrent.dropzone'
@@ -31,13 +34,22 @@ android {
         applicationId 'com.visualcurrent.dropzone'
         minSdk 26               // Android 8.0
         targetSdk 35
-        versionCode 3
+        versionCode 4
         versionName "${wrapperVersion}-dz${coreVersion}"
+
+        // Constants the Java code reads as BuildConfig.CORE_VERSION etc., so the
+        // screen can show the versions before the server has ever been started.
+        buildConfigField 'String', 'CORE_VERSION', "\"${coreVersion}\""
+        buildConfigField 'String', 'CORE_STAGE', "\"${coreStage}\""
+        buildConfigField 'String', 'WRAPPER_VERSION', "\"${wrapperVersion}\""
 
         // Which CPU types get a Python interpreter in the APK (each adds size).
         // arm64-v8a = every 64-bit phone; x86_64 = the PC emulator.
         ndk { abiFilters 'arm64-v8a', 'x86_64' }
     }
+
+    // Generate the BuildConfig class (off by default in this plugin version).
+    buildFeatures { buildConfig true }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17

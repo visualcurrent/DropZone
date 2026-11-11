@@ -25,7 +25,7 @@
         android:label="DropZone"
         android:icon="@drawable/ic_launcher"
         android:allowBackup="false"
-        android:theme="@android:style/Theme.DeviceDefault.DayNight">
+        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
         <activity
             android:name=".MainActivity"

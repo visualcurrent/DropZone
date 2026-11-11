@@ -5,7 +5,7 @@
 ## Current state
 - Core **v0.2.15 (nightly)**: fixes single-file download of names outside latin-1 (BACKLOG 16). [verified: `tests/test_download_filename.py` 17/17, 2026-11-11] Pushed and on the Termux phone. [verified: Gabe's report]
 - Tests on v0.2.15: 4 of 5 pass on Windows through a scratch shim; `test_zip_streaming.py` not run (cannot run on Windows); memory not measured (needs Linux). [verified: shim runs 2026-11-11] No Linux/Termux run of `tests/run_all.py` on v0.2.15 yet. [assumed: would pass — zip and upload code untouched]
-- M1 Android app merged in (2026-11-11): `android\build.bat` builds `0.1.02-dz0.2.15` from the repo's own `DropZone.py`; installed and running on phone `fc0f334f`. [verified: build + odd-filename round trip on PC and phone]
+- M1 Android app merged in (2026-11-11): `android\build.bat` builds from the repo's own `DropZone.py`. [verified: build + odd-filename round trip on PC and phone] Current build `0.1.03-dz0.2.15` has the screen restyled after the web page (three-row card, Copy button, version footer, light/dark); installed on phone `fc0f334f`, left stopped. [verified: emulator + phone screenshots 2026-11-11; on the Xiaomi, bold text draws nearly regular — open, Gabe's call]
 - M1 field so far: one phone, by script — 2.6 GB up and down byte-exact with the screen off, app memory flat. [verified: sha256, 2026-11-11] Second phone and browser-driven checks pending. [assumed: pending]
 - BACKLOG 10 (duplicate downloads, v0.2.14): Android Downloads-folder eyeball and iPhone check still owed. [assumed: pending]
 
