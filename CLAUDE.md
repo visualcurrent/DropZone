@@ -20,6 +20,7 @@ A host runs one pure-stdlib Python file; everyone else on the same WiFi opens a 
 - Keep the single-file, zero-dependency shape; prefer the smallest change that solves the problem.
 - 2026-11-11 — The Android app is part of this project (merged from the one-day separate project DropZone-Android, whose repo is retired). "Single-file, zero-dependency" is scoped to `DropZone.py` and how it runs; `android\` is a packaging layer with its own toolchain. The core never imports from, or branches on, the Android layer.
 - 2026-11-11 — In the app, the host page opens in the phone's browser, not inside the app. The APK is debug-signed for sideloading.
+- 2026-11-11 — App design balance: fully functional, good-looking, and reasonably simple, in that order of tie-breaking none over the others. Prefer the wider range of Android versions when a choice affects compatibility (e.g. a theme that exists on Android 8+ over a newer one). The app screen's text weight as rendered on the Xiaomi (bold drawn near regular) is accepted; do not add per-vendor font workarounds.
 - 2026-11-11 — The agent deletes nothing on the PC it did not create; removal candidates are handed over as a list (`UNINSTALL.md`).
 
 ## Do-not-re-derive (verified findings)
