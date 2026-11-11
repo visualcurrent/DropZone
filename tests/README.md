@@ -15,7 +15,7 @@ python3 tests/test_zip_streaming.py   # or one at a time
 ```
 
 Each script prints a short result and exits `0` on pass, non-zero on fail.
-`run_all.py` runs all three and fails if any fails.
+`run_all.py` runs every test listed below and fails if any fails.
 
 ## What each test covers
 
@@ -25,6 +25,7 @@ Each script prints a short result and exits `0` on pass, non-zero on fail.
 | `test_queue_feedback.py` | 6  | With the transfer cap forced to 1, three concurrent downloads show up in `/api/state` as one `sending` + others `queued` with positions, and the registry drains to empty. |
 | `test_zip_streaming.py`  | 13 | The per-user ZIP streams as it is built: advertised `Content-Length` == bytes streamed == `DropZone.zip_stream_size()`, first byte is near-instant, the archive is valid (Python `zipfile`, and Info-ZIP `unzip -t` if installed) and extracts byte-exact, and a mid-stream cancel leaves no traceback. |
 | `test_download_range.py` | 10 | Single-file `/api/download` speaks HTTP Range: a full GET is 200 with `Accept-Ranges`/`ETag`/`Last-Modified`; closed, open-ended and suffix ranges return 206 with the right `Content-Range` and offset-exact slices; a range past EOF is 416; a stale `If-Range` and a multi-range header both fall back to 200; a >`STREAM_THRESHOLD` slice streams from disk via seek byte-exact. Guards the iOS-Safari duplicate-download fix. |
+| `test_download_filename.py` | 16 | Single-file `/api/download` works for names outside plain ASCII (curly apostrophe, emoji, accents, Japanese): 200 with a byte-exact body, the header's quoted `filename=""` is printable ASCII, and `filename*=UTF-8''` decodes back to the exact original name. Port 8075. |
 
 ## How it works (for the next agent)
 

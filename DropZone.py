@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.14"        # running build
+__version__   = "0.2.15"        # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -491,7 +491,14 @@ class Handler(BaseHTTPRequestHandler):
             lastmod  = formatdate(st.st_mtime, usegmt=True)
             fsafe    = urllib.parse.quote(f["name"])
             ctype    = mimetypes.guess_type(f["name"])[0] or "application/octet-stream"
-            cdisp    = f'attachment; filename="{f["name"]}"; filename*=UTF-8\'\'{fsafe}'
+            # The quoted filename="" form gets a plain-ASCII stand-in for the name:
+            # http.server can only send latin-1 header text, so a raw name with an
+            # emoji or a curly apostrophe raised UnicodeEncodeError and killed the
+            # download (field 2026-11-11). A double quote or backslash would end the
+            # quoted string early, so those are swapped too. Browsers take the real
+            # name from the percent-encoded filename* form, which is pure ASCII.
+            fplain   = re.sub(r'[^\x20-\x7e]|["\\]', "_", f["name"])
+            cdisp    = f'attachment; filename="{fplain}"; filename*=UTF-8\'\'{fsafe}'
 
             # Range support (BACKLOG 10). If-Range gates the range: on a validator
             # mismatch — or a malformed/multi-range header — we fall through to a

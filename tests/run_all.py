@@ -1,7 +1,8 @@
 """Run every DropZone test in sequence; exit non-zero if any fails."""
 import subprocess, sys, os
 HERE = os.path.dirname(os.path.abspath(__file__))
-TESTS = ["test_upload_memory.py", "test_queue_feedback.py", "test_zip_streaming.py", "test_download_range.py"]
+TESTS = ["test_upload_memory.py", "test_queue_feedback.py", "test_zip_streaming.py", "test_download_range.py",
+         "test_download_filename.py"]
 fails = []
 for t in TESTS:
     print(f"\n===== {t} =====")

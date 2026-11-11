@@ -9,6 +9,9 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.15] — nightly
+- Fix single-file downloads of files whose name is not plain latin-1 (an emoji, a curly apostrophe, non-European scripts). `/api/download` put the raw name in the `Content-Disposition` header; `http.server` can only send latin-1 header text, so the request died with `UnicodeEncodeError` and the browser reported a failed download, while the zip of the same files worked. The quoted `filename=""` part now carries a plain-ASCII stand-in (other characters, `"` and `\` become `_`); the real name still travels in the percent-encoded `filename*=UTF-8''` part. New test `tests/test_download_filename.py`.
+
 ## [0.2.14] — nightly
 - Fix duplicate downloads the right way, and revert v0.2.13's blob approach (it
   had unacceptable UX: it buffered the whole file with no feedback, so downloads
