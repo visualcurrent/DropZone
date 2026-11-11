@@ -1,0 +1,55 @@
+plugins {
+    id 'com.android.application'
+    id 'com.chaquo.python'      // embeds a CPython interpreter + our .py files in the APK
+}
+
+// ── The core server ──────────────────────────────────────────────────────────
+// The app runs the repo's one DropZone.py (two folders up). Chaquopy only
+// packages files under src/main/python, so each build copies it there when it
+// has changed. That copy is GENERATED and git-ignored: never edit it, edit
+// ..\..\DropZone.py.
+def coreSrc = file('../../DropZone.py')
+def coreDst = file('src/main/python/DropZone.py')
+if (!coreDst.exists() || coreSrc.bytes != coreDst.bytes) {
+    coreDst.bytes = coreSrc.bytes
+    logger.lifecycle("DropZone.py refreshed from ${coreSrc}")
+}
+
+// Read the core's version constant (line: __version__ = "0.2.15") so the APK's
+// version name always says which DropZone build is inside it.
+def coreMatch = (coreDst.getText('UTF-8') =~ /(?m)^__version__\s*=\s*"([^"]+)"/)
+def coreVersion = coreMatch.find() ? coreMatch.group(1) : 'unknown'
+
+// Wrapper's own version (release.beta.incremental, same scheme as DropZone).
+def wrapperVersion = '0.1.02'
+
+android {
+    namespace 'com.visualcurrent.dropzone'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.visualcurrent.dropzone'
+        minSdk 26               // Android 8.0
+        targetSdk 35
+        versionCode 3
+        versionName "${wrapperVersion}-dz${coreVersion}"
+
+        // Which CPU types get a Python interpreter in the APK (each adds size).
+        // arm64-v8a = every 64-bit phone; x86_64 = the PC emulator.
+        ndk { abiFilters 'arm64-v8a', 'x86_64' }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        // Python inside the APK. Chaquopy also needs the SAME major.minor
+        // Python on this PC to pre-compile the .py files; it finds it through
+        // the Windows "py" launcher (py -3.13).
+        version '3.13'
+    }
+}

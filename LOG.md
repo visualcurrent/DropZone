@@ -10,6 +10,12 @@ Append-only. Newest on top. One dated entry per working session: built / decided
 - Added: backlog 17 (Windows host, emoji filename fails the upload via `log()`'s `print`). Not fixed. [verified: reproduced on the PC]
 - Updated: `SCRIPT_INDEX.md` line numbers (+7 below L494), `CHANGELOG.md`, `tests/README.md`, `run_all.py`.
 - Next (user): commit; run `python3 tests/run_all.py` on the Termux phone. Next (agent): step 2, move the Android project into `android\`.
+- Step 1 committed by Gabe as `b8a96b5 0.2.15`. [verified: git log]
+- Step 2 done: Android project copied from `PROJECTS\DropZone-Android` into `android\` (Gradle files, `build.bat`, `app\src`); the old folder is untouched. `android\app\build.gradle` now copies `..\..\DropZone.py` into `app\src\main\python\` per build; that copy, build output and the APK are git-ignored. The wrapper's `_patch_header_encoding` is deleted (v0.2.15 replaces it). Wrapper 0.1.02, versionCode 3. [verified: `android\build.bat` BUILD SUCCESSFUL; `aapt2 dump badging` versionName `0.1.02-dz0.2.15`]
+- Verified after the move: a file named 'Pickled Daikon Crunch (40’s) ☀️.txt' uploads and downloads byte-identical with header `filename="Pickled Daikon Crunch (40_s) __.txt"; filename*=UTF-8''...` — on the PC through `android\...\dz_host.py` (core 0.2.15, no header patch present), and on the phone `fc0f334f` running the installed 0.1.02 build. [verified: scratch `check_http.py`, both runs; phone log shows start v0.2.15 and the download done]
+- Retracted within this step: a first PC re-check reported "started 0.2.14"; it had run the old project's files because a path substitution did not apply. Discarded and re-run against the right folder (result above).
+- Rule conflict named: `docs-protocol.md` > Committing says the agent never commits; Gabe states (2026-11-11) the rule is now "agent commits, never pushes". Followed Gabe's statement for the step 2 commit; the rule-file edit is proposed, not yet made.
+- Next (agent): step 3, fold the docs (M1 in PLAN.md, CLAUDE.md, ARCHITECTURE.md, `UNINSTALL.md`, archive the DropZone-Android docs, `~Projects.md`).
 
 ## 2026-09-11 — Session 0: migrated into AI-dev
 - Migrated `D:\ClauDev\DropZone` into `projects\DropZone` by copying the whole folder including `.git`; full history and the `origin` link were preserved with no git write. [verified: git log --oneline = 17 commits, `remote -v` origin unchanged, git fsck clean in the copy]
