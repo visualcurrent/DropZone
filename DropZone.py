@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.15"        # running build
+__version__   = "0.2.16"       # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -927,7 +927,7 @@ button{cursor:pointer;background:none;border:none}
 .file-list{display:flex;flex-direction:column;margin-top:12px}
 .file-row{
   display:grid;
-  grid-template-columns:28px 1fr 32px;
+  grid-template-columns:48px 1fr 32px;   /* col 1 fits a thumbnail; icon rows use the same width so names line up */
   grid-template-rows:auto auto;
   column-gap:8px;
   padding:8px 6px;
@@ -937,7 +937,11 @@ button{cursor:pointer;background:none;border:none}
 }
 .file-row:hover{background:var(--off)}
 .file-row+.file-row{border-top:1px solid var(--div)}
-.f-ico{grid-column:1;grid-row:1/3;font-size:1.2rem;align-self:center;line-height:1;padding-top:1px}
+.f-ico{grid-column:1;grid-row:1/3;font-size:1.2rem;align-self:center;justify-self:center;line-height:1;padding-top:1px}
+/* A file's thumbnail takes the icon's place: a 48px square, cropped to fill
+   (object-fit:cover), drawn from the 320px JPEG the uploader's browser made. */
+.f-thumb{grid-column:1;grid-row:1/3;align-self:center;width:48px;height:48px;
+  object-fit:cover;border-radius:6px;background:var(--off);display:block}
 .f-name{grid-column:2;grid-row:1;font-size:.88rem;font-weight:500;
   overflow-wrap:break-word;word-break:break-word;line-height:1.35}
 .f-meta{grid-column:2;grid-row:2;font-size:.72rem;color:var(--hint);
@@ -1091,6 +1095,114 @@ function fileIcon(name){
   return m[ext]||'📁';
 }
 
+// First cell of a file row: the thumbnail when the server holds one for this
+// file (f.thumb, set once the uploader's browser has posted it), else the icon.
+// loading="lazy" means a thumbnail is only fetched when its row scrolls near view.
+function fileThumb(f){
+  return f.thumb
+    ? `<img class="f-thumb" loading="lazy" alt="" src="${API}/api/thumb?id=${encodeURIComponent(f.id)}">`
+    : `<span class="f-ico">${fileIcon(f.name)}</span>`;
+}
+
+// ── Thumbnails, made HERE in the uploader's browser ──────────────────────────
+// The server cannot decode images (standard library only), but this browser has
+// the original file and a decoder. After an upload is saved, each photo (or a
+// video's first frame) is drawn onto a small canvas and the resulting JPEG is
+// posted to /api/thumb. If it cannot be made, the reason is posted instead, so
+// the host's log shows which phones and formats fail.
+const THUMB_PX = 320;      // longest side of the thumbnail, in pixels
+const THUMB_Q  = 0.7;      // JPEG quality, 0..1
+
+// 'image', 'video' or '' (no thumbnail attempted). Uses the type the browser
+// reports; some phones leave it empty, so fall back to the file extension.
+function mediaKind(file){
+  const t=file.type||'';
+  if(t.startsWith('image/')) return 'image';
+  if(t.startsWith('video/')) return 'video';
+  const ext=(file.name.split('.').pop()||'').toLowerCase();
+  if(['jpg','jpeg','png','gif','webp','heic','heif'].includes(ext)) return 'image';
+  if(['mp4','mov','m4v','webm','mkv','avi'].includes(ext)) return 'video';
+  return '';
+}
+
+// Scale a decoded picture or video frame (w x h source pixels) down so its
+// longest side is THUMB_PX, and encode it as a JPEG. Never scales up (k <= 1).
+function drawThumb(source, w, h){
+  if(!w||!h) throw new Error('no picture size');
+  const k=Math.min(1, THUMB_PX/Math.max(w,h));
+  const c=document.createElement('canvas');
+  c.width=Math.max(1,Math.round(w*k));
+  c.height=Math.max(1,Math.round(h*k));
+  c.getContext('2d').drawImage(source,0,0,c.width,c.height);
+  return new Promise((resolve,reject)=>
+    c.toBlob(b=>b?resolve(b):reject(new Error('jpeg encode failed')),'image/jpeg',THUMB_Q));
+}
+
+// Returns {blob, w, h}: the thumbnail JPEG and the source's pixel size.
+// The file is read through a temporary "object URL" (a local address for the
+// file already on this device; nothing is downloaded), released in finally.
+async function makeThumb(file, kind){
+  const url=URL.createObjectURL(file);
+  try{
+    if(kind==='image'){
+      // An <img> element is used because it applies the photo's rotation tag,
+      // so portrait photos come out upright.
+      const img=new Image();
+      await new Promise((resolve,reject)=>{
+        img.onload=resolve;
+        img.onerror=()=>reject(new Error('image decode error'));
+        img.src=url;
+      });
+      return {blob:await drawThumb(img,img.naturalWidth,img.naturalHeight),
+              w:img.naturalWidth, h:img.naturalHeight};
+    }
+    // Video: load it muted and never play it; jump just past the start (the very
+    // first frame is often black) and draw the frame shown after the jump.
+    const v=document.createElement('video');
+    v.muted=true; v.playsInline=true; v.preload='auto';
+    try{
+      await new Promise((resolve,reject)=>{
+        const timer=setTimeout(()=>reject(new Error('video timeout')),8000);
+        v.onloadedmetadata=()=>{
+          const d=isFinite(v.duration)?v.duration:0;
+          v.currentTime=Math.min(0.1, d/2);
+        };
+        v.onseeked=()=>{clearTimeout(timer);resolve();};
+        v.onerror=()=>{clearTimeout(timer);reject(new Error('video decode error'));};
+        v.src=url; v.load();
+      });
+      return {blob:await drawThumb(v,v.videoWidth,v.videoHeight),
+              w:v.videoWidth, h:v.videoHeight};
+    }finally{
+      v.removeAttribute('src'); v.load();      // let the browser free the decoder
+    }
+  }finally{
+    URL.revokeObjectURL(url);
+  }
+}
+
+// files: the File objects just uploaded; saved: the server's reply for them, in
+// the same order, so files[i] was stored under saved[i].id. One at a time, so a
+// big batch never decodes several full-size photos at once on a phone.
+async function postThumbs(files, saved){
+  for(let i=0;i<files.length&&i<saved.length;i++){
+    const kind=mediaKind(files[i]);
+    if(!kind) continue;                        // not a photo or video: keeps its icon
+    const t0=performance.now();
+    let q='id='+encodeURIComponent(saved[i].id);
+    try{
+      const t=await makeThumb(files[i],kind);
+      q+=`&ms=${Math.round(performance.now()-t0)}&src=${t.w}x${t.h}`;
+      await fetch(`${API}/api/thumb?${q}`,{method:'POST',body:t.blob});
+    }catch(e){
+      // Tell the host why (it is logged); the file simply keeps its icon.
+      const why=String((e&&e.message)||e).slice(0,100);
+      q+=`&ms=${Math.round(performance.now()-t0)}&fail=${encodeURIComponent(why)}`;
+      try{await fetch(`${API}/api/thumb?${q}`,{method:'POST'});}catch(_){}
+    }
+  }
+}
+
 let _myFilesSig=null;
 function renderMyFiles(files){
   const el = document.getElementById('my-files');
@@ -1103,7 +1215,7 @@ function renderMyFiles(files){
   if(!files.length){el.innerHTML='<p class="empty">No files shared yet.</p>';return;}
   el.innerHTML='<div class="file-list">'+files.map(f=>`
     <div class="file-row">
-      <span class="f-ico">${fileIcon(f.name)}</span>
+      ${fileThumb(f)}
       <span class="f-name">${escHtml(f.name)}</span>
       <span class="f-meta">${f.size_str}</span>
       <span class="f-action">
@@ -1153,7 +1265,7 @@ function renderAllUsers(all_users){
       <div class="u-files"><div class="file-list">
         ${u.files.map(f=>`
           <div class="file-row">
-            <span class="f-ico">${fileIcon(f.name)}</span>
+            ${fileThumb(f)}
             <span class="f-name">${escHtml(f.name)}</span>
             <span class="f-meta">${f.size_str}</span>
             <span class="f-action">
@@ -1196,7 +1308,10 @@ async function uploadFiles(fileList){
   prog.classList.add('on');
   bar.style.width='0%';
   const fd=new FormData();
-  Array.from(fileList).forEach(f=>fd.append('file',f,f.name));
+  // Keep our own array of the files: the picker is cleared at the end of this
+  // function, but thumbnails are made from these after the upload is saved.
+  const picked=Array.from(fileList);
+  picked.forEach(f=>fd.append('file',f,f.name));
   const n=fileList.length;
   const noun=`${n} file${n>1?'s':''}`;
   lbl.textContent=`Uploading ${noun}…`;
@@ -1235,6 +1350,9 @@ async function uploadFiles(fileList){
       bar.style.width='100%';
       lbl.textContent=`✓ ${d.files.length} file${d.files.length>1?'s':''} shared!`;
       setTimeout(()=>{prog.classList.remove('on');bar.style.width='0%';},2200);
+      // Not awaited on purpose: thumbnails are made in the background after the
+      // files are already shared, so they never delay or fail an upload.
+      postThumbs(picked, d.files);
     }
     const s=await fetchState();
     renderMyFiles(s.user?.files||[]);

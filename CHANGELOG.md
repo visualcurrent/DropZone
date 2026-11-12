@@ -9,6 +9,10 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.16] — nightly
+- Thumbnails for photos and videos in the file lists (BACKLOG 18). The uploader's browser makes them: after an upload is saved, the page draws each photo, or a frame from just past the start of a video, to a canvas 320 px on its long side and posts the JPEG to the new `POST /api/thumb` (owner only, 256 KB cap, must be a JPEG). `GET /api/thumb` serves it, the file carries `thumb: true` in `/api/state`, and rows show it as a 48 px square in place of the icon, loaded lazily. The server decodes nothing and no dependency is added. A file the browser cannot decode keeps its icon and the browser reports the reason, which is logged. Removing a file removes its thumbnail. The row's first column is now 48 px wide for every row so names line up.
+- Logging for field tests: `upload start` and every thumbnail line end with the browser's User-Agent; `thumb saved` lines carry the browser's own time (`ms=`) and the source pixel size (`src=`). New test `tests/test_thumb.py`.
+
 ## [0.2.15] — nightly
 - Fix single-file downloads of files whose name is not plain latin-1 (an emoji, a curly apostrophe, non-European scripts). `/api/download` put the raw name in the `Content-Disposition` header; `http.server` can only send latin-1 header text, so the request died with `UnicodeEncodeError` and the browser reported a failed download, while the zip of the same files worked. The quoted `filename=""` part now carries a plain-ASCII stand-in (other characters, `"` and `\` become `_`); the real name still travels in the percent-encoded `filename*=UTF-8''` part. New test `tests/test_download_filename.py`.
 

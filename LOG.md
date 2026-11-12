@@ -2,6 +2,15 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-12 — Thumbnails steps 2 and 3: the page makes and shows them (v0.2.16)
+- Built in `DropZone.py`, version bumped to 0.2.16: `mediaKind`, `drawThumb`, `makeThumb`, `postThumbs` (the browser draws a photo or a video frame to a 320 px canvas, posts the JPEG, or posts the reason it failed); `uploadFiles` starts `postThumbs` after a saved upload without waiting for it; `fileThumb` puts a 48 px square image in the row when `thumb` is set. The row's first column went from 28 px to 48 px for every row so names line up. [verified: code in place; page script passes `node --check`]
+- Steps 2 and 3 were done in one turn, against the one-concept-per-turn rule, because step 2 has no visible result without step 3 and Gabe asked to get moving. [verified: this session]
+- Browser check on the PC, headless Edge 138, against a patched copy whose page uploads three generated files: a 2000x1500 PNG got a 320x240 JPEG thumbnail (1231 bytes) and the page drew `<img class="f-thumb">`; a text file got no thumbnail request; a fake `broken.jpg` produced `thumb FAILED in the browser: reason='image decode error'`; no traceback. [verified: scratch `browser_check.py` output 2026-11-12] The `ms=1010` it logged is not a real timing: the headless run used a virtual clock. [verified: run used `--virtual-time-budget`]
+- Not checked on the PC: video frames, photo rotation, any phone browser. [assumed: work — the field gate decides]
+- Tests on v0.2.16: `test_thumb` 14/14, `test_download_range`, `test_download_filename`, `test_queue_feedback`, `test_upload_memory` pass on Windows through the shim (memory not measured there); `test_zip_streaming` not run. [verified: shim run 2026-11-12]
+- APK built: `android\DropZone-debug.apk`, 2026-11-12 13:46, the app's copy of the core reads `__version__ = "0.2.16"`. Not installed on any phone. [verified: build output, grep of the copied file]
+- Next user action: install the APK on phone `fc0f334f` (or say go and the agent installs it), confirm the footer reads `dz0.2.16`, then run the field gate in PLAN backlog 18.
+
 ## 2026-11-12 — Thumbnails: design, plan, and step 1 (server routes)
 - Decided (Gabe): thumbnails are made by the uploader's browser, 320 px on the long side, always on, lazy-loaded; no dependency added. PLAN backlog 18; three build steps approved with a 256 KB cap, JPEG quality 0.7, three server checks, and thumbnail requests outside the transfer queue. [verified: Gabe's sign-off in session]
 - Decided (Gabe): Termux is a test bench only, no longer a goal or target; the project is planned to become a true Android app; a limited dependency may be considered later, none now; prefer the browser's capabilities and keep the app to hosting and distribution. Recorded in `CLAUDE.md`. [verified: Gabe, in session]

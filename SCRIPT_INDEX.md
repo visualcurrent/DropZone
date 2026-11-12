@@ -20,15 +20,16 @@ Per-file map so `DropZone.py` (~1450 lines, single file) need not be re-read who
 | `android/app/src/main/java/com/visualcurrent/dropzone/MainActivity.java` | The one screen, styled after the web page and built in code (no layout XML): header, a three-row card (Server -> Start/Stop, Your host page -> Open in the browser at `http://localhost:7070`, Others join at -> Copy), "How it works", version footer. Light/dark palettes mirror the CSS variables in `DropZone.py`; if those change, change `loadPalette()` too. | `loadPalette()`, `buildHeader()`, `buildBody()`, `buildBatteryCard()` + `batteryRestricted()` (notice shown until the phone's battery restriction is lifted), `buildFooter()`, `refresh()` (state -> screen), `styleButton()` | — |
 
 ## DropZone.py map (by anchor, not full read)
-- Config constants (~L18–42): `UPLOAD_DIR`, `PORT=7070`, `__version__="0.2.15"`, `VERSION_STAGE="nightly"`, `STREAM_THRESHOLD` (64 MB), `UPLOAD_CHUNK` (4 MB), `WARN_THRESHOLD` (512 MB), `MAX_CONCURRENT_TRANSFERS` (4), `SPEEDTEST_BYTES`, `THREADED`, `THUMB_MAX_BYTES` (256 KB).
+- Config constants (~L18–42): `UPLOAD_DIR`, `PORT=7070`, `__version__="0.2.16"`, `VERSION_STAGE="nightly"`, `STREAM_THRESHOLD` (64 MB), `UPLOAD_CHUNK` (4 MB), `WARN_THRESHOLD` (512 MB), `MAX_CONCURRENT_TRANSFERS` (4), `SPEEDTEST_BYTES`, `THREADED`, `THUMB_MAX_BYTES` (256 KB).
 - Transfer registry (~L47–68): `transfer_start` / `transfer_set` / `transfer_end` / `transfers_public`, `transfer_sem`.
 - Logging (~L83–115): `DEBUG`, `LOG_FILE` (`DropZone.log`, rolls at 5 MB), `log`, `rss_mb`, `get_local_ip`, `LOCAL_IP`.
 - Helpers (~L117–190): `gen_name`, `fmt_size`, `parse_range` (L125), `get_or_create_user`, `user_display`, `dedup_name`, `parse_multipart`.
 - Upload streaming (~L212–296): `stream_multipart` (socket → disk in `UPLOAD_CHUNK`; `fill`/`read_line`/`stream_body`), `get_filename`.
 - Zip streamer (~L312–366): `zip_stream_size` (exact length), `_dos_dt`, `zip_stream` (uniform-zip64 STORE).
 - `Handler` (~L369–790): `send_json`, `send_html` (L381, `no-store`), `get_session`, `do_OPTIONS`, `_zip_headers`, `stream_zip` (L419), `do_GET` (L453; `/api/thumb` L483; `/api/download` L504, its `Content-Disposition` built at L516–523), `do_POST` (L637; `/api/thumb` L728–786).
-- Embedded UI (~L793–1522): `CSS`, `JS`, `LOGO_SVG`/`MOON_ICO`, `NAME_CARD`/`UPLOAD_CARD`/`NET_CARD`, `HOST_*`/`REMOTE_*`, `qr_card`, `make_page`, `HOST_PAGE`/`REMOTE_PAGE`.
-- Server (~L1525–1548): `_LogErrors`, `ThreadingServer`, `SingleServer`, `make_server`.
+- Thumbnails in the page script (~L1101–1206): `fileThumb` (row cell: `<img class="f-thumb">` or the icon), `THUMB_PX`/`THUMB_Q`, `mediaKind`, `drawThumb`, `makeThumb(file, kind)` -> `{blob, w, h}`, `postThumbs(files, saved)` (called, not awaited, from `uploadFiles` L1301 after a saved upload). The page script is a plain Python string: write no backslashes in it.
+- Embedded UI (~L793–1640): `CSS`, `JS`, `LOGO_SVG`/`MOON_ICO`, `NAME_CARD`/`UPLOAD_CARD`/`NET_CARD`, `HOST_*`/`REMOTE_*`, `qr_card`, `make_page`, `HOST_PAGE`/`REMOTE_PAGE`.
+- Server (~L1643–1666): `_LogErrors`, `ThreadingServer`, `SingleServer`, `make_server`.
 
 ## API routes (UI-coupled — highest silent-corruption risk)
 `do_GET`: `/api/state` (L459, 1 s poll — file list grouped by user + `transfers`; a file with a thumbnail carries `thumb: true`), `/api/speedtest` (L473), `/api/thumb` (L483, a file's thumbnail as `image/jpeg`; 404 when there is none), `/api/download` (L504, single; NO `Accept-Ranges` advertised — see ARCHITECTURE contract 1), `/api/download_all` (L599, one user), `/api/download_everything` (L613, everyone else, foldered).
