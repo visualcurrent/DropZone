@@ -2,6 +2,13 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-12 — Video frame at 10% (v0.2.18); session close
+- Built in `DropZone.py`, v0.2.18, at Gabe's request: `makeThumb` seeks to 10% of a video's length before drawing the frame (0.1 s when the length is unknown), replacing 0.1 s in. [est_: page script passes `node --check`; not run on a video in any browser]
+- Not rebuilt on purpose: Gabe asked for this in the next build, so `android\DropZone-debug.apk` stays `0.1.05-dz0.2.17`, the build he is taking to the field. [verified: APK timestamp 14:39 unchanged]
+- Tests on v0.2.18: the same 5 pass on Windows through the shim; `test_zip_streaming` not run. [verified: shim run 2026-11-12]
+- Session close: `SESSION.md` rewritten; root `~Projects.md` status line updated. No promotion trigger fired; no `#cross-project` lesson written this session. [verified: this session]
+- Next user action: field-run the multi-download TEST page and the remaining thumbnail checks on `0.1.05-dz0.2.17`, then start a new session with the counts.
+
 ## 2026-11-12 — Thumbnail field result; multi-download test page (v0.2.17, wrapper 0.1.05)
 - Field result (Gabe, v0.2.16): portrait photos appear upright, thumbnails look right everywhere he looked, and the delay before they appear is acceptable. Some videos show a black thumbnail. Which phones and browsers were used was not stated. [verified: Gabe's report 2026-11-12; phones unrecorded]
 - Black video thumbnails: Gabe's reading is a fade-in from black. The frame is taken 0.1 s in, so that fits, but a browser that has not painted the frame yet would look the same; the log cannot tell the two apart. [assumed: fade-in] Not changed. A later frame (for example 1 s or 10% in) is an untried option.

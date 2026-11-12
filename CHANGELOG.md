@@ -9,6 +9,9 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.18] — nightly
+- Video thumbnails take the frame 10% of the way into the clip instead of 0.1 s in. Clips that fade in from black were getting a black thumbnail. If the browser does not know the clip's length it still uses 0.1 s.
+
 ## [0.2.17] — nightly
 - Field test page for several separate downloads from one tap (UNEXPLORED_IDEAS U4). Tapping the version number in the header opens the page with `?test=1`; a "TEST: download every file separately" button then starts each of the other people's files one second apart. Those requests carry `?mt=<run>-<k>of<n>`, and their `download:` log lines add that tag and the browser's User-Agent. Normal pages are unchanged apart from the version number now being a link.
 - Android app wrapper 0.1.05: the Copy button reads "Copied ✓" for 1.5 s after a tap. It gave no sign of working on the Xiaomi, where the system's own "copied" bubble does not appear.

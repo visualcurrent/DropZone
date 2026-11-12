@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.17"       # running build
+__version__   = "0.2.18"       # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -1161,8 +1161,10 @@ async function makeThumb(file, kind){
       return {blob:await drawThumb(img,img.naturalWidth,img.naturalHeight),
               w:img.naturalWidth, h:img.naturalHeight};
     }
-    // Video: load it muted and never play it; jump just past the start (the very
-    // first frame is often black) and draw the frame shown after the jump.
+    // Video: load it muted and never play it; jump 10% of the way in and draw
+    // the frame shown there. Many clips fade in from black, so a frame from the
+    // first moments made a black thumbnail (field 2026-11-12). If the length is
+    // unknown, fall back to 0.1 s in.
     const v=document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
     try{
@@ -1170,7 +1172,7 @@ async function makeThumb(file, kind){
         const timer=setTimeout(()=>reject(new Error('video timeout')),8000);
         v.onloadedmetadata=()=>{
           const d=isFinite(v.duration)?v.duration:0;
-          v.currentTime=Math.min(0.1, d/2);
+          v.currentTime = d>0 ? d*0.10 : 0.1;
         };
         v.onseeked=()=>{clearTimeout(timer);resolve();};
         v.onerror=()=>{clearTimeout(timer);reject(new Error('video decode error'));};

@@ -20,7 +20,7 @@ Per-file map so `DropZone.py` (~1450 lines, single file) need not be re-read who
 | `android/app/src/main/java/com/visualcurrent/dropzone/MainActivity.java` | The one screen, styled after the web page and built in code (no layout XML): header, a three-row card (Server -> Start/Stop, Your host page -> Open in the browser at `http://localhost:7070`, Others join at -> Copy), "How it works", version footer. Light/dark palettes mirror the CSS variables in `DropZone.py`; if those change, change `loadPalette()` too. | `loadPalette()`, `buildHeader()`, `buildBody()`, `buildBatteryCard()` + `batteryRestricted()` (notice shown until the phone's battery restriction is lifted), `buildFooter()`, `refresh()` (state -> screen), `styleButton()` | — |
 
 ## DropZone.py map (by anchor, not full read)
-- Config constants (~L18–42): `UPLOAD_DIR`, `PORT=7070`, `__version__="0.2.17"`, `VERSION_STAGE="nightly"`, `STREAM_THRESHOLD` (64 MB), `UPLOAD_CHUNK` (4 MB), `WARN_THRESHOLD` (512 MB), `MAX_CONCURRENT_TRANSFERS` (4), `SPEEDTEST_BYTES`, `THREADED`, `THUMB_MAX_BYTES` (256 KB).
+- Config constants (~L18–42): `UPLOAD_DIR`, `PORT=7070`, `__version__="0.2.18"`, `VERSION_STAGE="nightly"`, `STREAM_THRESHOLD` (64 MB), `UPLOAD_CHUNK` (4 MB), `WARN_THRESHOLD` (512 MB), `MAX_CONCURRENT_TRANSFERS` (4), `SPEEDTEST_BYTES`, `THREADED`, `THUMB_MAX_BYTES` (256 KB).
 - Transfer registry (~L47–68): `transfer_start` / `transfer_set` / `transfer_end` / `transfers_public`, `transfer_sem`.
 - Logging (~L83–115): `DEBUG`, `LOG_FILE` (`DropZone.log`, rolls at 5 MB), `log`, `rss_mb`, `get_local_ip`, `LOCAL_IP`.
 - Helpers (~L117–190): `gen_name`, `fmt_size`, `parse_range` (L125), `get_or_create_user`, `user_display`, `dedup_name`, `parse_multipart`.
