@@ -2,6 +2,15 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-12 — Thumbnail field result; multi-download test page (v0.2.17, wrapper 0.1.05)
+- Field result (Gabe, v0.2.16): portrait photos appear upright, thumbnails look right everywhere he looked, and the delay before they appear is acceptable. Some videos show a black thumbnail. Which phones and browsers were used was not stated. [verified: Gabe's report 2026-11-12; phones unrecorded]
+- Black video thumbnails: Gabe's reading is a fade-in from black. The frame is taken 0.1 s in, so that fits, but a browser that has not painted the frame yet would look the same; the log cannot tell the two apart. [assumed: fade-in] Not changed. A later frame (for example 1 s or 10% in) is an untried option.
+- Built in `DropZone.py`, v0.2.17: a field test page for UNEXPLORED_IDEAS U4. The header's version number links to `?test=1`; there a button starts each of the other people's files one second apart with `?mt=<run>-<k>of<n>`; `download:` log lines add that tag and the User-Agent. [verified: headless Edge check — plain page has no button, test page has it and ran to "Started 3 of 3"; `node --check`]
+- Observed in that check: headless Edge sent only the FIRST of the 3 downloads to the server (1 `multi-test` line, not 3) while the page reported 3 started. [verified: scratch `multi_check.py`, twice] Desktop Chromium asks permission before a page's second automatic download, and headless cannot ask. [assumed: that is the cause] So the page's own count is not evidence; the files on the phone and the log lines are.
+- Built in the app, wrapper 0.1.05: the Copy button reads "Copied" with a check mark for 1.5 s (Gabe: no sign the button worked on the Xiaomi). The Android-13+ branch that skipped the confirmation is removed. [verified: builds; not yet seen on a phone]
+- Tests on v0.2.17: the same 5 pass on Windows through the shim; `test_zip_streaming` not run. APK built 2026-11-12 14:39 with core 0.2.17; not installed. [verified: shim run, build output]
+- Next user action: install the APK, check the footer reads `0.1.05-dz0.2.17`, then on each phone: tap the version number, tap the TEST button, count the files that arrive.
+
 ## 2026-11-12 — Thumbnails steps 2 and 3: the page makes and shows them (v0.2.16)
 - Built in `DropZone.py`, version bumped to 0.2.16: `mediaKind`, `drawThumb`, `makeThumb`, `postThumbs` (the browser draws a photo or a video frame to a 320 px canvas, posts the JPEG, or posts the reason it failed); `uploadFiles` starts `postThumbs` after a saved upload without waiting for it; `fileThumb` puts a 48 px square image in the row when `thumb` is set. The row's first column went from 28 px to 48 px for every row so names line up. [verified: code in place; page script passes `node --check`]
 - Steps 2 and 3 were done in one turn, against the one-concept-per-turn rule, because step 2 has no visible result without step 3 and Gabe asked to get moving. [verified: this session]

@@ -24,7 +24,7 @@ def stageMatch = (coreDst.getText('UTF-8') =~ /(?m)^VERSION_STAGE\s*=\s*"([^"]+)
 def coreStage = stageMatch.find() ? stageMatch.group(1) : ''
 
 // Wrapper's own version (release.beta.incremental, same scheme as DropZone).
-def wrapperVersion = '0.1.04'
+def wrapperVersion = '0.1.05'
 
 android {
     namespace 'com.visualcurrent.dropzone'

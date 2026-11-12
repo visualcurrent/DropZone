@@ -25,7 +25,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 /**
  * The app's only screen, styled after the DropZone web page (same colours,
@@ -67,6 +66,8 @@ public class MainActivity extends Activity {
 
     // Re-reads ServerService's state once a second while the screen is visible.
     private final Handler handler = new Handler(Looper.getMainLooper());
+    /** Puts the Copy button's label back after its short "Copied" confirmation. */
+    private final Runnable copyLabelReset = () -> { if (copyBtn != null) copyBtn.setText("Copy"); };
     private final Runnable refresher = new Runnable() {
         @Override public void run() {
             refresh();
@@ -356,10 +357,13 @@ public class MainActivity extends Activity {
         copyBtn.setOnClickListener(v -> {
             ClipboardManager cm = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             cm.setPrimaryClip(ClipData.newPlainText("DropZone address", ServerService.remoteUrl));
-            // Android 13+ shows its own "copied" bubble; older versions show nothing.
-            if (Build.VERSION.SDK_INT < 33) {
-                Toast.makeText(this, "Address copied", Toast.LENGTH_SHORT).show();
-            }
+            // The button itself confirms the copy, then returns to "Copy" after
+            // 1.5 s. Android 13+ is supposed to show its own "copied" bubble, but
+            // the Xiaomi (HyperOS, Android 16) shows nothing, so the app no longer
+            // relies on the system for this (field 2026-11-12).
+            copyBtn.setText("Copied ✓");
+            handler.removeCallbacks(copyLabelReset);
+            handler.postDelayed(copyLabelReset, 1500);
         });
 
         LinearLayout card = new LinearLayout(this);

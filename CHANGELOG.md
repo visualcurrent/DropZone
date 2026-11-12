@@ -9,6 +9,10 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.17] — nightly
+- Field test page for several separate downloads from one tap (UNEXPLORED_IDEAS U4). Tapping the version number in the header opens the page with `?test=1`; a "TEST: download every file separately" button then starts each of the other people's files one second apart. Those requests carry `?mt=<run>-<k>of<n>`, and their `download:` log lines add that tag and the browser's User-Agent. Normal pages are unchanged apart from the version number now being a link.
+- Android app wrapper 0.1.05: the Copy button reads "Copied ✓" for 1.5 s after a tap. It gave no sign of working on the Xiaomi, where the system's own "copied" bubble does not appear.
+
 ## [0.2.16] — nightly
 - Thumbnails for photos and videos in the file lists (BACKLOG 18). The uploader's browser makes them: after an upload is saved, the page draws each photo, or a frame from just past the start of a video, to a canvas 320 px on its long side and posts the JPEG to the new `POST /api/thumb` (owner only, 256 KB cap, must be a JPEG). `GET /api/thumb` serves it, the file carries `thumb: true` in `/api/state`, and rows show it as a 48 px square in place of the icon, loaded lazily. The server decodes nothing and no dependency is added. A file the browser cannot decode keeps its icon and the browser reports the reason, which is logged. Removing a file removes its thumbnail. The row's first column is now 48 px wide for every row so names line up.
 - Logging for field tests: `upload start` and every thumbnail line end with the browser's User-Agent; `thumb saved` lines carry the browser's own time (`ms=`) and the source pixel size (`src=`). New test `tests/test_thumb.py`.

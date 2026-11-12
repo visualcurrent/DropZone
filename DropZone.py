@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.16"       # running build
+__version__   = "0.2.17"       # running build
 VERSION_STAGE = "nightly"       # release stage shown on the page: nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -561,7 +561,11 @@ class Handler(BaseHTTPRequestHandler):
             self.send_header("ETag", etag)
             self.send_header("Last-Modified", lastmod)
             self.end_headers()
-            log(f"download: '{f['name']}' {label} {fmt_size(span)} to {self.client_address[0]}")
+            # ?mt=<run>-<k>of<n> marks a request made by the page's multi-download
+            # field test (?test=1); those lines also record which browser asked.
+            mt = re.sub(r"[^0-9a-z-]", "", qs.get("mt",[""])[0])[:24]
+            log(f"download: '{f['name']}' {label} {fmt_size(span)} to {self.client_address[0]}"
+                + (f"; multi-test {mt}; UA={self.headers.get('User-Agent','?')[:200]}" if mt else ""))
 
             # Small spans (incl. a Safari probe): one buffered slice write — fast,
             # exact, and it never consumes a heavy-transfer slot.
@@ -1042,6 +1046,7 @@ function startPolling(){
     renderAllUsers(s.all_users||[]);
     renderActivity(s.transfers||[], s.session);
   };
+  setupTestMode();
   tick();                 // paint immediately, then keep polling
   setInterval(tick, 2500);
 }
@@ -1224,10 +1229,49 @@ function renderMyFiles(files){
     </div>`).join('')+'</div>';
 }
 
+// ── Field test page: several separate downloads from ONE tap ─────────────────
+// Reached by tapping the version number in the header (adds ?test=1 to the
+// address; tapping it again leaves). It answers one question per phone: when a
+// page starts several downloads a second apart from a single tap, how many
+// files actually arrive? (UNEXPLORED_IDEAS U4 - decides whether the per-row
+// download arrow can ever be replaced.) Each request carries ?mt=<run>-<k>of<n>
+// so the host's log ties it to this run and this browser.
+const TEST_MODE = new URLSearchParams(location.search).has('test');
+let _otherFiles = [];      // everyone else's files; kept current by renderAllUsers
+function setupTestMode(){
+  const ver=document.getElementById('ver-link');
+  const host=document.getElementById('net-files');
+  if(!TEST_MODE||!host) return;
+  if(ver){ ver.href=location.pathname; ver.textContent+=' · TEST PAGE'; ver.style.color='var(--pri)'; }
+  const bar=document.createElement('div');
+  bar.style.cssText='margin:12px 0;padding:10px;border:1px dashed var(--hint);border-radius:var(--r)';
+  bar.innerHTML='<button id="test-btn" style="width:100%;padding:10px;font:inherit;font-weight:600;'
+    +'border:1px solid var(--pri);border-radius:var(--r);background:none;color:var(--pri);cursor:pointer">'
+    +'TEST: download every file separately</button>'
+    +'<div id="test-lbl" style="margin-top:8px;font-size:.8rem;color:var(--hint)">'
+    +'One tap starts each of the other people’s files, one second apart.</div>';
+  host.parentNode.insertBefore(bar,host);
+  document.getElementById('test-btn').onclick=runMultiTest;
+}
+async function runMultiTest(){
+  const lbl=document.getElementById('test-lbl');
+  const files=_otherFiles.slice(), n=files.length;
+  if(!n){ lbl.textContent='No files from other people to download yet.'; return; }
+  const run=Date.now().toString(36).slice(-4);       // short id for this run, for the log
+  for(let i=0;i<n;i++){
+    lbl.textContent=`Started ${i+1} of ${n}…`;
+    triggerDownload(`${API}/api/download?id=${encodeURIComponent(files[i].id)}&mt=${run}-${i+1}of${n}`);
+    if(i<n-1) await new Promise(r=>setTimeout(r,1000));
+  }
+  lbl.textContent=`Started ${n} of ${n} (run ${run}). Now count the files that arrived on this phone.`;
+}
+
 let _netSig=null;
 function renderAllUsers(all_users){
   const el = document.getElementById('net-files');
   if(!el) return;
+  // Everyone else's files, flat, for the multi-download field test below.
+  _otherFiles = all_users.filter(u=>!u.is_me).flatMap(u=>u.files);
   // Skip the rebuild when the network file list is unchanged (see renderMyFiles).
   const sig=JSON.stringify(all_users);
   if(sig===_netSig) return;
@@ -1563,7 +1607,7 @@ def make_page(badge, tagline, body, init_script):
     <a href="/" class="logo">{LOGO_SVG} DropZone</a>
     <span class="badge">{badge}</span>
     <div class="hdr-right">
-      <span style="font-size:.72rem;font-weight:500;color:var(--hint);letter-spacing:.02em" title="Running build">v{__version__} &middot; {VERSION_STAGE}</span>
+      <a id="ver-link" href="?test=1" style="font-size:.72rem;font-weight:500;color:var(--hint);letter-spacing:.02em;text-decoration:none" title="Running build (tap for the test page)">v{__version__} &middot; {VERSION_STAGE}</a>
       <button class="tt-btn" data-tt aria-label="Toggle theme">{MOON_ICO}</button>
     </div>
   </div>
