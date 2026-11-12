@@ -38,6 +38,7 @@ WARN_THRESHOLD           = 512 * 1024 * 1024   # 512 MB: confirm (size + ETA) fi
 MAX_CONCURRENT_TRANSFERS = 4                   # backstop on simultaneous heavy transfers
 SPEEDTEST_BYTES          = 3 * 1024 * 1024     # sample the client times to estimate speed
 THREADED                 = True                # set False to force single-threaded serving
+THUMB_MAX_BYTES          = 256 * 1024          # largest thumbnail accepted (a 320 px JPEG is ~15-25 KB)
 
 SPEEDTEST_PAYLOAD = bytes(SPEEDTEST_BYTES)
 transfer_sem = threading.BoundedSemaphore(MAX_CONCURRENT_TRANSFERS)
@@ -479,6 +480,27 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.write(SPEEDTEST_PAYLOAD)
             return
 
+        if path == "/api/thumb":
+            # Serve a file's thumbnail: a small JPEG made by the UPLOADER'S browser
+            # and stored beside the upload as "<id>.t" (see POST /api/thumb). It is
+            # tiny, so it is read whole and skips the transfer queue and banner.
+            fid = qs.get("id",[""])[0]
+            f   = shared_files.get(fid)
+            tp  = Path(f["tmp_path"] + ".t") if f else None
+            if not tp or not tp.exists(): self.send_json({"error":"Not found"},404); return
+            data = tp.read_bytes()
+            self.send_response(200)
+            # Fixed type + nosniff: the bytes came from a guest, so the browser must
+            # never be allowed to guess they are anything other than an image.
+            self.send_header("Content-Type", "image/jpeg")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            self.send_header("Content-Length", len(data))
+            self.send_header("Cache-Control", "private, max-age=86400")   # an id never changes its file
+            self.end_headers()
+            self.wfile.write(data)
+            log(f"thumb served [{fid}] to {self.client_address[0]}")
+            return
+
         if path == "/api/download":
             fid = qs.get("id",[""])[0]
             if fid not in shared_files: self.send_json({"error":"Not found"},404); return
@@ -637,8 +659,11 @@ class Handler(BaseHTTPRequestHandler):
             m = re.search(r'boundary=(.+)', ct)
             if not m: self.send_json({"error":"No boundary"},400); return
             boundary = m.group(1).strip()
+            # The browser's User-Agent goes last on the line: in the field it is the
+            # only record of WHICH phone/browser a given upload came from.
             log(f"upload start: Content-Length={length} ({fmt_size(length)}) "
-                f"from {self.client_address[0]}; RSS={rss_mb():.1f} MB")
+                f"from {self.client_address[0]}; RSS={rss_mb():.1f} MB; "
+                f"UA={self.headers.get('User-Agent','?')[:200]}")
             if not sid: self.send_json({"error":"No session"},400); return
             user = get_or_create_user(sid)
             uploaded = []
@@ -692,9 +717,69 @@ class Handler(BaseHTTPRequestHandler):
                 if sid in users:
                     users[sid]["files"] = [f for f in users[sid]["files"] if f["id"] != fid]
                 if fid in shared_files and shared_files[fid]["owner_id"] == sid:
-                    try: Path(shared_files[fid]["tmp_path"]).unlink(missing_ok=True)
+                    try:
+                        Path(shared_files[fid]["tmp_path"]).unlink(missing_ok=True)
+                        Path(shared_files[fid]["tmp_path"] + ".t").unlink(missing_ok=True)   # its thumbnail
                     except OSError: pass
                     del shared_files[fid]
+            self.send_json({"ok":True})
+            return
+
+        if path == "/api/thumb":
+            # The uploader's browser posts a small JPEG it drew from its own copy of
+            # the file (the server cannot decode images without a dependency). The
+            # same route takes a failure report instead (?fail=reason, empty body),
+            # because a thumbnail that could not be made is otherwise invisible here.
+            # ?ms= and ?src= are the browser's own timing and source pixel size.
+            q    = parse_qs(urlparse(self.path).query)
+            fid  = q.get("id",[""])[0]
+            fail = q.get("fail",[""])[0][:120]
+            ms   = re.sub(r"[^0-9]",  "", q.get("ms", [""])[0])[:8]  or "?"
+            src  = re.sub(r"[^0-9x]", "", q.get("src",[""])[0])[:16] or "?"
+            with state_lock:
+                f     = shared_files.get(fid)
+                owner = bool(f) and f["owner_id"] == sid
+                info  = (f"'{f['name']}' [{fid}] by {f['owner_name']}" if f else f"[{fid}]") \
+                        + f" src={src} ms={ms}; UA={self.headers.get('User-Agent','?')[:200]}"
+            # A refused post still has its body read and thrown away (64 KB at a
+            # time, at most UPLOAD_CHUNK in total): closing the socket on unread
+            # data can reset the connection before the browser sees the answer.
+            def discard_body():
+                left = min(length, UPLOAD_CHUNK)
+                while left > 0:
+                    got = self.rfile.read(min(left, 65536))
+                    if not got: break
+                    left -= len(got)
+            if not f:
+                discard_body(); self.send_json({"error":"Not found"},404); return
+            if not owner:
+                log(f"thumb REFUSED (not the owner): {info}")
+                discard_body(); self.send_json({"error":"Not your file"},403); return
+            if fail:
+                log(f"thumb FAILED in the browser: reason={fail!r} {info}")
+                self.send_json({"ok":True}); return
+            # Size is checked BEFORE the body is kept, so an oversize post costs no RAM.
+            if length > THUMB_MAX_BYTES:
+                log(f"thumb REFUSED (too big, {length} bytes): {info}")
+                discard_body(); self.send_json({"error":"Thumbnail too large"},413); return
+            data = self.rfile.read(length)
+            if data[:3] != b"\xff\xd8\xff":            # every JPEG starts with these 3 bytes
+                log(f"thumb REFUSED (not a JPEG, {length} bytes): {info}")
+                self.send_json({"error":"Not a JPEG"},400); return
+            tp = Path(f["tmp_path"] + ".t")
+            tp.write_bytes(data)
+            with state_lock:
+                if fid in shared_files:
+                    # Flag both records of the file; /api/state sends the user's copy,
+                    # and the changed flag is what makes every page redraw its list.
+                    shared_files[fid]["thumb"] = True
+                    for uf in users.get(sid,{}).get("files",[]):
+                        if uf["id"] == fid: uf["thumb"] = True
+                else:
+                    # The file was removed while the thumbnail was being written.
+                    try: tp.unlink(missing_ok=True)
+                    except OSError: pass
+            log(f"thumb saved: {length} bytes {info}")
             self.send_json({"ok":True})
             return
 

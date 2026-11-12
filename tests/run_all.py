@@ -2,7 +2,7 @@
 import subprocess, sys, os
 HERE = os.path.dirname(os.path.abspath(__file__))
 TESTS = ["test_upload_memory.py", "test_queue_feedback.py", "test_zip_streaming.py", "test_download_range.py",
-         "test_download_filename.py"]
+         "test_download_filename.py", "test_thumb.py"]
 fails = []
 for t in TESTS:
     print(f"\n===== {t} =====")
