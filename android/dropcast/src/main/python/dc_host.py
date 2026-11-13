@@ -168,6 +168,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 .dc-prep.err{background:var(--err-bg);color:var(--err)}
 .dc-got{border-color:var(--pri);padding:1.1rem 1rem;gap:.8rem}
 .dc-gotrow{display:flex;align-items:center;gap:.8rem;width:100%}
+.dc-gotpic{width:4rem;height:4rem;object-fit:cover;flex:none}
 .dc-gotrow .dc-name{text-align:left;font-size:.98rem}
 .dc-gotrow .dc-size{margin-top:.1rem}
 .dc-bar{height:4px;border-radius:2px;margin-top:.6rem;background:var(--div);overflow:hidden}
@@ -446,7 +447,13 @@ function drawReceived(list){
     b.textContent = f.saved ? 'Saved to this phone.' : 'This file has been shared with you.';
     note.appendChild(b);
     var row = document.createElement('div'); row.className = 'dc-gotrow';
-    var ic = document.createElement('div'); ic.className = 'dc-icon small'; ic.textContent = f.icon;
+    var ic;                // the picture: the file's thumbnail, or an icon for its kind
+    if (f.thumb){
+      ic = document.createElement('img'); ic.className = 'dc-thumb dc-gotpic'; ic.alt = '';
+      ic.src = '/api/thumb?id=' + f.id;
+    } else {
+      ic = document.createElement('div'); ic.className = 'dc-icon small'; ic.textContent = f.icon;
+    }
     var tx = document.createElement('div');
     var nm = document.createElement('div'); nm.className = 'dc-name'; nm.textContent = f.name;
     var sz = document.createElement('div'); sz.className = 'dc-size'; sz.textContent = f.size_str;
@@ -573,7 +580,8 @@ def host_state():
         "files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
                    "thumb": bool(f.get("thumb")), "icon": _icon(f["name"])} for f in mine],
         "received": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
-                      "icon": _icon(f["name"]), "saved": bool(f.get("saved"))} for f in got],
+                      "icon": _icon(f["name"]), "thumb": bool(f.get("thumb")),
+                      "saved": bool(f.get("saved"))} for f in got],
     }
 
 
@@ -658,6 +666,26 @@ def _md5_of(path):
     return h.hexdigest()
 
 
+def _make_thumb(path, name):
+    """Make the thumbnail for a file a GUEST uploaded. Returns True if one now exists.
+
+    A host's file gets its thumbnail in Java during the copy-in. A guest's file
+    arrives through the core's upload route, which Java never sees, so Python
+    asks Java for the same job here: CopyIn.makeThumb writes "<path>.t", the
+    core's thumbnail slot. ("from java import jclass" is Chaquopy's way to
+    call the app's Java code from Python.)
+
+    Any failure only means the page shows an icon instead.
+    """
+    try:
+        from java import jclass
+        note = jclass("com.visualcurrent.dropcast.CopyIn").makeThumb(jclass("java.io.File")(path), name)
+        dz.log(f"guest thumb for '{name}': {note}")
+    except Exception as e:
+        dz.log(f"guest thumb for '{name}' FAILED: {e!r}")
+    return Path(path + ".t").exists()
+
+
 # One record per guest upload whose check has been started:
 #   fid -> {"sid": owner's session id, "done": threading.Event, "result": dict or None}
 # The check is started by the HOST'S phone itself the moment an upload has
@@ -727,6 +755,7 @@ def _check_upload(fid, sid):
         path, size = f["tmp_path"], f["size"]
 
     md5 = _md5_of(path)        # slow for a big file (seconds per GB), so done outside the lock
+    has_thumb = _make_thumb(path, f["name"])   # before the file is listed, so its card never appears without it
 
     with dz.state_lock:
         match = None
@@ -737,10 +766,13 @@ def _check_upload(fid, sid):
         if match is None:
             # The core keeps two copies of an entry (one in the file list, one
             # in the owner's list); mark both.
-            dz.shared_files[fid]["md5"] = md5
+            marks = {"md5": md5}
+            if has_thumb:
+                marks["thumb"] = True     # same flag the core sets after POST /api/thumb
+            dz.shared_files[fid].update(marks)
             for e in dz.users.get(sid, {}).get("files", []):
                 if e["id"] == fid:
-                    e["md5"] = md5
+                    e.update(marks)
             keep = dz.shared_files[fid]
         else:
             del dz.shared_files[fid]

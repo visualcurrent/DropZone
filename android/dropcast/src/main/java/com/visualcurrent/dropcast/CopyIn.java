@@ -41,7 +41,7 @@ import java.util.concurrent.Executors;
  * FILE EFFECTS: writes files/uploads/<id> in the app's private storage; a
  * failed or duplicate copy is deleted again.
  */
-final class CopyIn {
+public final class CopyIn {   // public (with makeThumb) so dc_host.py can call it for guests' files
 
     /** Progress line for the screen, "" when no copy is running. */
     static volatile String status = "";
@@ -167,7 +167,7 @@ final class CopyIn {
      *
      * FILE EFFECTS: writes "<file>.t"; removes it again if making it failed.
      */
-    private static String makeThumb(File file, String name) {
+    public static String makeThumb(File file, String name) {
         // Android's ready-made thumbnail maker for a plain file (it also
         // turns a photo the right way up) arrived in Android 10 (API 29).
         // Android 8 and 9 show the icon instead.
