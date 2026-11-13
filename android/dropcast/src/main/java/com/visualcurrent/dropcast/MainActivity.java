@@ -254,20 +254,33 @@ public class MainActivity extends Activity {
         finishAndRemoveTask();
     }
 
-    /** Stop was tapped: ask first when received files have not been saved (PLAN M2). */
+    /**
+     * Stop was tapped: ask first when stopping would lose something - received
+     * files not yet saved, or files still arriving from a guest (PLAN M2).
+     */
     private void askStop() {
-        int unsaved = 0;
+        int unsaved = 0;    // received, complete, not saved by the host
+        int arriving = 0;   // still uploading, or arrived and still being checked
         if (CastService.running) {
-            unsaved = Python.getInstance().getModule("dc_host").callAttr("unsaved_count").toInt();
+            List<PyObject> c = Python.getInstance().getModule("dc_host").callAttr("stop_check").asList();
+            unsaved = c.get(0).toInt();
+            arriving = c.get(1).toInt();
         }
-        if (unsaved == 0) {
+        if (unsaved == 0 && arriving == 0) {
             stopNow();
             return;
         }
+        // Build "2 unsaved files and 1 file still arriving" from whichever apply.
+        String what = "";
+        if (unsaved > 0) what = unsaved + (unsaved == 1 ? " unsaved file" : " unsaved files");
+        if (arriving > 0) {
+            what += (what.isEmpty() ? "" : " and ") + arriving + (arriving == 1 ? " file" : " files") + " still arriving";
+        }
+        boolean one = (unsaved + arriving) == 1;
         new AlertDialog.Builder(this)
                 .setTitle("Stop sharing?")
-                .setMessage("You have " + unsaved + (unsaved == 1 ? " unsaved file" : " unsaved files")
-                        + ". Stopping removes " + (unsaved == 1 ? "it" : "them") + " from this phone. Stop anyway?")
+                .setMessage("You have " + what + ". Stopping removes " + (one ? "it" : "them")
+                        + " from this phone. Stop anyway?")
                 .setNegativeButton("Cancel", null)
                 .setPositiveButton("Stop anyway", (d, which) -> stopNow())
                 .show();

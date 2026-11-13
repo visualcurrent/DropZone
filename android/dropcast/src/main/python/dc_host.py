@@ -30,6 +30,7 @@ log, Handler (and its send_json), CSS, LOGO_SVG, LOCAL_IP, PORT.
 
 import hashlib
 import html
+import threading
 import uuid
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
@@ -460,6 +461,28 @@ function drawReceived(list){
   $('gotBox').hidden = (list.length === 0);
 }
 
+// Files on their way in from guests: one progress box per upload, and one box
+// while arrived files are being checked. Redrawn every tick (once a second).
+function drawIncoming(list, checking){
+  var box = $('inBox'); box.innerHTML = '';
+  var mb = function(n){ return Math.floor(n / 1048576) + ' MB'; };
+  var add = function(text, pct){
+    var d = document.createElement('div'); d.className = 'dc-prep';
+    var t = document.createElement('span'); t.textContent = text;
+    var bar = document.createElement('div'); bar.className = 'dc-bar';
+    var fill = document.createElement('i');
+    if (pct !== null){ fill.className = 'exact'; fill.style.width = pct + '%'; }
+    bar.appendChild(fill); d.appendChild(t); d.appendChild(bar); box.appendChild(d);
+  };
+  for (var i = 0; i < list.length; i++){
+    var r = list[i];
+    var pct = r.total > 0 ? Math.min(100, Math.floor(100 * r.done / r.total)) : 0;
+    add('Receiving a file from a guest: ' + mb(r.done) + ' of ' + mb(r.total) + ' (' + pct + '%)', pct);
+  }
+  if (checking > 0) add(checking === 1 ? 'Checking a received file ...' : 'Checking ' + checking + ' received files ...', null);
+  box.hidden = (list.length === 0 && checking === 0);
+}
+
 function tick(){
   // 1. straight from the app: the progress line (copy-in or save), the last
   //    problem to tell the host about, and whether the phone restricts the app
@@ -477,6 +500,7 @@ function tick(){
     if (newest(s.files) !== newest(files)) picked = null;   // a new share takes over the screen
     files = s.files; base = s.base;
     draw();
+    drawIncoming(s.incoming, s.checking);
     drawReceived(s.received);
   }).catch(function(){ /* server stopping or starting: try again next tick */ });
 }
@@ -499,6 +523,7 @@ def host_page():
   <div id="prob" class="dc-prep err" hidden><span id="probText"></span>
     <button id="probBtn" class="dc-btn2 dc-stop" style="margin-top:.7rem">OK</button></div>
   <div id="prep" class="dc-prep" hidden><span id="prepText"></span><div class="dc-bar"><i></i></div></div>
+  <div id="inBox" class="dc-list" hidden></div>
   <div id="gotBox" class="dc-list" hidden><h2>Shared with you</h2><div id="got" class="dc-list"></div></div>
   <p id="empty" class="dc-note"><b>Share a file with people nearby.</b><br>
     Choose a file here, or use Share in any app and pick DropCast.</p>
@@ -537,7 +562,13 @@ def host_state():
         mine = list(dz.users.get(HOST_SID, {}).get("files", []))
         got = [f for f in dz.shared_files.values()       # dicts keep insertion order: oldest first
                if f.get("owner_id") != HOST_SID and f.get("md5")]
+        checking = _checking_count()
+    with _incoming_lock:
+        incoming = [dict(r) for r in _incoming.values()]   # copies, so the reply is a fixed snapshot
     return {
+        # incoming: uploads arriving right now; checking: arrived, being hashed.
+        "incoming": incoming,
+        "checking": checking,
         "base": f"http://{dz.LOCAL_IP}:{dz.PORT}",
         "files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
                    "thumb": bool(f.get("thumb")), "icon": _icon(f["name"])} for f in mine],
@@ -563,11 +594,56 @@ def mark_saved(fid):
     dz.log(f"host saved [{fid}] out of the app")
 
 
-def unsaved_count():
-    """How many received files the host has not saved yet."""
+def stop_check():
+    """What the host would lose by stopping now: [unsaved, arriving].
+
+    unsaved:  received files, complete, that the host has not saved.
+    arriving: files still uploading, plus files that have arrived but are
+              still being checked.
+    """
     with dz.state_lock:
-        return sum(1 for f in dz.shared_files.values()
-                   if f.get("owner_id") != HOST_SID and f.get("md5") and not f.get("saved"))
+        unsaved = sum(1 for f in dz.shared_files.values()
+                      if f.get("owner_id") != HOST_SID and f.get("md5") and not f.get("saved"))
+        checking = _checking_count()
+    with _incoming_lock:
+        arriving = len(_incoming) + checking
+    return [unsaved, arriving]
+
+
+# ─── Uploads on their way in ──────────────────────────────────────────────────
+# The core's /api/upload does the receiving, and tells nobody until it is done.
+# To let the host SEE a file arriving (and be warned about it at Stop),
+# CastHandler.do_POST hands the core a reader that counts the bytes as the core
+# reads them. One record per upload in progress.
+_incoming = {}                       # key -> {"total": bytes expected, "done": bytes read so far}
+_incoming_lock = threading.Lock()
+
+
+class _CountingReader:
+    """Stands in for a request's input stream and counts what is read from it.
+
+    The core's upload code reads the body only through read(n) (ARCHITECTURE
+    contract 7), so that is the one method counted; anything else is passed
+    straight through to the real stream by __getattr__.
+    """
+
+    def __init__(self, raw, rec):
+        self._raw = raw
+        self._rec = rec
+
+    def read(self, n=-1):
+        data = self._raw.read(n)
+        self._rec["done"] += len(data)
+        return data
+
+    def __getattr__(self, name):     # called only for names not defined above
+        return getattr(self._raw, name)
+
+
+def _checking_count():
+    """Guests' files that have arrived but are not yet claimed (hashed). Call with state_lock held."""
+    return sum(1 for f in dz.shared_files.values()
+               if f.get("owner_id") != HOST_SID and not f.get("md5"))
 
 
 def _md5_of(path):
@@ -709,7 +785,22 @@ class CastHandler(dz.Handler):
             else:
                 self.send_json(result)
             return
-        super().do_POST()      # /api/session, /api/upload and the rest: the core's own code
+        if parsed.path == "/api/upload":
+            # The core receives the file; we only count the bytes going past
+            # so the host's screen can show it arriving.
+            rec = {"total": int(self.headers.get("Content-Length", 0)), "done": 0}
+            with _incoming_lock:
+                _incoming[id(rec)] = rec
+            raw = self.rfile
+            self.rfile = _CountingReader(raw, rec)
+            try:
+                super().do_POST()
+            finally:                 # runs whether the upload finished or failed
+                self.rfile = raw
+                with _incoming_lock:
+                    _incoming.pop(id(rec), None)
+            return
+        super().do_POST()      # /api/session and the rest: the core's own code
 
     def _send_page(self, page, status):
         """Send an HTML page, never cached (same reason as the core's send_html)."""
