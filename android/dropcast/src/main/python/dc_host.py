@@ -2,11 +2,12 @@
 dc_host.py - DropCast's additions on top of the UNEDITED DropZone core.
 
 dz_host.py (shared with DropZone's app) starts and stops the server. This file
-holds what only DropCast needs. Through PLAN.md > M2 step 3 that is two jobs:
+holds what only DropCast needs. Through PLAN.md > M2 step 4 that is two jobs:
 
   1. putting a file the HOST shares into the core's file list, so the core's
      own /api/download route can send it (new_slot / register / discard);
-  2. DropCast's pages (CastHandler): the guest page at /f/<id>, one file each.
+  2. DropCast's pages (CastHandler): the guest page at /f/<id>, one file each,
+     and the host's own screen at /host, shown inside the app.
 
 How a host file gets in (the "copy-in")
 ---------------------------------------
@@ -23,8 +24,8 @@ held, the fresh copy is deleted and the existing file's id is returned, so one
 file never gets two ids (and later, two QR codes).
 
 Core names used here (ARCHITECTURE.md > Contracts, the Android list):
-UPLOAD_DIR, shared_files, state_lock, get_or_create_user, fmt_size, log,
-Handler, CSS, LOGO_SVG.
+UPLOAD_DIR, shared_files, users, state_lock, get_or_create_user, fmt_size,
+log, Handler (and its send_json), CSS, LOGO_SVG, LOCAL_IP, PORT.
 """
 
 import html
@@ -33,6 +34,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 import DropZone as dz   # already imported and configured by dz_host.start()
+import dc_qr            # the QR drawing library as a string (generated file)
 
 # The core files every shared file under a "user" keyed by a session id.
 # Guests get theirs from the browser; the host's files, which never pass
@@ -203,6 +205,157 @@ def gone_page():
   <p class="dc-note">Ask the person sharing it to show you their QR code again.</p>""")
 
 
+# ─── The host's own screen ────────────────────────────────────────────────────
+# The app shows this page inside itself (a WebView pointed at 127.0.0.1), so it
+# is only ever sent to the phone it runs on. Unlike the guest page it needs a
+# script: it asks /dc/host_state once a second and redraws when that changes.
+#
+# Three things only the app can do are reached through "Android", an object
+# the app adds to the page (MainActivity.Bridge):
+#   Android.status()      -> the copy-in progress line, "" when idle
+#   Android.chooseFile()  -> open Android's file picker
+#   Android.stop()        -> stop DropCast and delete the files it holds
+
+_HOST_CSS = """
+.dc-qr{background:#fff;padding:14px;border-radius:var(--rx);border:1px solid var(--border)}
+.dc-qr img,.dc-qr canvas{display:block}
+.dc-url{color:var(--pri);font-size:.8rem;font-weight:500;text-align:center;overflow-wrap:anywhere}
+.dc-thumb.small{max-height:8rem}
+.dc-icon.small{font-size:3rem}
+.dc-btn2{display:block;width:100%;text-align:center;background:none;color:var(--pri);
+  border:1.5px solid var(--pri);font-weight:600;font-size:1rem;padding:.8rem 1rem;border-radius:var(--rfull)}
+.dc-stop{color:var(--err);border-color:var(--err)}
+.dc-prep{width:100%;background:var(--pri-hl);border-radius:var(--rx);padding:.9rem 1rem;
+  color:var(--txt);font-size:.9rem;text-align:center;overflow-wrap:anywhere}
+.dc-bar{height:4px;border-radius:2px;margin-top:.6rem;background:var(--div);overflow:hidden}
+.dc-bar i{display:block;height:100%;width:35%;border-radius:2px;background:var(--pri);
+  animation:dc-slide 1.1s ease-in-out infinite alternate}
+@keyframes dc-slide{from{margin-left:0}to{margin-left:65%}}
+.dc-list{width:100%;display:flex;flex-direction:column;gap:.4rem}
+.dc-list h2{font-size:.8rem;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.04em}
+.dc-row{display:flex;justify-content:space-between;gap:.75rem;width:100%;text-align:left;
+  background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem;font-size:.9rem}
+.dc-row span:first-child{overflow-wrap:anywhere}
+.dc-row span:last-child{color:var(--hint);white-space:nowrap}
+[hidden]{display:none!important}
+"""
+
+# The page's script. A plain (non-f) Python string, and written with NO
+# backslashes, so Python passes it to the browser exactly as typed.
+_HOST_JS = """
+var files = [];        // the host's shared files, oldest first (from /dc/host_state)
+var base = '';         // http://<phone's WiFi address>:<port>
+var shownId = null;    // id of the file whose QR is on screen
+var picked = null;     // id the host tapped in "Earlier files"; null = newest
+var $ = function(id){ return document.getElementById(id); };
+
+function draw(){
+  var f = null;
+  for (var i = 0; i < files.length; i++) if (files[i].id === picked) f = files[i];
+  if (!f && files.length) f = files[files.length - 1];      // default: the newest share
+
+  $('empty').hidden = !!f;
+  $('card').hidden = !f;
+  $('choose').textContent = f ? 'Share another file' : 'Choose a file';
+  $('choose').className = f ? 'dc-btn2' : 'dc-btn';
+
+  // Rebuild the card and its QR only when a different file is shown.
+  if (f && f.id !== shownId){
+    shownId = f.id;
+    var url = base + '/f/' + f.id;
+    $('pic').innerHTML = '';
+    if (f.thumb){
+      var img = document.createElement('img');
+      img.className = 'dc-thumb small'; img.alt = ''; img.src = '/api/thumb?id=' + f.id;
+      $('pic').appendChild(img);
+    } else {
+      var d = document.createElement('div');
+      d.className = 'dc-icon small'; d.textContent = f.icon;
+      $('pic').appendChild(d);
+    }
+    $('name').textContent = f.name;       // textContent: a file name is never treated as HTML
+    $('size').textContent = f.size_str;
+    $('url').textContent = url;
+    $('qr').innerHTML = '';
+    new QRCode($('qr'), {text: url, width: 220, height: 220,
+                         colorDark: '#000000', colorLight: '#ffffff',
+                         correctLevel: QRCode.CorrectLevel.M});
+  }
+  if (!f) shownId = null;
+
+  // Earlier files: every file except the one on show, newest first.
+  var list = $('others'); list.innerHTML = '';
+  var n = 0;
+  for (var j = files.length - 1; j >= 0; j--){
+    if (f && files[j].id === f.id) continue;
+    var b = document.createElement('button');
+    b.className = 'dc-row';
+    var a = document.createElement('span'); a.textContent = files[j].name;
+    var s = document.createElement('span'); s.textContent = files[j].size_str;
+    b.appendChild(a); b.appendChild(s);
+    b.onclick = (function(id){ return function(){ picked = id; draw(); window.scrollTo(0, 0); }; })(files[j].id);
+    list.appendChild(b); n++;
+  }
+  $('othersBox').hidden = (n === 0);
+}
+
+function tick(){
+  // 1. the copy-in progress line, straight from the app
+  var st = (window.Android && Android.status()) || '';
+  $('prep').hidden = !st;
+  $('prepText').textContent = st;
+
+  // 2. the file list, from the server on this phone
+  fetch('/dc/host_state').then(function(r){ return r.json(); }).then(function(s){
+    var newest = function(a){ return a.length ? a[a.length - 1].id : ''; };
+    if (newest(s.files) !== newest(files)) picked = null;   // a new share takes over the screen
+    files = s.files; base = s.base;
+    draw();
+  }).catch(function(){ /* server stopping or starting: try again next tick */ });
+}
+
+$('choose').onclick = function(){ if (window.Android) Android.chooseFile(); };
+$('stop').onclick = function(){ if (window.Android) Android.stop(); };
+tick();
+setInterval(tick, 1000);
+"""
+
+
+def host_page():
+    """The host's screen: the shared file with its QR, Choose a file, Stop."""
+    inner = """
+  <div id="prep" class="dc-prep" hidden><span id="prepText"></span><div class="dc-bar"><i></i></div></div>
+  <p id="empty" class="dc-note"><b>Share a file with people nearby.</b><br>
+    Choose a file here, or use Share in any app and pick DropCast.</p>
+  <section id="card" class="dc-frame" hidden>
+    <div id="pic"></div>
+    <div id="name" class="dc-name"></div>
+    <div id="size" class="dc-size"></div>
+    <div id="qr" class="dc-qr"></div>
+    <div id="url" class="dc-url"></div>
+    <p class="dc-note">Anyone on this WiFi can scan this code to download the file.</p>
+  </section>
+  <button id="choose" class="dc-btn">Choose a file</button>
+  <div id="othersBox" class="dc-list" hidden><h2>Earlier files</h2><div id="others" class="dc-list"></div></div>
+  <button id="stop" class="dc-btn2 dc-stop">Stop sharing</button>
+  <p class="dc-foot">Stop closes DropCast and removes the files it holds.</p>
+  <script src="/dc/qrcode.js"></script>
+  <script>""" + _HOST_JS + "</script>"
+    # _page() puts _PAGE_CSS in; the host-only styles ride along in a second tag.
+    return _page("DropCast", "<style>" + _HOST_CSS + "</style>" + inner)
+
+
+def host_state():
+    """What the host's screen needs: the host's own files and the address guests use."""
+    with dz.state_lock:
+        mine = list(dz.users.get(HOST_SID, {}).get("files", []))
+    return {
+        "base": f"http://{dz.LOCAL_IP}:{dz.PORT}",
+        "files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
+                   "thumb": bool(f.get("thumb")), "icon": _icon(f["name"])} for f in mine],
+    }
+
+
 class CastHandler(dz.Handler):
     """The core's request handler plus DropCast's pages.
 
@@ -221,8 +374,29 @@ class CastHandler(dz.Handler):
             else:
                 self._send_page(gone_page(), 404)
             return
+        # The host's screen and its data: only for the phone itself. A guest
+        # asking for them gets the same "not shared" page as any unknown address.
+        if path in ("/host", "/dc/host_state"):
+            if self.client_address[0] not in ("127.0.0.1", "::1"):
+                self._send_page(gone_page(), 404)
+            elif path == "/host":
+                self._send_page(host_page(), 200)
+            else:
+                self.send_json(host_state())
+            return
+        # The QR drawing library (dc_qr.py). It never changes, so let the
+        # browser keep it.
+        if path == "/dc/qrcode.js":
+            body = dc_qr.QRCODE_JS.encode()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/javascript; charset=utf-8")
+            self.send_header("Content-Length", len(body))
+            self.send_header("Cache-Control", "public, max-age=86400")
+            self.end_headers()
+            self.wfile.write(body)
+            return
         # DropZone's own host and guest pages are not part of DropCast.
-        if path in ("/", "/host", "/remote"):
+        if path in ("/", "/remote"):
             self._send_page(gone_page(), 404)
             return
         super().do_GET()

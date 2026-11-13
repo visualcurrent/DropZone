@@ -22,9 +22,13 @@
     <!-- Show the "DropCast is running" notification on Android 13+. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- usesCleartextTraffic: the app's screen is a page loaded from the server
+         on this same phone over plain http (http://127.0.0.1:7071). Android
+         blocks plain http inside an app unless this is set. -->
     <application
         android:label="DropCast"
         android:allowBackup="false"
+        android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
 
         <!-- singleTask: sharing a second file while the app is already open

@@ -14,8 +14,8 @@ import java.util.Locale;
  * One place for DropCast's own log lines, usable from any thread and whether
  * or not the screen is showing.
  *
- * Each line goes to three places: logcat, the file files/DropCast.log, and an
- * in-memory copy that MainActivity puts on screen.
+ * Each line goes to logcat and to the file files/DropCast.log. (The server's
+ * own lines are separate, in files/DropZone.log.)
  *
  * FILE EFFECTS: appends to DropCast.log in the app's private files folder.
  * Read it from the PC with:
@@ -24,8 +24,6 @@ import java.util.Locale;
 final class Report {
 
     private static final String TAG = "DropCast";
-    private static final StringBuilder screen = new StringBuilder();
-    private static int count = 0;   // lines added so far; lets the screen see "something new"
 
     private Report() {}
 
@@ -33,16 +31,10 @@ final class Report {
     static synchronized void add(Context ctx, String line) {
         String stamped = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()) + "  " + line;
         Log.i(TAG, line);
-        screen.append(stamped).append("\n\n");
-        count++;
         try (FileWriter w = new FileWriter(new File(ctx.getFilesDir(), "DropCast.log"), true)) {  // true = append
             w.write(stamped + "\n");
         } catch (IOException e) {
             Log.w(TAG, "could not write DropCast.log: " + e);
         }
     }
-
-    static synchronized int count() { return count; }
-
-    static synchronized String screenText() { return screen.toString(); }
 }
