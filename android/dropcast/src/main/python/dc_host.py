@@ -658,8 +658,57 @@ def _md5_of(path):
     return h.hexdigest()
 
 
+# One record per guest upload whose check has been started:
+#   fid -> {"sid": owner's session id, "done": threading.Event, "result": dict or None}
+# The check is started by the HOST'S phone itself the moment an upload has
+# arrived (CastHandler.do_POST), so a guest who closes their browser straight
+# after uploading cannot leave the file unchecked. The guest's page still asks
+# (POST /dc/claim) because it needs the RESULT for its QR; that request finds
+# the record here and waits on "done" instead of hashing the file a second time.
+_claims = {}
+_claims_lock = threading.Lock()
+
+
 def claim(fid, sid):
-    """Finish a GUEST's upload: hash it and run the same-file check.
+    """Check a GUEST's upload once, and give every caller the same result.
+
+    Called twice per upload in the normal case: by the host's phone as soon as
+    the upload has arrived, and by the guest's page asking for the result.
+    Whichever comes first does the work (_check_upload); the other waits for it.
+
+    Returns the file's public details as a dict, or None when fid is not an
+    upload of this guest (or the check failed, e.g. Stop was tapped meanwhile).
+    """
+    if not sid:
+        return None
+    with _claims_lock:
+        c = _claims.get(fid)
+        first = c is None
+        if first:
+            # Only the owner may start a check, so nobody else can fill this
+            # record with a refusal before the owner asks.
+            with dz.state_lock:
+                f = dz.shared_files.get(fid)
+                owned = bool(f) and f.get("owner_id") == sid
+            if not owned:
+                return None
+            c = _claims[fid] = {"sid": sid, "done": threading.Event(), "result": None}
+    if c["sid"] != sid:
+        return None
+    if first:
+        try:
+            c["result"] = _check_upload(fid, sid)
+        except Exception as e:           # e.g. the file was deleted by Stop mid-hash
+            dz.log(f"claim FAILED [{fid}]: {e!r}")
+        finally:
+            c["done"].set()              # release anyone waiting, whatever happened
+    else:
+        c["done"].wait()                 # Event.wait(): sleeps until set() is called
+    return c["result"]
+
+
+def _check_upload(fid, sid):
+    """The work of a claim: hash the upload and run the same-file check.
 
     The core's /api/upload has already saved the file and listed it under the
     guest (session id sid). This adds the MD5 and, when an identical file is
@@ -791,6 +840,9 @@ class CastHandler(dz.Handler):
             rec = {"total": int(self.headers.get("Content-Length", 0)), "done": 0}
             with _incoming_lock:
                 _incoming[id(rec)] = rec
+            sid = self.get_session()
+            with dz.state_lock:
+                before = set(dz.shared_files)        # ids held before this upload
             raw = self.rfile
             self.rfile = _CountingReader(raw, rec)
             try:
@@ -799,6 +851,16 @@ class CastHandler(dz.Handler):
                 self.rfile = raw
                 with _incoming_lock:
                     _incoming.pop(id(rec), None)
+            # Start the check of what just arrived, here on the host's phone,
+            # without waiting for the guest's page to ask (it may never ask).
+            # A separate thread, so this request can end while a big file is
+            # still being hashed.
+            with dz.state_lock:
+                arrived = [fid for fid, f in dz.shared_files.items()
+                           if fid not in before and f.get("owner_id") == sid]
+            for fid in arrived:
+                threading.Thread(target=claim, args=(fid, sid),
+                                 name="dropcast-claim", daemon=True).start()
             return
         super().do_POST()      # /api/session and the rest: the core's own code
 
@@ -819,5 +881,12 @@ def install():
     make_server() looks up the name "Handler" in the core at call time, so
     replacing it here makes the server use CastHandler. Same technique as
     dz_host's LOG_FILE / UPLOAD_DIR / LOCAL_IP / PORT replacements.
+
+    Python keeps running inside the app between a Stop and the next start, so
+    the records of the previous session are emptied here too.
     """
     dz.Handler = CastHandler
+    with _claims_lock:
+        _claims.clear()
+    with _incoming_lock:
+        _incoming.clear()
