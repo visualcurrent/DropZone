@@ -100,9 +100,16 @@ public class MainActivity extends Activity {
             requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
         }
 
-        Report.add(this, "DropCast " + versionName() + " opened");
         startServer();               // PLAN M2: opening the app starts the server
-        handleIntent(getIntent());
+
+        // Android rebuilds this screen when the phone is rotated or its theme
+        // changes, and hands back the SAME share request each time. "saved" is
+        // null only on a genuinely new opening, so a shared file is taken
+        // once and not copied again on every rotation.
+        if (saved == null) {
+            Report.add(this, "DropCast " + versionName() + " opened");
+            handleIntent(getIntent());
+        }
     }
 
     /** Ask Android to start CastService (does nothing if it is already running). */

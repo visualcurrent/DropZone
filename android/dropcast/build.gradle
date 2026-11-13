@@ -18,7 +18,7 @@ def coreMatch = (file('../../DropZone.py').getText('UTF-8') =~ /(?m)^__version__
 def coreVersion = coreMatch.find() ? coreMatch.group(1) : 'unknown'
 
 // DropCast's own version (release.beta.incremental, same scheme as DropZone).
-def castVersion = '0.1.04'
+def castVersion = '0.1.05'
 
 android {
     namespace 'com.visualcurrent.dropcast'
@@ -28,7 +28,7 @@ android {
         applicationId 'com.visualcurrent.dropcast'
         minSdk 26               // Android 8.0, same floor as DropZone
         targetSdk 35
-        versionCode 5
+        versionCode 6
         versionName "${castVersion}-dz${coreVersion}"
 
         // Which CPU types get a Python interpreter in the APK (each adds size).

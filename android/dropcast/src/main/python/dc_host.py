@@ -28,10 +28,11 @@ UPLOAD_DIR, shared_files, users, state_lock, get_or_create_user, fmt_size,
 log, Handler (and its send_json), CSS, LOGO_SVG, LOCAL_IP, PORT.
 """
 
+import hashlib
 import html
 import uuid
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 
 import DropZone as dz   # already imported and configured by dz_host.start()
 import dc_qr            # the QR drawing library as a string (generated file)
@@ -153,6 +154,29 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
   font-weight:600;font-size:1.05rem;padding:.9rem 1rem;border-radius:var(--rfull)}
 .dc-btn:active{background:var(--pri-h)}
 .dc-foot{color:var(--hint);font-size:.78rem;text-align:center}
+.dc-qr{background:#fff;padding:14px;border-radius:var(--rx);border:1px solid var(--border)}
+.dc-qr img,.dc-qr canvas{display:block}
+.dc-url{color:var(--pri);font-size:.8rem;font-weight:500;text-align:center;overflow-wrap:anywhere}
+.dc-thumb.small{max-height:8rem}
+.dc-icon.small{font-size:3rem}
+.dc-btn2{display:block;width:100%;text-align:center;background:none;color:var(--pri);
+  border:1.5px solid var(--pri);font-weight:600;font-size:1rem;padding:.8rem 1rem;border-radius:var(--rfull)}
+.dc-stop{color:var(--err);border-color:var(--err)}
+.dc-prep{width:100%;background:var(--pri-hl);border-radius:var(--rx);padding:.9rem 1rem;
+  color:var(--txt);font-size:.9rem;text-align:center;overflow-wrap:anywhere}
+.dc-prep.err{background:var(--err-bg);color:var(--err)}
+.dc-bar{height:4px;border-radius:2px;margin-top:.6rem;background:var(--div);overflow:hidden}
+.dc-bar i{display:block;height:100%;width:35%;border-radius:2px;background:var(--pri);
+  animation:dc-slide 1.1s ease-in-out infinite alternate}
+.dc-bar i.exact{animation:none;margin-left:0;transition:width .2s}
+@keyframes dc-slide{from{margin-left:0}to{margin-left:65%}}
+.dc-list{width:100%;display:flex;flex-direction:column;gap:.4rem}
+.dc-list h2{font-size:.8rem;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.04em}
+.dc-row{display:flex;justify-content:space-between;gap:.75rem;width:100%;text-align:left;
+  background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem;font-size:.9rem}
+.dc-row span:first-child{overflow-wrap:anywhere}
+.dc-row span:last-child{color:var(--hint);white-space:nowrap}
+[hidden]{display:none!important}
 """
 
 
@@ -192,7 +216,106 @@ def file_page(f):
     <div class="dc-size">{f["size_str"]}</div>
     <a class="dc-btn" href="/api/download?id={fid}" download>Download</a>
   </section>
-  <p class="dc-foot">Stay on this WiFi until the download finishes.</p>""")
+  <p class="dc-foot">Stay on this WiFi until the download finishes.</p>
+""" + _SHARE_HTML)
+
+
+# The "Share a file" part of the guest page (PLAN M2 step 5): the guest picks
+# one file, it uploads to the host's phone with a progress bar, and the guest
+# then gets a QR for it. A plain string (not an f-string), with NO backslashes
+# in the script, so Python passes it to the browser exactly as typed.
+_SHARE_HTML = """
+  <section id="mine" class="dc-frame" hidden>
+    <p class="dc-note"><b>Your file is ready to share.</b><br>Anyone on this WiFi can scan this code to download it.</p>
+    <div id="myName" class="dc-name"></div>
+    <div id="mySize" class="dc-size"></div>
+    <div id="qr" class="dc-qr"></div>
+    <div id="myUrl" class="dc-url"></div>
+  </section>
+  <div id="up" class="dc-prep" hidden><span id="upText"></span><div class="dc-bar"><i id="upBar"></i></div></div>
+  <button id="share" class="dc-btn2">Share a file</button>
+  <input id="pick" type="file" hidden>
+  <p class="dc-foot">Your file is sent to the phone that is hosting, and stays there until that person stops sharing.</p>
+  <script src="/dc/qrcode.js"></script>
+  <script>
+var $ = function(id){ return document.getElementById(id); };
+var busy = false;
+
+// Show the QR card for one of this guest's own files.
+function showMine(f){
+  var url = location.origin + '/f/' + f.id;
+  $('myName').textContent = f.name;      // textContent: a file name is never treated as HTML
+  $('mySize').textContent = f.size_str;
+  $('myUrl').textContent = url;
+  $('qr').innerHTML = '';
+  new QRCode($('qr'), {text: url, width: 220, height: 220,
+                       colorDark: '#000000', colorLight: '#ffffff',
+                       correctLevel: QRCode.CorrectLevel.M});
+  $('mine').hidden = false;
+  $('share').textContent = 'Share another file';
+}
+
+// The progress box. pct = 0..100 for a real percentage, null for "working".
+function progress(text, pct){
+  $('up').hidden = false;
+  $('up').className = 'dc-prep';
+  $('upText').textContent = text;
+  var bar = $('upBar');
+  if (pct === null){ bar.className = ''; bar.style.width = ''; }
+  else { bar.className = 'exact'; bar.style.width = pct + '%'; }
+}
+function failed(why){
+  busy = false;
+  $('up').hidden = false;
+  $('up').className = 'dc-prep err';
+  $('upText').textContent = 'That did not work: ' + why + '. Please try again.';
+  $('upBar').className = 'exact'; $('upBar').style.width = '0%';
+}
+
+function upload(file){
+  busy = true;
+  progress('Sending ' + file.name + ' ... 0%', 0);
+  // 1. the host's server gives this browser an id (a cookie) so the file is filed under it
+  fetch('/api/session', {method: 'POST'}).then(function(){
+    // 2. send the file. XMLHttpRequest is used because it reports upload progress.
+    var fd = new FormData();
+    fd.append('file', file, file.name);
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/upload');
+    x.upload.onprogress = function(e){
+      if (!e.lengthComputable) return;
+      var pct = Math.floor(100 * e.loaded / e.total);
+      progress('Sending ' + file.name + ' ... ' + pct + '%', pct);
+    };
+    x.onerror = function(){ failed('the connection to the host was lost'); };
+    x.onload = function(){
+      var r = null;
+      try { r = JSON.parse(x.responseText); } catch (e) {}
+      if (x.status !== 200 || !r || !r.files || !r.files.length){ failed('the host did not accept the file'); return; }
+      // 3. the host checks the file (and whether it already holds the same one)
+      progress('Preparing ' + file.name + ' ...', null);
+      fetch('/dc/claim?id=' + r.files[0].id, {method: 'POST'})
+        .then(function(c){ if (!c.ok) throw 0; return c.json(); })
+        .then(function(f){ busy = false; $('up').hidden = true; showMine(f); window.scrollTo(0, document.body.scrollHeight); })
+        .catch(function(){ failed('the host could not prepare the file'); });
+    };
+    x.send(fd);
+  }).catch(function(){ failed('the host could not be reached'); });
+}
+
+$('share').onclick = function(){ if (!busy) $('pick').click(); };
+$('pick').onchange = function(){
+  var f = this.files && this.files[0];
+  this.value = '';                 // so picking the same file again still fires
+  if (f) upload(f);
+};
+
+// On opening (or reloading) the page: if this browser already shared
+// something in this session, show its newest file's QR again.
+fetch('/dc/mine').then(function(r){ return r.json(); }).then(function(s){
+  if (s.files.length) showMine(s.files[s.files.length - 1]);
+}).catch(function(){});
+  </script>"""
 
 
 def gone_page():
@@ -215,30 +338,6 @@ def gone_page():
 #   Android.status()      -> the copy-in progress line, "" when idle
 #   Android.chooseFile()  -> open Android's file picker
 #   Android.stop()        -> stop DropCast and delete the files it holds
-
-_HOST_CSS = """
-.dc-qr{background:#fff;padding:14px;border-radius:var(--rx);border:1px solid var(--border)}
-.dc-qr img,.dc-qr canvas{display:block}
-.dc-url{color:var(--pri);font-size:.8rem;font-weight:500;text-align:center;overflow-wrap:anywhere}
-.dc-thumb.small{max-height:8rem}
-.dc-icon.small{font-size:3rem}
-.dc-btn2{display:block;width:100%;text-align:center;background:none;color:var(--pri);
-  border:1.5px solid var(--pri);font-weight:600;font-size:1rem;padding:.8rem 1rem;border-radius:var(--rfull)}
-.dc-stop{color:var(--err);border-color:var(--err)}
-.dc-prep{width:100%;background:var(--pri-hl);border-radius:var(--rx);padding:.9rem 1rem;
-  color:var(--txt);font-size:.9rem;text-align:center;overflow-wrap:anywhere}
-.dc-bar{height:4px;border-radius:2px;margin-top:.6rem;background:var(--div);overflow:hidden}
-.dc-bar i{display:block;height:100%;width:35%;border-radius:2px;background:var(--pri);
-  animation:dc-slide 1.1s ease-in-out infinite alternate}
-@keyframes dc-slide{from{margin-left:0}to{margin-left:65%}}
-.dc-list{width:100%;display:flex;flex-direction:column;gap:.4rem}
-.dc-list h2{font-size:.8rem;font-weight:600;color:var(--hint);text-transform:uppercase;letter-spacing:.04em}
-.dc-row{display:flex;justify-content:space-between;gap:.75rem;width:100%;text-align:left;
-  background:var(--surf2);border:1px solid var(--border);border-radius:var(--r);padding:.6rem .8rem;font-size:.9rem}
-.dc-row span:first-child{overflow-wrap:anywhere}
-.dc-row span:last-child{color:var(--hint);white-space:nowrap}
-[hidden]{display:none!important}
-"""
 
 # The page's script. A plain (non-f) Python string, and written with NO
 # backslashes, so Python passes it to the browser exactly as typed.
@@ -341,8 +440,7 @@ def host_page():
   <p class="dc-foot">Stop closes DropCast and removes the files it holds.</p>
   <script src="/dc/qrcode.js"></script>
   <script>""" + _HOST_JS + "</script>"
-    # _page() puts _PAGE_CSS in; the host-only styles ride along in a second tag.
-    return _page("DropCast", "<style>" + _HOST_CSS + "</style>" + inner)
+    return _page("DropCast", inner)
 
 
 def host_state():
@@ -354,6 +452,76 @@ def host_state():
         "files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
                    "thumb": bool(f.get("thumb")), "icon": _icon(f["name"])} for f in mine],
     }
+
+
+def _md5_of(path):
+    """Hex MD5 of a file, read 1 MB at a time so memory stays flat at any size."""
+    h = hashlib.md5()
+    with open(path, "rb") as fh:
+        while True:
+            block = fh.read(1024 * 1024)
+            if not block:
+                break
+            h.update(block)
+    return h.hexdigest()
+
+
+def claim(fid, sid):
+    """Finish a GUEST's upload: hash it and run the same-file check.
+
+    The core's /api/upload has already saved the file and listed it under the
+    guest (session id sid). This adds the MD5 and, when an identical file is
+    already held by anyone, removes the new upload and answers with the
+    existing file instead, so one file never gets two addresses.
+
+    Returns the file's public details as a dict, or None when fid is not an
+    upload of this guest.
+
+    FILE EFFECTS: on a match, deletes the just-uploaded copy and its thumbnail.
+    """
+    with dz.state_lock:
+        f = dz.shared_files.get(fid)
+        if not f or f.get("owner_id") != sid or not sid:
+            return None
+        path, size = f["tmp_path"], f["size"]
+
+    md5 = _md5_of(path)        # slow for a big file (seconds per GB), so done outside the lock
+
+    with dz.state_lock:
+        match = None
+        for other in dz.shared_files.values():
+            if other["id"] != fid and other.get("md5") == md5 and other["size"] == size:
+                match = other
+                break
+        if match is None:
+            # The core keeps two copies of an entry (one in the file list, one
+            # in the owner's list); mark both.
+            dz.shared_files[fid]["md5"] = md5
+            for e in dz.users.get(sid, {}).get("files", []):
+                if e["id"] == fid:
+                    e["md5"] = md5
+            keep = dz.shared_files[fid]
+        else:
+            del dz.shared_files[fid]
+            mine = dz.users.get(sid, {}).get("files", [])
+            mine[:] = [e for e in mine if e["id"] != fid]    # slice assignment: edits the list in place
+            keep = match
+
+    if match is not None:
+        Path(path).unlink(missing_ok=True)
+        Path(path + ".t").unlink(missing_ok=True)
+        dz.log(f"claim: '{f['name']}' {dz.fmt_size(size)} md5={md5} is already held as [{keep['id']}]; upload [{fid}] deleted")
+    else:
+        dz.log(f"claim: '{f['name']}' [{fid}] {dz.fmt_size(size)} md5={md5}")
+    return {"id": keep["id"], "name": keep["name"], "size_str": keep["size_str"], "reused": match is not None}
+
+
+def my_files(sid):
+    """A guest's own finished shares, oldest first (for the guest page on reload)."""
+    with dz.state_lock:
+        mine = list(dz.users.get(sid, {}).get("files", [])) if sid else []
+    return {"files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"]}
+                      for f in mine if f.get("md5")]}
 
 
 class CastHandler(dz.Handler):
@@ -395,11 +563,27 @@ class CastHandler(dz.Handler):
             self.end_headers()
             self.wfile.write(body)
             return
+        # A guest's own shares, so a reloaded guest page can show its QR again.
+        if path == "/dc/mine":
+            self.send_json(my_files(self.get_session()))
+            return
         # DropZone's own host and guest pages are not part of DropCast.
         if path in ("/", "/remote"):
             self._send_page(gone_page(), 404)
             return
         super().do_GET()
+
+    def do_POST(self):
+        parsed = urlparse(self.path)
+        if parsed.path == "/dc/claim":
+            fid = parse_qs(parsed.query).get("id", [""])[0]
+            result = claim(fid, self.get_session())
+            if result is None:
+                self.send_json({"error": "Not your upload"}, 403)
+            else:
+                self.send_json(result)
+            return
+        super().do_POST()      # /api/session, /api/upload and the rest: the core's own code
 
     def _send_page(self, page, status):
         """Send an HTML page, never cached (same reason as the core's send_html)."""

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DropCast's window theme on Android 8 and 9, which have no system-wide
+         dark setting: always light. Android 10+ uses values-v29\styles.xml. -->
+    <style name="CastTheme" parent="@android:style/Theme.DeviceDefault.Light.NoActionBar" />
+</resources>

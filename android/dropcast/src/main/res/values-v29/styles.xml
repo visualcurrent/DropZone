@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- DropCast's window theme on Android 10+ (API 29): follows the phone's
+         light/dark setting.
+
+         Why this matters for the page: the app's screen is a web page, and
+         Android tells a page inside an app "light" or "dark" from the APP'S
+         theme, not from the phone's setting. With an always-light theme the
+         page stayed light on a phone set to dark (seen on the Xiaomi,
+         2026-11-13). DayNight has no ready-made "no title bar" variant, so
+         the two items below remove the bar. -->
+    <style name="CastTheme" parent="@android:style/Theme.DeviceDefault.DayNight">
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowActionBar">false</item>
+    </style>
+</resources>
