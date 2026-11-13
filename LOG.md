@@ -122,6 +122,15 @@ Append-only. Newest on top. One dated entry per working session: built / decided
 - Gabe raised guest pages that stay on screen after the host has stopped: a last message from the host at Stop, or a timed check by the page. Agent's proposal, not built: one timed check by the guest's page covers both, since the host cannot push to a page; awaiting his go.
 - Gabe does not recall the "test leftovers" topic; re-explained in the reply of this date. No rule written.
 - Next user action: say when DropCast on the host's phone can be replaced, so 0.1.10 can be installed and the thumbnails checked.
+- Gabe: go on the guest-page check plan; no rule wanted for test leftovers ("clean up after ourselves, or leave a note if a mess has to be left"). [verified: Gabe 2026-11-13]
+- Upload-speed test, DropCast 0.1.09, guest's phone (192.168.7.94, Firefox on Android) to host's phone `fc0f334f`, timings from the host's `DropZone.log`:
+  - Upload alone: 1,517,759,377 bytes, 23:23:38 to 23:23:57, 19 s, about 76 MB/s. [verified: log]
+  - Upload while the PC downloaded from the host's phone: 1,690,707,192 bytes, 23:29:53 to 23:33:10, 197 s, about 8.2 MB/s. The PC's download ran 23:29:27 to 23:33:51 and so covered the whole upload. [verified: log]
+  - The PC's download: 1,517,759,129 bytes in 264 s, about 5.5 MB/s, all bytes received. [verified: log + byte count on the PC] Earlier PC downloads with no upload running: 4.75 and 4.3 MB/s. [verified: earlier entries of this date]
+  - Result: a PC download in progress cut the guest's upload to about a ninth. Stated goal of the test: decide whether the two are linked; they are. [verified: the two timings above at equal conditions except the download]
+  - Cause not found. The core's send loop is a plain 256 KB read-and-write with no delay (`DropZone.py` L590-595), and the same file went to the host phone's own browser at about 255 MB/s, so the loop is not the limit. [verified: code read; log 16:07] The PC download holds near 5 MB/s whether or not an upload runs, so something on the host-phone-to-PC path caps it. [est_] A slow or retry-heavy WiFi leg to the PC would also explain the upload slowing, by using up shared air time. [assumed: untested]
+- Not installed still: 0.1.10. The host's phone holds the two test files (`fbedb7d6`, `4d96efe1`, Gabe's uploads) for the next test.
+- Next user action: on the guest's phone open `http://192.168.7.110:7071/f/fbedb7d6`, tap Download, and say when it finishes.
 
 ## 2026-11-12 — Video frame at 10% (v0.2.18); session close
 - Built in `DropZone.py`, v0.2.18, at Gabe's request: `makeThumb` seeks to 10% of a video's length before drawing the frame (0.1 s when the length is unknown), replacing 0.1 s in. [est_: page script passes `node --check`; not run on a video in any browser]
