@@ -183,6 +183,7 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 .dc-row span:first-child{overflow-wrap:anywhere}
 .dc-row span:last-child{color:var(--hint);white-space:nowrap}
 [hidden]{display:none!important}
+.dc-lost .dc-live{display:none!important}
 """
 
 
@@ -216,13 +217,14 @@ def file_page(f):
     return _page(f["name"], f"""
   <p class="dc-note"><b>Someone nearby is sharing a file with you.</b><br>
     It comes straight from their phone over this WiFi. Nothing goes through the internet.</p>
-  <section class="dc-frame">
+  <section id="fileCard" class="dc-frame dc-live">
     {picture}
     <div class="dc-name">{name}</div>
     <div class="dc-size">{f["size_str"]}</div>
     <a class="dc-btn" href="/api/download?id={fid}" download>Download</a>
   </section>
-  <p class="dc-foot">Stay on this WiFi until the download finishes.</p>
+  <p class="dc-foot dc-live">Stay on this WiFi until the download finishes.</p>
+  <script>var PAGE_FID = '{fid}';</script>
 """ + _SHARE_HTML)
 
 
@@ -231,7 +233,10 @@ def file_page(f):
 # then gets a QR for it. A plain string (not an f-string), with NO backslashes
 # in the script, so Python passes it to the browser exactly as typed.
 _SHARE_HTML = """
-  <section id="mine" class="dc-frame" hidden>
+  <div id="goneNote" class="dc-prep err" hidden>This file is no longer being shared.</div>
+  <div id="lost" class="dc-prep err" hidden><b>Can't reach the host's phone.</b><br>
+    They may have stopped sharing, or you may have left their WiFi.</div>
+  <section id="mine" class="dc-frame dc-live" hidden>
     <p class="dc-note"><b>Your file is ready to share.</b><br>Anyone on this WiFi can scan this code to download it.</p>
     <div id="myName" class="dc-name"></div>
     <div id="mySize" class="dc-size"></div>
@@ -239,16 +244,64 @@ _SHARE_HTML = """
     <div id="myUrl" class="dc-url"></div>
   </section>
   <div id="up" class="dc-prep" hidden><span id="upText"></span><div class="dc-bar"><i id="upBar"></i></div></div>
-  <button id="share" class="dc-btn2">Share a file</button>
+  <button id="share" class="dc-btn2 dc-live">Share a file</button>
   <input id="pick" type="file" hidden>
-  <p class="dc-foot">Your file is sent to the phone that is hosting, and stays there until that person stops sharing.</p>
+  <p class="dc-foot dc-live">Your file is sent to the phone that is hosting, and stays there until that person stops sharing.</p>
   <script src="/dc/qrcode.js"></script>
   <script>
 var $ = function(id){ return document.getElementById(id); };
 var busy = false;
+var myId = '';       // id of this guest's own shared file whose QR is on show, '' when none
+var misses = 0;      // checks in a row that got no answer from the host's phone
+
+// ── Is the host still there? ─────────────────────────────────────────────────
+// A page cannot be told that the host stopped: the host's phone only ever
+// answers questions. So this page asks, every 5 seconds, whether the file it
+// shows (PAGE_FID) and this guest's own shared file (myId) are still held.
+//   answer "no"          -> that file is gone for good: remove its card and QR
+//   no answer, 3 in a row -> hide everything that needs the host and say so;
+//                            if the host answers again, it all comes back
+// Everything that needs the host carries the class dc-live; putting the class
+// dc-lost on the page hides all of it at once.
+function check(){
+  if (busy) return;                      // an upload is running; it reports its own failures
+  var stop = new AbortController();      // lets us give up on a question after 4 s
+  var timer = setTimeout(function(){ stop.abort(); }, 4000);
+  fetch('/dc/alive?id=' + PAGE_FID + '&mine=' + myId, {cache: 'no-store', signal: stop.signal})
+    .then(function(r){ return r.json(); })
+    .then(function(s){
+      clearTimeout(timer);
+      misses = 0;
+      document.body.classList.remove('dc-lost');
+      $('lost').hidden = true;
+      if (PAGE_FID && !s.file){          // the file this page offers is no longer held
+        var card = $('fileCard');
+        if (card){ card.parentNode.removeChild(card); $('goneNote').hidden = false; }
+      }
+      if (myId && !s.mine){              // this guest's own file is no longer held
+        myId = '';
+        $('mine').hidden = true;
+        $('qr').innerHTML = '';
+        $('share').textContent = 'Share a file';
+      }
+    })
+    .catch(function(){
+      clearTimeout(timer);
+      misses++;
+      if (misses >= 3){
+        document.body.classList.add('dc-lost');
+        $('lost').hidden = false;
+      }
+    });
+}
+setInterval(check, 5000);
+// Phone browsers pause timers in a tab that is not on screen, so ask again the
+// moment the page is brought back into view.
+document.addEventListener('visibilitychange', function(){ if (!document.hidden) check(); });
 
 // Show the QR card for one of this guest's own files.
 function showMine(f){
+  myId = f.id;
   var url = location.origin + '/f/' + f.id;
   $('myName').textContent = f.name;      // textContent: a file name is never treated as HTML
   $('mySize').textContent = f.size_str;
@@ -330,6 +383,7 @@ def landing_page():
     return _page("DropCast", """
   <p class="dc-note"><b>Send a file to the person who showed you this code.</b><br>
     It goes straight to their phone over this WiFi. Nothing goes through the internet.</p>
+  <script>var PAGE_FID = '';</script>
 """ + _SHARE_HTML)
 
 
@@ -835,6 +889,13 @@ class CastHandler(dz.Handler):
             self.send_header("Cache-Control", "public, max-age=86400")
             self.end_headers()
             self.wfile.write(body)
+            return
+        # A guest page's 5-second question: are these two files still held?
+        # Not logged: it arrives every few seconds from every open guest page.
+        if path == "/dc/alive":
+            q = parse_qs(urlparse(self.path).query)
+            self.send_json({"file": q.get("id", [""])[0] in dz.shared_files,
+                            "mine": q.get("mine", [""])[0] in dz.shared_files})
             return
         # A guest's own shares, so a reloaded guest page can show its QR again.
         if path == "/dc/mine":
