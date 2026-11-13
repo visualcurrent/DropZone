@@ -11,28 +11,21 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.OpenableColumns;
-import android.util.Log;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 /**
  * DropCast's one screen.
  *
- * SKELETON, through PLAN.md > M2 step 2a:
+ * SKELETON, through PLAN.md > M2 step 2b:
  *  - opening the app (from its icon or from the share menu) starts the server
  *    (CastService) and reports its address; one button stops and starts it;
- *  - a file shared to DropCast is reported by name and size. It is not copied
- *    or served yet; that is step 2b.
- * Every reported line is also appended to files/DropCast.log.
+ *  - a file shared to DropCast is copied into the app (CopyIn) with a progress
+ *    line, then reported with its id and download address.
+ * Every reported line is also appended to files/DropCast.log (see Report).
  *
  * FILE EFFECTS: appends to DropCast.log in the app's private files folder.
  * Read it from the PC with:
@@ -40,12 +33,14 @@ import java.util.Locale;
  */
 public class MainActivity extends Activity {
 
-    private static final String TAG = "DropCast";
-    private TextView out;   // the on-screen copy of the log
+    private TextView out;      // the on-screen copy of the log
+    private TextView status;   // one line: copy-in progress, empty when idle
     private Button serverBtn;
+    private int shownCount = -1;   // how many Report lines are on screen
 
-    // Watches CastService's published state twice a second while the screen
-    // is visible, and reports each change once.
+    // Twice a second while the screen is visible: reports each change in
+    // CastService's state once, and copies the progress line and any new
+    // Report lines onto the screen.
     private final Handler handler = new Handler(Looper.getMainLooper());
     private String shownState = "";
     private final Runnable watch = new Runnable() {
@@ -61,6 +56,11 @@ public class MainActivity extends Activity {
                     report("server stopped");
                 }
                 serverBtn.setText(CastService.running ? "Stop" : "Start");
+            }
+            status.setText(CopyIn.status);
+            if (Report.count() != shownCount) {
+                shownCount = Report.count();
+                out.setText(Report.screenText());
             }
             handler.postDelayed(this, 500);
         }
@@ -80,6 +80,10 @@ public class MainActivity extends Activity {
         ScrollView scroll = new ScrollView(this);
         scroll.addView(out);
 
+        status = new TextView(this);
+        status.setPadding(pad, pad / 2, pad, pad / 2);
+        status.setTextSize(16);
+
         // One button: Stop while the server runs, Start while it does not.
         serverBtn = new Button(this);
         serverBtn.setText("Start");
@@ -92,6 +96,7 @@ public class MainActivity extends Activity {
         root.setOrientation(LinearLayout.VERTICAL);
         root.setFitsSystemWindows(true);     // keep content out from under the status bar
         root.addView(serverBtn);
+        root.addView(status);
         root.addView(scroll);
         setContentView(root);
 
@@ -135,7 +140,7 @@ public class MainActivity extends Activity {
         handleIntent(intent);
     }
 
-    /** Decide which way in was used and report what arrived. */
+    /** Decide which way in was used; a shared file is reported and queued for copy-in. */
     private void handleIntent(Intent intent) {
         if (intent == null || !Intent.ACTION_SEND.equals(intent.getAction())) {
             report("Opened from the icon. Share a file to DropCast from a file manager to test.");
@@ -153,7 +158,7 @@ public class MainActivity extends Activity {
             return;
         }
 
-        String name = "(unknown name)";
+        String name = null;
         long size = -1;   // -1 = the sending app did not state a size
 
         // Ask the app that owns the file for its display name and size.
@@ -170,20 +175,22 @@ public class MainActivity extends Activity {
             report("could not ask for name/size: " + e);
         }
 
+        // A sending app that gives no name still needs one for the download.
+        if (name == null || name.trim().isEmpty()) {
+            name = uri.getLastPathSegment() != null ? uri.getLastPathSegment() : "file";
+        }
+
         report("share received: name='" + name + "' size=" + size + " bytes"
                 + " type=" + intent.getType() + " from=" + uri.getAuthority());
+
+        // Opens the file now (while this screen holds the permission to read
+        // it) and copies it on a background thread.
+        CopyIn.start(getApplicationContext(), uri, name, size);
     }
 
-    /** Show a line on screen, send it to logcat, and append it to DropCast.log. */
+    /** Record a line (screen, logcat, DropCast.log); the watch timer puts it on screen. */
     private void report(String line) {
-        String stamped = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).format(new Date()) + "  " + line;
-        Log.i(TAG, line);
-        out.append(stamped + "\n\n");
-        try (FileWriter w = new FileWriter(new File(getFilesDir(), "DropCast.log"), true)) {  // true = append
-            w.write(stamped + "\n");
-        } catch (IOException e) {
-            Log.w(TAG, "could not write DropCast.log: " + e);
-        }
+        Report.add(getApplicationContext(), line);
     }
 
     /** The versionName set in build.gradle, read back from the installed app. */
