@@ -70,6 +70,7 @@ final class CopyIn {
             if (in == null) throw new java.io.IOException("the sending app returned no data");
         } catch (Exception e) {
             Report.add(appCtx, "copy-in FAILED at open: '" + name + "': " + e);
+            Report.problem = "Could not share '" + name + "': the file could not be opened.";
             return;
         }
         worker.execute(() -> run(appCtx, in, name, size));
@@ -140,6 +141,10 @@ final class CopyIn {
                     + "\nguest page: " + CastService.baseUrl + "/f/" + useFid);
         } catch (Throwable t) {
             Report.add(ctx, "copy-in FAILED: '" + name + "': " + t);
+            // Our own checks (no space, server not running) throw
+            // IllegalStateException with a message written for the host.
+            Report.problem = "Could not share '" + name + "': "
+                    + (t instanceof IllegalStateException ? t.getMessage() : "the file could not be read") + ".";
             // Remove whatever part of the copy was written.
             if (fid != null && dc != null) {
                 try { dc.callAttr("discard", fid); } catch (Throwable ignored) { /* server already stopped and wiped */ }

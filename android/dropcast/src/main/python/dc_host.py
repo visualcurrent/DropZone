@@ -165,6 +165,10 @@ body{font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 .dc-prep{width:100%;background:var(--pri-hl);border-radius:var(--rx);padding:.9rem 1rem;
   color:var(--txt);font-size:.9rem;text-align:center;overflow-wrap:anywhere}
 .dc-prep.err{background:var(--err-bg);color:var(--err)}
+.dc-got{border-color:var(--pri);padding:1.1rem 1rem;gap:.8rem}
+.dc-gotrow{display:flex;align-items:center;gap:.8rem;width:100%}
+.dc-gotrow .dc-name{text-align:left;font-size:.98rem}
+.dc-gotrow .dc-size{margin-top:.1rem}
 .dc-bar{height:4px;border-radius:2px;margin-top:.6rem;background:var(--div);overflow:hidden}
 .dc-bar i{display:block;height:100%;width:35%;border-radius:2px;background:var(--pri);
   animation:dc-slide 1.1s ease-in-out infinite alternate}
@@ -333,11 +337,16 @@ def gone_page():
 # is only ever sent to the phone it runs on. Unlike the guest page it needs a
 # script: it asks /dc/host_state once a second and redraws when that changes.
 #
-# Three things only the app can do are reached through "Android", an object
-# the app adds to the page (MainActivity.Bridge):
-#   Android.status()      -> the copy-in progress line, "" when idle
-#   Android.chooseFile()  -> open Android's file picker
-#   Android.stop()        -> stop DropCast and delete the files it holds
+# What only the app can do is reached through "Android", an object the app
+# adds to the page (MainActivity.Bridge):
+#   Android.status()            -> progress line of a copy-in or a save, "" when idle
+#   Android.problem()           -> last failure to tell the host about, "" when none
+#   Android.clearProblem()      -> the host tapped OK on it
+#   Android.batteryRestricted() -> true while the phone may pause the app
+#   Android.openAppSettings()   -> open this app's page in the phone's Settings
+#   Android.chooseFile()        -> open Android's file picker
+#   Android.save(id)            -> save a received file through Android's save dialog
+#   Android.stop()              -> stop DropCast (asks first if files are unsaved)
 
 # The page's script. A plain (non-f) Python string, and written with NO
 # backslashes, so Python passes it to the browser exactly as typed.
@@ -398,11 +407,47 @@ function draw(){
   $('othersBox').hidden = (n === 0);
 }
 
+// Files guests have shared with the host: one small card each, newest first,
+// with a Download button that opens Android's "save to" dialog.
+var gotKey = '';       // what is drawn now, so the cards are rebuilt only on a change
+function drawReceived(list){
+  var key = JSON.stringify(list);
+  if (key === gotKey) return;
+  gotKey = key;
+  var box = $('got'); box.innerHTML = '';
+  for (var i = list.length - 1; i >= 0; i--){
+    var f = list[i];
+    var card = document.createElement('section'); card.className = 'dc-frame dc-got';
+    var note = document.createElement('p'); note.className = 'dc-note';
+    var b = document.createElement('b');
+    b.textContent = f.saved ? 'Saved to this phone.' : 'This file has been shared with you.';
+    note.appendChild(b);
+    var row = document.createElement('div'); row.className = 'dc-gotrow';
+    var ic = document.createElement('div'); ic.className = 'dc-icon small'; ic.textContent = f.icon;
+    var tx = document.createElement('div');
+    var nm = document.createElement('div'); nm.className = 'dc-name'; nm.textContent = f.name;
+    var sz = document.createElement('div'); sz.className = 'dc-size'; sz.textContent = f.size_str;
+    tx.appendChild(nm); tx.appendChild(sz); row.appendChild(ic); row.appendChild(tx);
+    var btn = document.createElement('button');
+    btn.className = f.saved ? 'dc-btn2' : 'dc-btn';
+    btn.textContent = f.saved ? 'Save again' : 'Download';
+    btn.onclick = (function(id){ return function(){ if (window.Android) Android.save(id); }; })(f.id);
+    card.appendChild(note); card.appendChild(row); card.appendChild(btn);
+    box.appendChild(card);
+  }
+  $('gotBox').hidden = (list.length === 0);
+}
+
 function tick(){
-  // 1. the copy-in progress line, straight from the app
+  // 1. straight from the app: the progress line (copy-in or save), the last
+  //    problem to tell the host about, and whether the phone restricts the app
   var st = (window.Android && Android.status()) || '';
   $('prep').hidden = !st;
   $('prepText').textContent = st;
+  var pr = (window.Android && Android.problem()) || '';
+  $('prob').hidden = !pr;
+  $('probText').textContent = pr;
+  $('batt').hidden = !(window.Android && Android.batteryRestricted());
 
   // 2. the file list, from the server on this phone
   fetch('/dc/host_state').then(function(r){ return r.json(); }).then(function(s){
@@ -410,9 +455,12 @@ function tick(){
     if (newest(s.files) !== newest(files)) picked = null;   // a new share takes over the screen
     files = s.files; base = s.base;
     draw();
+    drawReceived(s.received);
   }).catch(function(){ /* server stopping or starting: try again next tick */ });
 }
 
+$('battBtn').onclick = function(){ if (window.Android) Android.openAppSettings(); };
+$('probBtn').onclick = function(){ if (window.Android) Android.clearProblem(); $('prob').hidden = true; };
 $('choose').onclick = function(){ if (window.Android) Android.chooseFile(); };
 $('stop').onclick = function(){ if (window.Android) Android.stop(); };
 tick();
@@ -423,7 +471,13 @@ setInterval(tick, 1000);
 def host_page():
     """The host's screen: the shared file with its QR, Choose a file, Stop."""
     inner = """
+  <div id="batt" class="dc-prep err" hidden><b>This phone may pause DropCast.</b><br>
+    Downloads stall when it does. In App info, set the battery or power option to No restrictions.
+    <button id="battBtn" class="dc-btn2 dc-stop" style="margin-top:.7rem">Open settings</button></div>
+  <div id="prob" class="dc-prep err" hidden><span id="probText"></span>
+    <button id="probBtn" class="dc-btn2 dc-stop" style="margin-top:.7rem">OK</button></div>
   <div id="prep" class="dc-prep" hidden><span id="prepText"></span><div class="dc-bar"><i></i></div></div>
+  <div id="gotBox" class="dc-list" hidden><h2>Shared with you</h2><div id="got" class="dc-list"></div></div>
   <p id="empty" class="dc-note"><b>Share a file with people nearby.</b><br>
     Choose a file here, or use Share in any app and pick DropCast.</p>
   <section id="card" class="dc-frame" hidden>
@@ -444,14 +498,49 @@ def host_page():
 
 
 def host_state():
-    """What the host's screen needs: the host's own files and the address guests use."""
+    """What the host's screen needs.
+
+    files:    the host's own shares, oldest first (each gets a QR).
+    received: files guests have shared, oldest first (no QR; the host saves
+              them). A guest's file appears only once it has been claimed
+              (hashed), so an upload that turns out to be a duplicate never
+              flashes up and vanishes.
+    """
     with dz.state_lock:
         mine = list(dz.users.get(HOST_SID, {}).get("files", []))
+        got = [f for f in dz.shared_files.values()       # dicts keep insertion order: oldest first
+               if f.get("owner_id") != HOST_SID and f.get("md5")]
     return {
         "base": f"http://{dz.LOCAL_IP}:{dz.PORT}",
         "files": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
                    "thumb": bool(f.get("thumb")), "icon": _icon(f["name"])} for f in mine],
+        "received": [{"id": f["id"], "name": f["name"], "size_str": f["size_str"],
+                      "icon": _icon(f["name"]), "saved": bool(f.get("saved"))} for f in got],
     }
+
+
+# ─── Saving a received file (called from Java: MainActivity / SaveOut) ────────
+
+def file_info(fid):
+    """[name, path, size] of a held file, for Java to copy it out; None if not held."""
+    with dz.state_lock:
+        f = dz.shared_files.get(fid)
+        return [f["name"], f["tmp_path"], f["size"]] if f else None
+
+
+def mark_saved(fid):
+    """Record that the host has saved a received file (the Stop warning counts the rest)."""
+    with dz.state_lock:
+        if fid in dz.shared_files:
+            dz.shared_files[fid]["saved"] = True
+    dz.log(f"host saved [{fid}] out of the app")
+
+
+def unsaved_count():
+    """How many received files the host has not saved yet."""
+    with dz.state_lock:
+        return sum(1 for f in dz.shared_files.values()
+                   if f.get("owner_id") != HOST_SID and f.get("md5") and not f.get("saved"))
 
 
 def _md5_of(path):

@@ -3,21 +3,33 @@ package com.visualcurrent.dropcast;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.PowerManager;
 import android.provider.OpenableColumns;
+import android.provider.Settings;
 import android.view.Gravity;
 import android.view.View;
 import android.webkit.JavascriptInterface;
+import android.webkit.MimeTypeMap;
 import android.webkit.WebView;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+
+import java.io.File;
+import java.util.List;
+import java.util.Locale;
 
 /**
  * DropCast's one screen (PLAN.md > M2 step 4).
@@ -40,6 +52,8 @@ public class MainActivity extends Activity {
 
     private static final String HOST_PAGE = "http://127.0.0.1:" + CastService.PORT + "/host";
     private static final int PICK_FILE = 7;   // any number; names our file-picker request
+    private static final int SAVE_FILE = 8;   // ... and our save-dialog request
+    private String pendingSaveFid = null;     // the received file whose save dialog is open
 
     private WebView web;
     private TextView msg;             // "Starting..." or the reason the server did not start
@@ -109,6 +123,8 @@ public class MainActivity extends Activity {
         if (saved == null) {
             Report.add(this, "DropCast " + versionName() + " opened");
             handleIntent(getIntent());
+        } else {
+            pendingSaveFid = saved.getString("pendingSaveFid");
         }
     }
 
@@ -156,13 +172,111 @@ public class MainActivity extends Activity {
         shareFile(uri, "share menu");
     }
 
-    /** "Choose a file": Android's own file picker returns here with the chosen file. */
+    /** Both of Android's dialogs return here: the file picker and the save dialog. */
     @Override
     protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
-        if (request == PICK_FILE && result == RESULT_OK && data != null && data.getData() != null) {
+        if (result != RESULT_OK || data == null || data.getData() == null) return;   // cancelled
+
+        if (request == PICK_FILE) {
             shareFile(data.getData(), "file picker");
+        } else if (request == SAVE_FILE && pendingSaveFid != null) {
+            // The host chose where to save; copy the file there in the background.
+            String fid = pendingSaveFid;
+            pendingSaveFid = null;
+            PyObject info = fileInfo(fid);
+            if (info == null) {
+                Report.problem = "That file is no longer held in DropCast.";
+                return;
+            }
+            List<PyObject> f = info.asList();   // [name, path, size]
+            SaveOut.start(getApplicationContext(), data.getData(), fid,
+                    f.get(0).toString(), new File(f.get(1).toString()));
         }
+    }
+
+    /** Keep the id of the file being saved if Android rebuilds the screen while its save dialog is open. */
+    @Override
+    protected void onSaveInstanceState(Bundle out) {
+        super.onSaveInstanceState(out);
+        out.putString("pendingSaveFid", pendingSaveFid);
+    }
+
+    /** dc_host.file_info(fid) -> [name, path, size], or null when the file is not held or the server is down. */
+    private PyObject fileInfo(String fid) {
+        if (!CastService.running) return null;
+        return Python.getInstance().getModule("dc_host").callAttr("file_info", fid);   // Python None arrives as null
+    }
+
+    /**
+     * "Download" on a received file: check there is room, then open Android's
+     * save dialog with the file's name filled in. onActivityResult continues.
+     */
+    private void beginSave(String fid) {
+        PyObject info = fileInfo(fid);
+        if (info == null) {
+            Report.problem = "That file is no longer held in DropCast.";
+            return;
+        }
+        List<PyObject> f = info.asList();   // [name, path, size]
+        String name = f.get(0).toString();
+        long size = f.get(2).toLong();
+
+        // Free-space check (Gabe, 2026-11-13): saving is a copy, so the phone
+        // needs room for a second copy. Measured on the phone's own storage,
+        // which is where a save normally goes; a save to a memory card or a
+        // cloud folder is not measured.
+        long free = Environment.getDataDirectory().getUsableSpace();
+        if (size > free) {
+            Report.add(this, "save refused, not enough space: '" + name + "' size=" + size + " free=" + free);
+            Report.problem = "Not enough space to save this file. It is " + (size / 1048576)
+                    + " MB and this phone has " + (free / 1048576) + " MB free.";
+            return;
+        }
+
+        // The save dialog wants the kind of file; take it from the name's ending.
+        int dot = name.lastIndexOf('.');
+        String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase(Locale.US) : "";
+        String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+
+        Intent save = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        save.addCategory(Intent.CATEGORY_OPENABLE);
+        save.setType(type != null ? type : "application/octet-stream");   // octet-stream = "any file"
+        save.putExtra(Intent.EXTRA_TITLE, name);
+        pendingSaveFid = fid;
+        startActivityForResult(save, SAVE_FILE);
+    }
+
+    /** Stop: shut the server down (which deletes the files DropCast holds) and close the app. */
+    private void stopNow() {
+        Report.add(this, "Stop confirmed");
+        stopService(new Intent(this, CastService.class));
+        finishAndRemoveTask();
+    }
+
+    /** Stop was tapped: ask first when received files have not been saved (PLAN M2). */
+    private void askStop() {
+        int unsaved = 0;
+        if (CastService.running) {
+            unsaved = Python.getInstance().getModule("dc_host").callAttr("unsaved_count").toInt();
+        }
+        if (unsaved == 0) {
+            stopNow();
+            return;
+        }
+        new AlertDialog.Builder(this)
+                .setTitle("Stop sharing?")
+                .setMessage("You have " + unsaved + (unsaved == 1 ? " unsaved file" : " unsaved files")
+                        + ". Stopping removes " + (unsaved == 1 ? "it" : "them") + " from this phone. Stop anyway?")
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton("Stop anyway", (d, which) -> stopNow())
+                .show();
+    }
+
+    /** True while the phone is allowed to pause this app in the background. */
+    private boolean batteryRestricted() {
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        return !pm.isIgnoringBatteryOptimizations(getPackageName());
     }
 
     /** Both ways in end here: look up the file's name and size, then start the copy-in. */
@@ -212,10 +326,46 @@ public class MainActivity extends Activity {
      */
     private class Bridge {
 
-        /** The copy-in progress line, "" when no copy is running. */
+        /** The progress line of a copy-in or a save, "" when neither is running. */
         @JavascriptInterface
         public String status() {
-            return CopyIn.status;
+            return !CopyIn.status.isEmpty() ? CopyIn.status : SaveOut.status;
+        }
+
+        /** The last failure the host should be told about, "" when none. */
+        @JavascriptInterface
+        public String problem() {
+            return Report.problem;
+        }
+
+        /** The host tapped OK on the problem box. */
+        @JavascriptInterface
+        public void clearProblem() {
+            Report.problem = "";
+        }
+
+        /**
+         * True while the phone may pause DropCast in the background. On the
+         * Xiaomi that freezes the server (guests' pages hang) until the app's
+         * battery option is set to "No restrictions"; see CLAUDE.md.
+         */
+        @JavascriptInterface
+        public boolean batteryRestricted() {
+            return MainActivity.this.batteryRestricted();
+        }
+
+        /** Open this app's page in the phone's Settings, where the battery option lives. */
+        @JavascriptInterface
+        public void openAppSettings() {
+            runOnUiThread(() -> startActivity(new Intent(
+                    Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+                    Uri.parse("package:" + getPackageName()))));
+        }
+
+        /** "Download" on a received file: save it through Android's save dialog. */
+        @JavascriptInterface
+        public void save(String fid) {
+            runOnUiThread(() -> beginSave(fid));
         }
 
         /** Way in 1: open Android's file picker for one file of any type. */
@@ -229,14 +379,10 @@ public class MainActivity extends Activity {
             });
         }
 
-        /** Stop: shut the server down (which deletes the files DropCast holds) and close the app. */
+        /** Stop: asks first if received files are unsaved, then stops and closes. */
         @JavascriptInterface
         public void stop() {
-            runOnUiThread(() -> {
-                Report.add(MainActivity.this, "Stop tapped");
-                stopService(new Intent(MainActivity.this, CastService.class));
-                finishAndRemoveTask();
-            });
+            runOnUiThread(() -> askStop());
         }
     }
 }

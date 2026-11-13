@@ -25,6 +25,13 @@ final class Report {
 
     private static final String TAG = "DropCast";
 
+    /**
+     * The last failure the HOST should be told about, in plain words; "" when
+     * there is none. The host's screen shows it in a box until OK is tapped.
+     * (Log lines are for the developer; this is for the person holding the phone.)
+     */
+    static volatile String problem = "";
+
     private Report() {}
 
     /** Record one line. synchronized: the copy thread and the screen both call this. */
