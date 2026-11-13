@@ -322,6 +322,15 @@ fetch('/dc/mine').then(function(r){ return r.json(); }).then(function(s){
   </script>"""
 
 
+def landing_page():
+    """The page behind the host's "receive a file" QR: no file to download,
+    only the "Share a file" part, so a guest can send one to the host."""
+    return _page("DropCast", """
+  <p class="dc-note"><b>Send a file to the person who showed you this code.</b><br>
+    It goes straight to their phone over this WiFi. Nothing goes through the internet.</p>
+""" + _SHARE_HTML)
+
+
 def gone_page():
     """Shown for an address whose file is not (or no longer) shared."""
     return _page("DropCast", f"""
@@ -355,6 +364,7 @@ var files = [];        // the host's shared files, oldest first (from /dc/host_s
 var base = '';         // http://<phone's WiFi address>:<port>
 var shownId = null;    // id of the file whose QR is on screen
 var picked = null;     // id the host tapped in "Earlier files"; null = newest
+var recvBase = '';     // address the "receive a file" QR was drawn for
 var $ = function(id){ return document.getElementById(id); };
 
 function draw(){
@@ -364,6 +374,18 @@ function draw(){
 
   $('empty').hidden = !!f;
   $('card').hidden = !f;
+
+  // Nothing shared yet: show a QR that lets someone SEND a file to this phone
+  // (it opens the landing page, which has only the "Share a file" button).
+  $('recv').hidden = !!f || !base;
+  if (!f && base && recvBase !== base){
+    recvBase = base;
+    $('recvUrl').textContent = base + '/';
+    $('recvQr').innerHTML = '';
+    new QRCode($('recvQr'), {text: base + '/', width: 220, height: 220,
+                             colorDark: '#000000', colorLight: '#ffffff',
+                             correctLevel: QRCode.CorrectLevel.M});
+  }
   $('choose').textContent = f ? 'Share another file' : 'Choose a file';
   $('choose').className = f ? 'dc-btn2' : 'dc-btn';
 
@@ -480,6 +502,11 @@ def host_page():
   <div id="gotBox" class="dc-list" hidden><h2>Shared with you</h2><div id="got" class="dc-list"></div></div>
   <p id="empty" class="dc-note"><b>Share a file with people nearby.</b><br>
     Choose a file here, or use Share in any app and pick DropCast.</p>
+  <section id="recv" class="dc-frame" hidden>
+    <p class="dc-note"><b>Want a file from someone?</b><br>They scan this code and send it to you. No app needed.</p>
+    <div id="recvQr" class="dc-qr"></div>
+    <div id="recvUrl" class="dc-url"></div>
+  </section>
   <section id="card" class="dc-frame" hidden>
     <div id="pic"></div>
     <div id="name" class="dc-name"></div>
@@ -656,10 +683,20 @@ class CastHandler(dz.Handler):
         if path == "/dc/mine":
             self.send_json(my_files(self.get_session()))
             return
-        # DropZone's own host and guest pages are not part of DropCast.
-        if path in ("/", "/remote"):
+        # The address behind the host's "receive a file" QR.
+        if path == "/":
+            self._send_page(landing_page(), 200)
+            return
+        # DropZone's own guest page is not part of DropCast.
+        if path == "/remote":
             self._send_page(gone_page(), 404)
             return
+        # A Download tapped on a page left open from an earlier session: the
+        # file is gone. Say so as a page; the core would answer with raw JSON.
+        if path == "/api/download":
+            if parse_qs(urlparse(self.path).query).get("id", [""])[0] not in dz.shared_files:
+                self._send_page(gone_page(), 404)
+                return
         super().do_GET()
 
     def do_POST(self):
