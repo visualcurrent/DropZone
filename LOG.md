@@ -2,6 +2,17 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-13 — Multi-download field test (U4): partial result, iPhone still owed
+- Source: Gabe's report of the v0.2.17 TEST page (5 files, one tap, one second apart). No phone was on adb, so `files/DropZone.log` was not read and no `multi-test` line backs any count below. Phone models, browser versions and which files arrived were not stated. [verified: Gabe's report 2026-11-13; `adb devices` empty]
+- Android Chrome: asked once for permission to download multiple files, then all 5 arrived. [verified: Gabe's report] This is the hurdle U4 predicted, and it passes the gate's Android half.
+- Android Via: one dialog per file, stacked; all 5 arrived after answering each. [verified: Gabe's report]
+- Android Firefox: 2 of 5 arrived. FAIL. [verified: Gabe's report] Cause not diagnosed: the log would show whether the 3 missing requests reached the host or were dropped in the browser. [assumed: dropped in the browser, since the page starts each one by a scripted click with no new tap]
+- PC Chrome: asked for the multi-download permission. With Block chosen, later downloads are ignored; with it allowed, all arrive, each with its own save-location dialog. [verified: Gabe's report] The per-file location dialog is Chrome's own "ask where to save each file" setting, not the page. [assumed] One run contradicts this: Gabe chose Block and Chrome still asked per file and delivered all 5; he could not reproduce it. [verified: Gabe's report; unexplained]
+- PC Firefox: a save dialog per file, all 5. [verified: Gabe's report] Same kind of browser setting. [assumed]
+- Follows from a known input: PC Chrome dropping downloads when the permission is blocked or cannot be asked matches the 2026-11-12 headless Edge check (1 of 3 reached the server), whose cause was then only assumed. That assumption now has a field observation behind it. [est_: same behaviour seen, not the same browser]
+- Interpretation by the agent: one tap for several separate files works on Chrome-family Android browsers at the price of one permission prompt, and does not work on Android Firefox. So it cannot be the only way to get several files; a zip must stay available. U1's open point (does the per-row download arrow stay) is NOT settled: the gate names iPhone Safari, which is untested. [est_]
+- Next user action: run the same test on iPhone Safari; on Android Firefox, note which 2 files arrived (first two, or any two); connect the host phone to adb afterwards so the log can be read.
+
 ## 2026-11-13 — DropCast planned (PLAN M2); nothing built
 - Requested by Gabe: a second, simpler app that shares one file by QR, from the share menu or from the app itself; to fold into DropZone later. Behaviour agreed in chat and written to `PLAN.md` > M2 with six steps and a field gate. [verified: Gabe's answers 2026-11-13] Awaiting his sign-off on the plan; no code written.
 - Decided (Gabe): copy the shared file into app storage as DropZone does; manual Stop with a warning for unsaved received files; every share is a new file + QR pair kept until Stop; an MD5 match reuses the existing pair; name DropCast (working name, not checked against other products). [verified: Gabe 2026-11-13]
