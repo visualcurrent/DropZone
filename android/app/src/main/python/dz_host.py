@@ -29,12 +29,15 @@ _thread = None    # thread running serve_forever()
 _upload_dir = None
 
 
-def start(files_dir, port=None):
+def start(files_dir, port=None, addon=None):
     """Start the DropZone server. Returns [remote_url, core_version].
 
     files_dir: the app's private files folder (Context.getFilesDir()).
     port:      None keeps DropZone's own PORT (7070). DropCast passes 7071 so
                the two apps can run on one phone at the same time.
+    addon:     None for DropZone. DropCast passes "dc_host": that module is
+               imported and its install() called just before the server is
+               made, so it can add its own pages to the core.
     Raises on failure (e.g. port 7070 already in use); Java shows the message.
     """
     global _dz, _server, _thread, _upload_dir
@@ -71,6 +74,13 @@ def start(files_dir, port=None):
         # make_server() and /api/state at call time, like the three above.
         if port is not None:
             _dz.PORT = int(port)
+
+        # DropCast's own pages. Imported here, not at the top of this file,
+        # because the add-on imports DropZone, and that must not happen
+        # before the temp-folder line above has run.
+        if addon:
+            import importlib
+            importlib.import_module(addon).install()
         # --------------------------------------------------------------------
 
         # Same one-file log roll DropZone does in its own __main__ block.

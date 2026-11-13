@@ -1,7 +1,12 @@
 package com.visualcurrent.dropcast;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.media.ThumbnailUtils;
 import android.net.Uri;
+import android.os.Build;
+import android.util.Size;
+import android.webkit.MimeTypeMap;
 
 import com.chaquo.python.PyObject;
 import com.chaquo.python.Python;
@@ -45,6 +50,7 @@ final class CopyIn {
     private static final ExecutorService worker = Executors.newSingleThreadExecutor();
 
     private static final int BLOCK = 1024 * 1024;   // copy 1 MB at a time; memory use stays flat
+    private static final int THUMB_PX = 320;        // thumbnail's longer side, same as DropZone's browser-made ones
 
     private CopyIn() {}
 
@@ -115,6 +121,11 @@ final class CopyIn {
             }
             double secs = (System.nanoTime() - t0) / 1e9;
 
+            // --- 4b. thumbnail for the guest page -----------------------------
+            // A failure here never fails the share: the page shows an icon.
+            status = "Preparing '" + name + "': making the thumbnail";
+            String thumbNote = makeThumb(dest, name);
+
             // --- 5. hand over -------------------------------------------------
             String hex = hex(md5.digest());
             List<PyObject> res = dc.callAttr("register", fid, name, hex).asList();
@@ -125,7 +136,8 @@ final class CopyIn {
             Report.add(ctx, (reused ? "copy-in REUSED existing file" : "copy-in done") + ": '" + name + "' id=" + useFid
                     + " bytes=" + done + " md5=" + hex
                     + String.format(Locale.US, " copy=%.1f s (%s)", secs, rate)
-                    + "\ndownload: " + CastService.baseUrl + "/api/download?id=" + useFid);
+                    + " thumb=" + thumbNote
+                    + "\nguest page: " + CastService.baseUrl + "/f/" + useFid);
         } catch (Throwable t) {
             Report.add(ctx, "copy-in FAILED: '" + name + "': " + t);
             // Remove whatever part of the copy was written.
@@ -134,6 +146,59 @@ final class CopyIn {
             }
         } finally {
             status = "";
+        }
+    }
+
+    /**
+     * Make the thumbnail the guest page shows, for a picture or a video.
+     *
+     * Writes a JPEG no larger than THUMB_PX on its longer side to
+     * "<file>.t" - the slot the DropZone core already serves at /api/thumb.
+     * In DropZone the uploader's BROWSER makes this; a file shared from the
+     * share menu never passes through a browser, so Android makes it here.
+     *
+     * Returns a short note for the log: the thumbnail's size, or why there is
+     * none. Never throws.
+     *
+     * FILE EFFECTS: writes "<file>.t"; removes it again if making it failed.
+     */
+    private static String makeThumb(File file, String name) {
+        // Android's ready-made thumbnail maker for a plain file (it also
+        // turns a photo the right way up) arrived in Android 10 (API 29).
+        // Android 8 and 9 show the icon instead.
+        if (Build.VERSION.SDK_INT < 29) return "none (needs Android 10+)";
+
+        // Decide picture / video from the NAME's ending, not from the type the
+        // sending app stated (the Xiaomi gallery sent "image/*").
+        int dot = name.lastIndexOf('.');
+        String ext = dot >= 0 ? name.substring(dot + 1).toLowerCase(Locale.US) : "";
+        String type = MimeTypeMap.getSingleton().getMimeTypeFromExtension(ext);
+        if (type == null) return "none (unknown kind ." + ext + ")";
+
+        File out = new File(file.getPath() + ".t");
+        try {
+            Size box = new Size(THUMB_PX, THUMB_PX);
+            Bitmap bmp;
+            if (type.startsWith("image/"))      bmp = ThumbnailUtils.createImageThumbnail(file, box, null);
+            else if (type.startsWith("video/")) bmp = ThumbnailUtils.createVideoThumbnail(file, box, null);
+            else return "none (not a picture or video)";
+
+            // Android may hand back something larger than asked; shrink so the
+            // longer side is THUMB_PX, keeping the shape (k = scale factor <= 1).
+            int w = bmp.getWidth(), h = bmp.getHeight();
+            float k = Math.min(1f, (float) THUMB_PX / Math.max(w, h));
+            if (k < 1f) {
+                w = Math.max(1, Math.round(w * k));
+                h = Math.max(1, Math.round(h * k));
+                bmp = Bitmap.createScaledBitmap(bmp, w, h, true);   // true = smooth scaling
+            }
+            try (OutputStream o = new FileOutputStream(out)) {
+                bmp.compress(Bitmap.CompressFormat.JPEG, 80, o);    // 80 = JPEG quality, as small as looks clean
+            }
+            return w + "x" + h + " (" + out.length() + " bytes)";
+        } catch (Throwable t) {
+            out.delete();   // no half-written thumbnail left behind
+            return "none (" + t + ")";
         }
     }
 

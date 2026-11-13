@@ -70,9 +70,10 @@ public class CastService extends Service {
                     Python.start(new AndroidPlatform(getApplicationContext()));
                 }
                 PyObject host = Python.getInstance().getModule("dz_host");
-                // dz_host.start(files_dir, port) returns [remote_url, core_version].
+                // dz_host.start(files_dir, port, addon) returns [remote_url, core_version].
+                // "dc_host" is DropCast's add-on module; it adds DropCast's pages.
                 List<PyObject> info = host.callAttr(
-                        "start", getFilesDir().getAbsolutePath(), PORT).asList();
+                        "start", getFilesDir().getAbsolutePath(), PORT, "dc_host").asList();
                 // The core answers with DropZone's guest address (".../remote").
                 // DropCast has its own pages (later steps), so keep only the
                 // "http://ip:port" part.
