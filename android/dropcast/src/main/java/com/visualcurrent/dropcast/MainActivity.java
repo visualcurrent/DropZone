@@ -1,12 +1,19 @@
 package com.visualcurrent.dropcast;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.provider.OpenableColumns;
 import android.util.Log;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
@@ -20,10 +27,12 @@ import java.util.Locale;
 /**
  * DropCast's one screen.
  *
- * STEP 1 SKELETON (PLAN.md > M2 step 1): proves the share-menu entry works.
- * When a file is shared to DropCast, this screen shows the file's name and
- * size and appends the same line to files/DropCast.log. Nothing is copied or
- * served yet; that is step 2.
+ * SKELETON, through PLAN.md > M2 step 2a:
+ *  - opening the app (from its icon or from the share menu) starts the server
+ *    (CastService) and reports its address; one button stops and starts it;
+ *  - a file shared to DropCast is reported by name and size. It is not copied
+ *    or served yet; that is step 2b.
+ * Every reported line is also appended to files/DropCast.log.
  *
  * FILE EFFECTS: appends to DropCast.log in the app's private files folder.
  * Read it from the PC with:
@@ -33,6 +42,29 @@ public class MainActivity extends Activity {
 
     private static final String TAG = "DropCast";
     private TextView out;   // the on-screen copy of the log
+    private Button serverBtn;
+
+    // Watches CastService's published state twice a second while the screen
+    // is visible, and reports each change once.
+    private final Handler handler = new Handler(Looper.getMainLooper());
+    private String shownState = "";
+    private final Runnable watch = new Runnable() {
+        @Override public void run() {
+            String state = CastService.running + "|" + CastService.baseUrl + "|" + CastService.lastError;
+            if (!state.equals(shownState)) {
+                shownState = state;
+                if (CastService.running) {
+                    report("server running at " + CastService.baseUrl + " (core " + CastService.coreVersion + ")");
+                } else if (!CastService.lastError.isEmpty()) {
+                    report("server did NOT start: " + CastService.lastError);
+                } else {
+                    report("server stopped");
+                }
+                serverBtn.setText(CastService.running ? "Stop" : "Start");
+            }
+            handler.postDelayed(this, 500);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle saved) {
@@ -46,12 +78,52 @@ public class MainActivity extends Activity {
         out.setTextSize(16);
         out.setTextIsSelectable(true);
         ScrollView scroll = new ScrollView(this);
-        scroll.setFitsSystemWindows(true);   // keep text out from under the status bar
         scroll.addView(out);
-        setContentView(scroll);
+
+        // One button: Stop while the server runs, Start while it does not.
+        serverBtn = new Button(this);
+        serverBtn.setText("Start");
+        serverBtn.setOnClickListener(v -> {
+            if (CastService.running) stopService(new Intent(this, CastService.class));
+            else startServer();
+        });
+
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setFitsSystemWindows(true);     // keep content out from under the status bar
+        root.addView(serverBtn);
+        root.addView(scroll);
+        setContentView(root);
+
+        // Android 13+ shows a foreground service's notification only if the
+        // user allows notifications. The server runs either way.
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                   != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+        }
 
         report("DropCast " + versionName() + " opened");
+        startServer();               // PLAN M2: opening the app starts the server
         handleIntent(getIntent());
+    }
+
+    /** Ask Android to start CastService (does nothing if it is already running). */
+    private void startServer() {
+        CastService.lastError = "";
+        startForegroundService(new Intent(this, CastService.class));
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        handler.post(watch);
+    }
+
+    @Override
+    protected void onPause() {
+        handler.removeCallbacks(watch);
+        super.onPause();
     }
 
     /** Called instead of onCreate when a file is shared while the app is already open. */
@@ -59,6 +131,7 @@ public class MainActivity extends Activity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        if (!CastService.running) startServer();   // a new share restarts a stopped server
         handleIntent(intent);
     }
 

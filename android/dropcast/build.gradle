@@ -3,14 +3,22 @@
 // A second app built from the same android\ project as DropZone (app\).
 // It installs beside DropZone because its applicationId is different.
 //
-// STEP 1 SKELETON: this is a plain Android app with no Python inside yet.
-// The Chaquopy plugin and the core server are added in step 2.
+// The Python inside is NOT a second copy: this app packages the same two
+// files DropZone's app does, straight from ..\app\src\main\python
+// (dz_host.py, and the DropZone.py that app\build.gradle generates there
+// from the repo's one DropZone.py).
 plugins {
     id 'com.android.application'
+    id 'com.chaquo.python'      // embeds a CPython interpreter + the .py files in the APK
 }
 
+// Read the core's version constant (line: __version__ = "0.2.18") from the
+// repo's DropZone.py so the APK's version name says which core is inside.
+def coreMatch = (file('../../DropZone.py').getText('UTF-8') =~ /(?m)^__version__\s*=\s*"([^"]+)"/)
+def coreVersion = coreMatch.find() ? coreMatch.group(1) : 'unknown'
+
 // DropCast's own version (release.beta.incremental, same scheme as DropZone).
-def castVersion = '0.1.00'
+def castVersion = '0.1.01'
 
 android {
     namespace 'com.visualcurrent.dropcast'
@@ -20,12 +28,28 @@ android {
         applicationId 'com.visualcurrent.dropcast'
         minSdk 26               // Android 8.0, same floor as DropZone
         targetSdk 35
-        versionCode 1
-        versionName castVersion
+        versionCode 2
+        versionName "${castVersion}-dz${coreVersion}"
+
+        // Which CPU types get a Python interpreter in the APK (each adds size).
+        // arm64-v8a = every 64-bit phone; x86_64 = the PC emulator.
+        ndk { abiFilters 'arm64-v8a', 'x86_64' }
     }
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+chaquopy {
+    defaultConfig {
+        // Same Python as DropZone's app; the PC needs Python 3.13 to build.
+        version '3.13'
+    }
+    sourceSets {
+        // Package DropZone's Python folder as well as this app's own
+        // src\main\python (which does not exist yet).
+        main { srcDir '../app/src/main/python' }
     }
 }

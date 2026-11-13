@@ -29,10 +29,12 @@ _thread = None    # thread running serve_forever()
 _upload_dir = None
 
 
-def start(files_dir):
+def start(files_dir, port=None):
     """Start the DropZone server. Returns [remote_url, core_version].
 
     files_dir: the app's private files folder (Context.getFilesDir()).
+    port:      None keeps DropZone's own PORT (7070). DropCast passes 7071 so
+               the two apps can run on one phone at the same time.
     Raises on failure (e.g. port 7070 already in use); Java shows the message.
     """
     global _dz, _server, _thread, _upload_dir
@@ -64,6 +66,11 @@ def start(files_dir):
         _dz.UPLOAD_DIR = _upload_dir
 
         _dz.LOCAL_IP = _dz.get_local_ip()
+
+        # A fourth override, used only by DropCast: PORT is read by
+        # make_server() and /api/state at call time, like the three above.
+        if port is not None:
+            _dz.PORT = int(port)
         # --------------------------------------------------------------------
 
         # Same one-file log roll DropZone does in its own __main__ block.
