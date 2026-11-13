@@ -2,6 +2,18 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-13 — Multi-download field test (U4): host log read; Firefox assumption retracted
+- Source: `files/DropZone.log` pulled from host phone `fc0f334f` over adb, 691 lines, 62 `multi-test` lines in 11 runs between 16:56 and 17:14. [verified: adb read 2026-11-13] The log shows what the host sent, never what a browser saved; saved counts remain Gabe's report.
+- RETRACTED: the entry below assumed Android Firefox dropped the 3 missing downloads before they reached the host. Wrong. In both Firefox runs (`yd2f` 16:56, `3va2` 17:01; Firefox 159, Android 16, from 192.168.7.94) the host logged all 5 requests one second apart and a `download done` for each of the 5. [verified: log lines 471-480, 538-547] So Firefox received all 5 files in full and kept 2. The loss is inside Firefox after the transfer. [est_: follows from 5 `download done` against Gabe's count of 2] Why it keeps only 2 is not diagnosed. [assumed: a new download's prompt replaces one still waiting on screen]
+- Android Chrome (run `76v9`, Chrome 155, 192.168.7.94): file 1 at 17:03:35, files 2-5 all at 17:03:39, each requested once, all `download done`. [verified: log lines 588-596] The 4 s hold then a burst is the permission prompt being answered.
+- Android Via requests every file more than once. On the host phone itself (run `2irm`, Xiaomi 23116PN5BC, 127.0.0.1): each of 5 files twice, once by the page (User-Agent with `wv`) and once by the downloader. On the second phone (run `5t12`, Samsung SM-S921B): each file three times, 15 requests, 4 logged `download cancelled`. [verified: log lines 518-536, 553-581] So in Via a file is sent 2 to 3 times for one save. [est_: cost on a multi-GB file not measured; the page's own request may be cut short]
+- All three browsers at 192.168.7.94 are on the one Samsung SM-S921B. [est_: same address; only Via's User-Agent names the model]
+- PC Chrome 156 (192.168.7.133), 5 runs: `d3qq` 17:08 file 1, then files 2-5 together 19 s later; `fi13` 17:10 all 5 one second apart; `hiq6` 17:11 and `i3s1` 17:12 file 1 only; `jjk4` 17:13 all 5. [verified: log lines 630-667] Blocked runs send exactly one request, matching the 2026-11-12 headless Edge check. [verified: same count, 1 of n]
+- Gabe's unexplained run ("chose Block, still got all 5") is most likely `d3qq`, the first PC run. Its pattern, a hold then 4 requests in one second, is the same as Android Chrome's after the prompt was allowed. [est_: the log cannot show which button was pressed]
+- PC Firefox 153 (run `kv7z`): 5 requests one second apart, all done. [verified: log lines 674-682]
+- No server error and no traceback on 2026-11-13. [verified: grep of the log]
+- Next user action: iPhone Safari run; on Android Firefox repeat once and report what Firefox shows on screen after the tap and which 2 files land in Downloads.
+
 ## 2026-11-13 — Multi-download field test (U4): partial result, iPhone still owed
 - Source: Gabe's report of the v0.2.17 TEST page (5 files, one tap, one second apart). No phone was on adb, so `files/DropZone.log` was not read and no `multi-test` line backs any count below. Phone models, browser versions and which files arrived were not stated. [verified: Gabe's report 2026-11-13; `adb devices` empty]
 - Android Chrome: asked once for permission to download multiple files, then all 5 arrived. [verified: Gabe's report] This is the hurdle U4 predicted, and it passes the gate's Android half.
