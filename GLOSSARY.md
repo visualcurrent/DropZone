@@ -2,6 +2,9 @@
 
 Every project-coined term in plain English. A term not here is not used in LOG, SESSION, or a reply.
 
+- **DropCast** — working name (Gabe, 2026-11-13) for the second app planned in PLAN M2: share one file, show its QR, guests download it and can share one back. Not checked against existing products.
+- **Pair (DropCast)** — one shared file together with its own address and QR.
+- **Copy-in (DropCast)** — copying a file the host shares into the app's own storage before serving it.
 - **Host page / Remote page** — the two served pages. Host is `http://localhost:7070` (the machine running DropZone); Remote is `http://<ip>:7070/remote` (what a QR-scanning guest opens).
 - **sid** — per-visitor session id from `POST /api/session`; also keys the in-memory user (display name + files).
 - **Transfer registry** — in-memory table of every heavy download/zip (`transfer_start/set/end`); `transfers_public` exposes it per viewer in `/api/state` so the activity banner can show phase and queue position.

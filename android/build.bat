@@ -34,6 +34,9 @@ if errorlevel 1 (
 )
 
 copy /Y "%~dp0app\build\outputs\apk\debug\app-debug.apk" "%~dp0DropZone-debug.apk" >nul
+rem assembleDebug builds every app in settings.gradle, so DropCast is built too.
+copy /Y "%~dp0dropcast\build\outputs\apk\debug\dropcast-debug.apk" "%~dp0DropCast-debug.apk" >nul
 echo.
 echo Built: "%~dp0DropZone-debug.apk"
+echo Built: "%~dp0DropCast-debug.apk"
 endlocal

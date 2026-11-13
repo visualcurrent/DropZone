@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- STEP 1 SKELETON: no permissions yet. The network, foreground-service
+         and wake-lock permissions arrive with the server in step 2. -->
+
+    <application
+        android:label="DropCast"
+        android:allowBackup="false"
+        android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
+
+        <!-- singleTask: sharing a second file while the app is already open
+             reuses this one screen (onNewIntent) instead of stacking another. -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
+
+            <!-- Way in 1: the app's own icon. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- Way in 2: the share menu, for ONE item of any type.
+                 SEND_MULTIPLE is deliberately not listed, so DropCast is not
+                 offered when several files are selected (PLAN M2: one file
+                 per share). -->
+            <intent-filter>
+                <action android:name="android.intent.action.SEND" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="*/*" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

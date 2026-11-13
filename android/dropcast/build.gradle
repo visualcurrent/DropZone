@@ -1,0 +1,31 @@
+// DropCast - the single-file share app (PLAN.md > M2).
+//
+// A second app built from the same android\ project as DropZone (app\).
+// It installs beside DropZone because its applicationId is different.
+//
+// STEP 1 SKELETON: this is a plain Android app with no Python inside yet.
+// The Chaquopy plugin and the core server are added in step 2.
+plugins {
+    id 'com.android.application'
+}
+
+// DropCast's own version (release.beta.incremental, same scheme as DropZone).
+def castVersion = '0.1.00'
+
+android {
+    namespace 'com.visualcurrent.dropcast'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'com.visualcurrent.dropcast'
+        minSdk 26               // Android 8.0, same floor as DropZone
+        targetSdk 35
+        versionCode 1
+        versionName castVersion
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

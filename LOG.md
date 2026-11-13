@@ -2,6 +2,23 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-13 — DropCast planned (PLAN M2); nothing built
+- Requested by Gabe: a second, simpler app that shares one file by QR, from the share menu or from the app itself; to fold into DropZone later. Behaviour agreed in chat and written to `PLAN.md` > M2 with six steps and a field gate. [verified: Gabe's answers 2026-11-13] Awaiting his sign-off on the plan; no code written.
+- Decided (Gabe): copy the shared file into app storage as DropZone does; manual Stop with a warning for unsaved received files; every share is a new file + QR pair kept until Stop; an MD5 match reuses the existing pair; name DropCast (working name, not checked against other products). [verified: Gabe 2026-11-13]
+- Decided (agent, delegated by Gabe on usability and simplicity): the host's screen is a web page inside the app, so host and guest share one design and the QR library DropZone already uses, embedded so it needs no internet. [est_: not built] `qrcodejs` size (~20 KB) and MIT licence to confirm before embedding. [assumed]
+- Found: DropZone's QR is drawn in the browser by `qrcodejs` fetched from cdnjs (`DropZone.py` L1603), so today a QR needs internet on the viewing device. [verified: grep]
+- Rejected for the first version: serving the host's file in place. The agent first called it required for videos; that was wrong — the copy works at any size, at the cost of free space and a wait, the same cost DropZone already carries. Recorded as U5. Also recorded: U6 (save by moving) and U7 (skip an upload the host already holds).
+- Open: DropCast's port (DropZone holds 7070). [assumed: 7071]
+- Next user action: read `PLAN.md` > M2 and say go, or mark what to change.
+- Later the same session — Gabe signed off the plan, confirmed port 7071, and asked for a free-space check before the host saves a received file (added to M2 step 6). His storage concern (3 GB free, 2 GB file held) is recorded under U6. [verified: Gabe 2026-11-13]
+- Built, M2 step 1: `android\dropcast\` as a second app folder (build file, manifest with a single-file share entry, a bare screen that shows and logs a shared file's name and size); `settings.gradle` includes it; `build.bat` copies out both APKs. Nothing under `android\app\` was edited. No Python in DropCast yet. [verified: files in place]
+- Build: Gradle `:dropcast:assembleDebug` succeeded in 1 m 7 s; `android\DropCast-debug.apk` is 9 KB, version 0.1.00. [verified: build output 2026-11-13 13:47] Run alone on purpose so `android\DropZone-debug.apk` stays the `0.1.05-dz0.2.17` field build. [verified: its timestamp still 2026-11-12 14:39] The edited `build.bat` itself has not been run. [est_]
+- Not installed and not run on any device: whether DropCast appears in the share menu and reports name and size is unchecked. [assumed: works — step 1's check decides]
+- `.gitignore` does not yet cover `android\dropcast\build\`; adding the line needs Gabe's permission.
+- Gabe gave permission for the `.gitignore` line `/android/dropcast/build/`; added. [verified: Gabe 2026-11-13]
+- Installed on phone `fc0f334f` over adb: `Success`, `versionName=0.1.00`, the package lists `android.intent.action.SEND`. Opened from the icon, it wrote "DropCast 0.1.00 opened" to `files/DropCast.log`. [verified: adb output 2026-11-13 13:53] A real share from Files or Gallery is still unchecked. [assumed: works]
+- Next user action: share one file from Files and one from Gallery to DropCast, and report what the screen shows.
+
 ## 2026-11-12 — Video frame at 10% (v0.2.18); session close
 - Built in `DropZone.py`, v0.2.18, at Gabe's request: `makeThumb` seeks to 10% of a video's length before drawing the frame (0.1 s when the length is unknown), replacing 0.1 s in. [est_: page script passes `node --check`; not run on a video in any browser]
 - Not rebuilt on purpose: Gabe asked for this in the next build, so `android\DropZone-debug.apk` stays `0.1.05-dz0.2.17`, the build he is taking to the field. [verified: APK timestamp 14:39 unchanged]

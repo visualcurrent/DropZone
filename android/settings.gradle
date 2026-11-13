@@ -15,4 +15,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = 'DropZone-android'
-include ':app'
+include ':app'        // DropZone
+include ':dropcast'   // DropCast, the single-file share app (PLAN.md > M2)

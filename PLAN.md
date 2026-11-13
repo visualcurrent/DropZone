@@ -24,6 +24,27 @@ Open items:
 - [ ] Read `DropZone.log` from the phone without `adb` — DoD: a button shares or exports the log.
 - [-] Host page inside the app (WebView) — deferred by decision 2026-11-11; the browser already handles file picking and multi-GB downloads.
 
+## M2 — DropCast (single-file share app)
+A second, simpler app for people who will never manage a DropZone session: share one file, a QR appears, anyone on the WiFi scans it and downloads. Requested by Gabe 2026-11-13; planned to fold into DropZone as a feature once it works. Built from the same `android\` tree and the same unedited `DropZone.py`; the DropCast pages and routes live in an add-on file beside `dz_host.py`. PROPOSED — awaiting Gabe's sign-off; nothing is built.
+**Agreed behaviour (Gabe, 2026-11-13):**
+- Two ways in: share one file to DropCast from any file manager, or open DropCast and tap "Choose a file". Both lead to the same screen. One file per share; no zip, no lists, no names.
+- The file is copied into the app's storage (as DropZone does), with visible "Preparing" progress, then the host's screen shows thumbnail or icon, filename and QR.
+- Guest page (from the QR): a short friendly note; a frame holding the thumbnail or icon, the filename and a Download button; below it a "Share a file" button. Sharing uploads to the host's phone with real progress (animated), then shows the guest a QR for that file.
+- Every share makes a new file + QR pair. All pairs keep working until Stop. A file identical to one already held (MD5 match) reuses the existing pair instead of making a new one.
+- Host's screen shows a QR only for files the host sent. A received file shows as a card, "This file has been shared — Download"; Download opens Android's save dialog and copies the file out of the app.
+- Stop is manual and deletes everything the app holds. If received files are unsaved, Stop asks first ("You have N unsaved files. Stop anyway?").
+- The host's screen is a web page shown inside the app (WebView), so host and guest share one design and one QR library (`qrcodejs`, embedded in the page; no internet needed). This reverses, for DropCast only, the M1 item "Host page inside the app — deferred".
+**Steps (one per turn, each with its own check):**
+- [ ] 1. Second app from the same tree: `build.bat` also writes `android\DropCast-debug.apk` (app id `com.visualcurrent.dropcast`), installable beside DropZone, listed in the share menu for a single file. Check: shared from Files and from Gallery on the phone, the log shows the file's name and size.
+- [ ] 2. Copy-in: the shared file is copied into app storage with progress, MD5-hashed, and registered with the core. Check: a 2 GB+ video downloads byte-exact (sha256) on a second device; copy time is logged; sharing the same file twice returns the same id.
+- [ ] 3. Guest page: note, framed thumbnail or icon, filename, Download. The host's thumbnail is made by Android and stored in the core's existing thumbnail slot. Check: page seen on Android Chrome and iPhone Safari; one tap saves one file.
+- [ ] 4. Host screen: file, QR, "Choose a file", Stop. Check: QR drawn with the phone in airplane mode + WiFi; a second phone scans it and downloads.
+- [ ] 5. Guest shares back: upload with progress, then the guest's QR. Check: a third device scans the guest's QR and downloads byte-exact; an identical file reuses the pair.
+- [ ] 6. Host receives: the received-file card, save dialog, saved/unsaved state, Stop warning. Before saving, the app checks free space and says "Not enough space to save this file" rather than failing partway (Gabe, 2026-11-13). Check: saved file byte-exact in the chosen folder; Stop with an unsaved file asks first.
+**Gate (field, user-run):** with DropCast on one phone and two other devices (one iPhone) in their browsers — a 2 GB+ video shared from the file manager downloads byte-exact with the host's screen off; a guest's file shared back is saved by the host byte-exact and downloaded by the third device; no internet connection on the WiFi; Stop leaves no files in the app's storage.
+**Port:** DropCast uses 7071 so it never collides with DropZone on 7070. [verified: Gabe 2026-11-13]
+**Deferred to `UNEXPLORED_IDEAS.md`:** U5 (skip the copy-in), U6 (save by moving), U7 (skip an upload the host already holds). Several files per share waits on the U4 field result.
+
 ## Backlog — active
 - [ ] **2. Test: does a remote user's file-delete actually remove the file?** Code path `POST /api/remove_file` unlinks the temp file only when `owner_id == sid`. DoD: a written finding in a note stating observed behaviour (list entry dropped AND temp file unlinked, no orphans); if broken, a new item with the fix.
 - [ ] **4. Host view: panel of all connected users + status.** Today a user appears only once they upload (`/api/state` filters `if u["files"]`). DoD: host page lists connected sessions even with no files, showing name and a live activity/status indicator; guests unaffected. This is the next code target after the v0.2.14 field confirm.

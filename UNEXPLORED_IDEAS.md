@@ -29,3 +29,19 @@ Directions scoped but not built. Larger P3 features carried from the old backlog
 **Idea.** One persistent status region showing both your own upload progress and the host's live download/queue activity, with no page-content jump as it updates, reachable without scrolling on phone and desktop widths.
 **Why it matters.** Today the upload bar and the host-activity panel are separate and in different places (field feedback: "combine with the progress bar").
 **In hand.** v0.2.08 made the activity a floating always-visible panel as an interim; pairs with the per-upload progress work in BACKLOG 15 (PLAN).
+
+## U5 DropCast: serve the host's file where it already is (skip the copy-in)
+**Idea.** When the host shares a file, serve it from its original location instead of copying it into the app's storage first.
+**Why it matters.** No wait before the QR is usable and no second copy of a multi-GB video on the phone (Gabe, 2026-11-13: revisit as an optimisation).
+**In hand.** Android hands the app an open handle to the file, not a path, and the core serves by path (`tmp_path`). Untried route: give the core the path `/proc/self/fd/N` for that handle; Android may refuse the re-open for a file the app has no storage permission for. [assumed: untested] Fallback is a core change so a download can read from an open handle. Also to check: the read permission must be passed from the screen to the service or it ends when the screen closes. [assumed] First step is a test on the phone with a 2 GB+ video shared from Files and from Gallery.
+
+## U6 DropCast: the host's "Download" moves the file instead of copying it
+**Idea.** When the host saves a received file, move it out of the app's storage rather than copy it, and keep a pointer so its QR still works until Stop.
+**Why it matters.** A saved multi-GB file would otherwise sit on the phone twice until Stop (Gabe, 2026-11-13).
+**In hand.** The app's storage and the phone's shared folders are separate areas, so a plain rename across them is expected to fail, and shared storage is not expected to accept symbolic links. [assumed: untested on our phones] Two untried routes: (a) copy out, delete the app's copy, and serve from the saved file — which needs the same "serve a file outside app storage" ability as U5, so the two ideas are best solved together; (b) receive uploads straight into a hidden pending entry in the phone's Downloads (Android 10+), so "Download" only un-hides it and nothing is copied.
+**Update 2026-11-13 (Gabe).** Keep it simple for now; needs testing. The wider need, for both apps: cope gracefully when the phone is short of space. His case: 3 GB free and a 2 GB file held by the app — saving by copying needs another 2 GB and cannot finish, yet the file should be keepable when the app is stopped. Route (b) would cover that case. His expected hurdle with moving: each new save location needs its own access grant.
+
+## U7 DropCast: skip an upload when the host already holds the file
+**Idea.** Before a guest uploads, the page asks the host whether it already has this file, and if so shows the existing QR at once.
+**Why it matters.** M2's MD5 check runs after the file has arrived, so it saves storage but not upload time.
+**In hand.** Browsers have no built-in MD5 and cannot hash a multi-GB file without reading all of it. Untried: a quick fingerprint (size plus a hash of the first and last few MB) as the pre-check, with the full MD5 on arrival still the deciding test.

@@ -7,6 +7,7 @@
 /android/.gradle/
 /android/build/
 /android/app/build/
+/android/dropcast/build/
 /android/local.properties
 /android/*.apk
 /android/app/src/main/python/DropZone.py
