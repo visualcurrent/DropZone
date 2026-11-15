@@ -2,6 +2,15 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-16 — Android Firefox cannot copy video frames; v0.2.23 still black there
+- Field (Gabe): on v0.2.23 all video thumbnails are black. [verified: Gabe's report]
+- RETRACTED, in part, from the entry below and the 2026-11-16 entry before it: "black on PC Chrome, PC Firefox, Android Via and Android Firefox" was read as four browsers making black thumbnails. The Samsung's log shows every film on v0.2.22 and v0.2.23 was uploaded from Firefox 160 on the Samsung itself (127.0.0.1); a thumbnail is made once, by the uploader's browser, so the other three only displayed it. [verified: log lines 25-67, 6 film uploads, all `rv:160.0 Firefox/160`] Akira's thumbnail is 1507 bytes on both v0.2.22 and v0.2.23. [verified: same lines] So the v0.2.23 fix, verified in headless Edge, has never been tried in the field. [est_]
+- Tested in Firefox 160 on the Samsung itself, through `adb reverse` to a scratch page on the PC, with a bright 40 s 1080p H.264 test video: every way a page can copy a frame gave black, after waiting for the first frame, after the jump, after playing on screen for 1.5 s, and with the video visible on the page: 2D canvas, canvas kept in main memory, `createImageBitmap`, `OffscreenCanvas` all brightness 0; `VideoFrame` refused ("video frame is broken"); WebGL gave a flat dark purple, not a picture. Chrome 155 on the same phone, same page: brightness 127 by every route. [verified: scratch runs 2026-11-16; WebGL result viewed as an image]
+- So Android Firefox will not give a page the pixels of a video, and no change to `makeThumb`'s timing can fix that. [est_: one phone, one Firefox version, H.264; that it is hardware decoding is assumed]
+- Recorded in `CLAUDE.md` > Do-not-re-derive, since thumbnail code depends on it.
+- Left on the Samsung: a Firefox tab and a Chrome tab on the scratch page, now dead; the `adb reverse` link was removed. [verified: `adb reverse --list` empty]
+- Next user action: decide what Android Firefox uploads get instead (see SESSION); upload a film from PC Chrome to test v0.2.23 where it can work.
+
 ## 2026-11-16 — v0.2.23: black video thumbnails traced and fixed on the PC; rule change; handoff note removed
 - Field (Gabe): two films, black thumbnails on PC Chrome, PC Firefox, Android Via and Android Firefox. [verified: Gabe's report]
 - Reproduced on the PC: the page's own `makeThumb`, copied out of `DropZone.py` into a scratch page, on a bright 2-minute 1080p test video made with ffmpeg. In a freshly started headless Edge it drew flat black (mean brightness 0 of 255) 5 runs of 5, with the video reporting `readyState` 4 at 12.0 s (10% in). [verified: scratch runs] So the frame at 10% is not dark, and v0.2.18's fade-in idea was the wrong cause. [verified: test video is bright throughout]
