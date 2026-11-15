@@ -2,6 +2,12 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-16 — v0.2.23 passes on PC Chrome; embedded covers checked and not there
+- Field: `In.Time.2011.1080p.Brrip.x264.Deceit.YIFY.mp4` uploaded from PC Chrome 156 to the Samsung on v0.2.23; thumbnail 6217 bytes, a picture (Gabe: "a good thumbnail"). [verified: log line `thumb saved ... src=1920x816 ms=1313`; Gabe's report] First field pass of the v0.2.23 timing fix; one browser, one film. [est_]
+- Gabe asked whether video files carry an embedded thumbnail to read instead. Checked the four films stored on the Samsung by reading only their index parts over adb (scratch `cover_probe.py`): Akira, Time Trap and In Time (`.mp4`) each have a tag block but no cover picture (`covr` absent); The Gorge (`.mkv`) has no attached picture (no `image/jpeg` or `image/png` in its first or last 8 MB; the word `cover` appears, not as an attachment). [verified: probe output 2026-11-16] Phone recordings, DropZone's common case, are not expected to carry one either. [assumed: not checked] Not pursued; recorded as `LESSONS_LEARNED.md` > L12.
+- DECIDED (Gabe): keep the current frame grab ("just keep using the first frame -- some videos show, at least"). The code takes the frame 10% in, not the first frame; no change made. Android Firefox uploads keep getting a black thumbnail. [verified: Gabe's word; no code change]
+- Scratch folder cleared (Gabe's standing request). [verified: folder empty]
+
 ## 2026-11-16 — Android Firefox cannot copy video frames; v0.2.23 still black there
 - Field (Gabe): on v0.2.23 all video thumbnails are black. [verified: Gabe's report]
 - RETRACTED, in part, from the entry below and the 2026-11-16 entry before it: "black on PC Chrome, PC Firefox, Android Via and Android Firefox" was read as four browsers making black thumbnails. The Samsung's log shows every film on v0.2.22 and v0.2.23 was uploaded from Firefox 160 on the Samsung itself (127.0.0.1); a thumbnail is made once, by the uploader's browser, so the other three only displayed it. [verified: log lines 25-67, 6 film uploads, all `rv:160.0 Firefox/160`] Akira's thumbnail is 1507 bytes on both v0.2.22 and v0.2.23. [verified: same lines] So the v0.2.23 fix, verified in headless Edge, has never been tried in the field. [est_]

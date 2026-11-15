@@ -34,6 +34,11 @@ What was tried and did not survive. The trip-wire list. Each entry: what was tri
 **Why it failed.** It was not tied to real bytes, so it hid where an upload actually stalled. Replaced v0.2.05 by an `XMLHttpRequest` driving the bar from `upload.onprogress` (true bytes + ETA), which also visibly halts at a stall point.
 **Evidence.** CHANGELOG [0.2.05]; BACKLOG item 9 (archived).
 
+### L12 Reading a video's embedded cover picture instead of grabbing a frame
+**What was considered.** Gabe, 2026-11-16: most video files may carry an embedded thumbnail; read that instead of drawing a frame, which Android Firefox cannot do.
+**Why it was not pursued.** None of the four films on hand had one: three `.mp4` files with a tag block but no `covr` cover box, one `.mkv` with no attached picture. Phone recordings are not expected to carry one either [assumed]. Parsing the box tree in the page would be real work for files that mostly have nothing to find. Gabe chose to keep the frame grab.
+**Evidence.** LOG 2026-11-16 (v0.2.23 passes on PC Chrome entry): index-only reads over adb of the four stored films.
+
 ### L11 Video thumbnails: "fade-in from black" fix (v0.2.18)
 **What was tried.** Some video thumbnails were black on v0.2.16; v0.2.18 moved the frame from 0.1 s in to 10% in, on the assumption that clips fade in from black.
 **Why it failed.** The assumption was never tested. On v0.2.22 two feature films were black on four browsers; a bright test video was black too. The real cause was jumping before the first frame was decoded (fixed v0.2.23). Reproducing the fault on a known-bright video would have shown this before the first fix.

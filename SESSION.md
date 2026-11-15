@@ -29,13 +29,13 @@
 - New names for the DropZone / DropCast pair (Gabe's brainstorm) before the icon work resumes. [verified: Gabe 2026-11-14]
 
 ## Resume
-- Next action (Gabe): decide what a video uploaded from Android Firefox gets, since that browser cannot make a video thumbnail (LOG 2026-11-16 top entry, `CLAUDE.md` > Do-not-re-derive). Then upload a film from PC Chrome to test v0.2.23, which no field run has tried. Footer check on either phone still owed.
+- Next action (Gabe): video thumbnails settled for now (frame grab kept; Android Firefox stays black, `LOG.md` 2026-11-16). Open: the footer check on either phone. Otherwise pick the next item from PLAN Backlog.
 - For DropCast instead: read PLAN.md > M2 (status, open items, gate), then SCRIPT_INDEX.md rows under `android/dropcast/`, and ARCHITECTURE.md > Contracts to preserve, 7 (the core names DropCast leans on). Next DropCast action (Gabe): open DropCast with nothing shared and have a guest send a file through the QR it shows; then the M2 field gate.
 - Read: UNEXPLORED_IDEAS.md > U1 (agreed design); U4 is dropped (`LESSONS_LEARNED.md` > L8).
 - Read: PLAN.md > Backlog — active, item 18 (its DoD is the thumbnail field gate).
 - Read: SCRIPT_INDEX.md > DropZone.py map > Thumbnails in the page script, and Host-unreachable notice in the page script.
 - Read: ARCHITECTURE.md > Contracts to preserve (7-9 Android, 10 thumbnails) before changing module-level names or the thumbnail routes.
 - Pending gate: thumbnails, user-run (partly reported) — iPhone Safari upload of a JPEG, PNG, portrait photo and MP4 shows thumbnails on a second device; an undecodable file keeps its icon; removing a file removes its row; log memory at "upload done" stays 12–16 MB.
-- Pending gate: video thumbnail, user-run on v0.2.23: a film uploaded from PC Chrome (and Android Chrome) shows a picture. Android Firefox cannot pass by any page-side method (verified 2026-11-16); its outcome waits on Gabe's decision.
+- Video thumbnail gate: PASSED on PC Chrome (v0.2.23, one film, LOG 2026-11-16); Android Firefox cannot pass by any page-side method, accepted by Gabe. Android Chrome and Via not yet tried. [assumed: would pass, as Chrome on the Samsung drew frames in the scratch test]
 - Pending gate: M2 field gate, user-run — DropCast on one phone, two other devices (one iPhone): a 2 GB+ video down byte-exact with the host's screen off, a guest's file back and saved byte-exact, no internet on the WiFi, Stop leaves the app's storage empty.
 - Pending gate: M1 field gate, user-run — on each test phone a multi-GB upload and download byte-exact with the screen off, app not killed, each file downloads once in the browser.
