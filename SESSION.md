@@ -3,39 +3,32 @@
 > Read first, update last. Current-state block under 15 lines. It is a prompt, not a history.
 
 ## Current state
-- Source is **core v0.2.23, wrapper 0.1.06**; `android\DropZone-debug.apk` is `0.1.06-dz0.2.23`, installed as an update on the Samsung `RFCXA10KBPZ` and the Xiaomi `fc0f334f` (main profile, battery setting kept). [verified: `dumpsys package`, `deviceidle whitelist`]
-- Stopped-host notice (PLAN Backlog 19, v0.2.20): PASSED on phones, "pages react to host presence". [verified: Gabe 2026-11-16; which devices and the timing not stated] v0.2.22: the page shows the version number alone, no stage label; app 0.1.06 drops it from the app's footer too; the label stays in the log and the console banner. [verified: page text checked by script] Tests not run since v0.2.18. [assumed: unaffected]
-- v0.2.16 thumbnails (BACKLOG 18): the uploader's browser posts a 320 px JPEG to `/api/thumb`; rows show a 48 px square. [verified: `tests/test_thumb.py` 14/14; headless Edge check] Field (Gabe, v0.2.16): portrait upright, look right, delay acceptable, some videos black. [verified: Gabe's report; phones unrecorded] iPhone, undecodable file, removal and memory lines of the DoD not yet reported. [assumed: pending]
-- Several separate downloads from one tap (U4) is DROPPED (Gabe, 2026-11-16): Android Firefox keeps 2 to 4 of 5 under every method; iPhone Safari 1 of 5 by link click, 5 of 5 by hidden frames; PC Chrome saves nothing once its permission is blocked. Every file keeps its download button. [verified: Gabe's counts and `multi-test` lines, LOG 2026-11-13 to 2026-11-16; `LESSONS_LEARNED.md` L8] The TEST page and its log tag were removed in v0.2.21. [verified: grep finds no test-page name; headless Edge shows no TEST button]
-- v0.2.18 video thumbnails take the frame 10% into the clip instead of 0.1 s in, to get past fade-ins. [est_: script passes `node --check`; never run on a video in any browser]
-- Wrapper 0.1.05: Copy button reads "Copied" for 1.5 s. [verified: builds; not yet seen on a phone]
-- Field logging: `upload start`, and thumbnail lines carry the User-Agent; a thumbnail that fails in a guest's browser is logged with its reason. Android Chrome hides the phone model, so Gabe notes model against the page's user name. [verified: test + Edge checks]
-- Tests on v0.2.18: 5 of 6 pass on Windows through a scratch shim; `test_zip_streaming.py` not run (cannot run on Windows); memory not measured. [verified: shim run 2026-11-12] No Linux run yet; Termux is a test bench only. [assumed: would pass]
-- Designed, not built (`UNEXPLORED_IDEAS.md` U1): tap thumbnail = peek, tap row = select, one list-wide download button, header select circles. The per-row download arrow stays (settled 2026-11-16).
-- M1 field so far: one phone, by script — 2.6 GB up and down byte-exact, screen off, memory flat. [verified: sha256, 2026-11-11] Second phone, browser-driven checks, and BACKLOG 10's Downloads-folder and iPhone checks still owed. [assumed: pending]
-
-- **DropCast (PLAN M2), new 2026-11-13:** a second app in `android\dropcast\`, `0.1.11-dz0.2.18`, installed on phone `fc0f334f`; APK `android\DropCast-debug.apk`. Share one file, the host's phone shows a QR, a guest downloads and can share one back; the host saves received files; core unedited. Every built step passed Gabe's phone tests except the receive-without-sharing QR, not yet reported. [verified: LOG 2026-11-13] Field gate not run; icon on hold. [assumed: pending]
-- DropCast was always built alone (Gradle `:dropcast:assembleDebug`); the edited `build.bat` has never been run and will also rebuild the DropZone APK with core 0.2.18. `dz_host.start` gained `port` and `addon` arguments; DropZone's own app has not been rebuilt or run with that change. [est_: DropZone's call is unchanged]
-- Phone-to-PC transfers run at about 5 MB/s; not the app (phone to phone about 47 MB/s). Closed for this project (`LESSONS_LEARNED.md` > L10). [verified: logs 2026-11-13]
+- Source is **core v0.2.23, wrapper 0.1.06**; `android\DropZone-debug.apk` is `0.1.06-dz0.2.23`, installed as an update on the Samsung `RFCXA10KBPZ` and the Xiaomi `fc0f334f` (main profile only, battery setting kept). Nothing pushed since 2026-11-12. [verified: `dumpsys package`, `deviceidle whitelist`, `git log`]
+- Page and app show the version without a stage label. [verified: page text by script; app footer seen by Gabe 2026-11-16]
+- Stopped-host notice (Backlog 19, v0.2.20): PASSED on phones. [verified: Gabe 2026-11-16]
+- Several separate downloads from one tap (U4) is DROPPED; every file keeps its download button; the test page is removed. [verified: Gabe's decision 2026-11-16; `LESSONS_LEARNED.md` L8]
+- Thumbnails (Backlog 18): photos good; video thumbnails fixed in v0.2.23 (jump waits for the first frame) and PASSED on PC Chrome, one film. Android Firefox cannot make video thumbnails by any page method; its uploads stay black, accepted. [verified: LOG 2026-11-16; `CLAUDE.md` > Do-not-re-derive] Android Chrome and Via video uploads, iPhone, undecodable-file, removal and memory lines not yet reported. [assumed: pending]
+- Tests not run since v0.2.18 (5 of 6 passed on Windows through a scratch shim; `test_zip_streaming.py` cannot run on Windows). [assumed: v0.2.19-0.2.23 page-script changes do not affect them]
+- Designed, not built (`UNEXPLORED_IDEAS.md` U1): tap thumbnail = peek, tap row = select, one list-wide download button, header select circles; the per-row download arrow stays.
+- M1 field: one phone by script, 2.6 GB up and down byte-exact. [verified: sha256, 2026-11-11] Second phone and browser-driven checks still owed. [assumed: pending]
+- **DropCast (PLAN M2):** `0.1.11-dz0.2.18` on the Xiaomi; every built step passed except the receive-without-sharing QR, not yet reported; field gate not run; icon on hold. [verified: LOG 2026-11-13] DropCast was not rebuilt this session; `build.bat` still never run in its two-app form.
+- Installs: update in place with `adb install --user 0 -r`; the Samsung's dual-app profile stays empty. [verified: `CLAUDE.md` settled decision 2026-11-16]
 
 ## Open user questions
-- Reword `README.md`? It still presents Termux as a way to host (6 mentions); `CLAUDE.md` now says test bench only. [assumed: yes, awaiting Gabe's word]
-- Which phones and browsers gave the v0.2.16 thumbnail result? [assumed: unknown]
+- Reword `README.md`? It still presents Termux as a way to host (6 mentions). [assumed: yes, awaiting Gabe's word]
 - Keep or remove the wake lock + WiFi lock the app holds while the server runs (added without a request)? [assumed: keep]
-- Gabe deletes `PROJECTS\DropZone-Android` and the GitHub repo `visualcurrent/DropZone-Android` (retired; see LOG 2026-11-11 Retire). [verified: LOG entry]
-- Audit decision (BACKLOG 8): keep or remove Range support wholesale. [assumed: pending]
-- Close M1's slow-download item now that the cause is placed outside the app? [assumed: yes]
-- Delete the test copies left by 2026-11-13's transfers: about 5.0 GB in the host phone's `Download` and 2.8 GB in the PC's `Downloads` (listed in LOG 2026-11-13, the 2026-11-14 lines)? The agent deletes nothing without his word. [verified: listings 2026-11-14]
-- New names for the DropZone / DropCast pair (Gabe's brainstorm) before the icon work resumes. [verified: Gabe 2026-11-14]
+- Gabe deletes `PROJECTS\DropZone-Android` and the GitHub repo `visualcurrent/DropZone-Android` (retired; LOG 2026-11-11). [verified: LOG entry]
+- Audit decision (Backlog 8): keep or remove Range support wholesale. [assumed: pending]
+- Close M1's slow-download item now that the cause is outside the app (`LESSONS_LEARNED.md` L10)? [assumed: yes]
+- Delete the test copies of films left on the phones and the PC by the transfer tests (LOG 2026-11-13, 2026-11-14 lines), and the four films now stored in the Samsung's DropZone (removed when the host stops or a file is removed)? [verified: listings 2026-11-14, `ls files/uploads` 2026-11-16]
+- New names for the DropZone / DropCast pair before the icon work resumes. [verified: Gabe 2026-11-14]
 
 ## Resume
-- Next action (Gabe): video thumbnails settled for now (frame grab kept; Android Firefox stays black, `LOG.md` 2026-11-16). Open: the footer check on either phone. Otherwise pick the next item from PLAN Backlog.
-- For DropCast instead: read PLAN.md > M2 (status, open items, gate), then SCRIPT_INDEX.md rows under `android/dropcast/`, and ARCHITECTURE.md > Contracts to preserve, 7 (the core names DropCast leans on). Next DropCast action (Gabe): open DropCast with nothing shared and have a guest send a file through the QR it shows; then the M2 field gate.
-- Read: UNEXPLORED_IDEAS.md > U1 (agreed design); U4 is dropped (`LESSONS_LEARNED.md` > L8).
-- Read: PLAN.md > Backlog — active, item 18 (its DoD is the thumbnail field gate).
+- Next action: Gabe picks the next item from PLAN Backlog — active (open: 2, 4, 6, 8, 15, 17, 18's remaining DoD lines); or DropCast, below. Start with a planning round.
+- For DropCast instead: read PLAN.md > M2 (status, open items, gate), SCRIPT_INDEX.md rows under `android/dropcast/`, and ARCHITECTURE.md > Contracts to preserve, 7. Next DropCast action (Gabe): open DropCast with nothing shared and have a guest send a file through its QR; then the M2 field gate.
+- Read: PLAN.md > Backlog — active, item 18 (remaining DoD lines).
 - Read: SCRIPT_INDEX.md > DropZone.py map > Thumbnails in the page script, and Host-unreachable notice in the page script.
 - Read: ARCHITECTURE.md > Contracts to preserve (7-9 Android, 10 thumbnails) before changing module-level names or the thumbnail routes.
-- Pending gate: thumbnails, user-run (partly reported) — iPhone Safari upload of a JPEG, PNG, portrait photo and MP4 shows thumbnails on a second device; an undecodable file keeps its icon; removing a file removes its row; log memory at "upload done" stays 12–16 MB.
-- Video thumbnail gate: PASSED on PC Chrome (v0.2.23, one film, LOG 2026-11-16); Android Firefox cannot pass by any page-side method, accepted by Gabe. Android Chrome and Via not yet tried. [assumed: would pass, as Chrome on the Samsung drew frames in the scratch test]
+- Pending gate: thumbnails, user-run (partly reported) — an MP4 from Android Chrome and from iPhone Safari shows a thumbnail on a second device; an undecodable file keeps its icon; removing a file removes its row; log memory at "upload done" stays flat.
 - Pending gate: M2 field gate, user-run — DropCast on one phone, two other devices (one iPhone): a 2 GB+ video down byte-exact with the host's screen off, a guest's file back and saved byte-exact, no internet on the WiFi, Stop leaves the app's storage empty.
 - Pending gate: M1 field gate, user-run — on each test phone a multi-GB upload and download byte-exact with the screen off, app not killed, each file downloads once in the browser.

@@ -2,6 +2,13 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-16 — Session close
+- App footer reads the version without "nightly" (Gabe: "nightly gone"). [verified: Gabe's report] Closed.
+- Session summary: one-tap separate downloads dropped (L8); stopped-host notice built and passed (Backlog 19); test page removed; stage label off page and app; installs update in place; video thumbnails fixed for Chromium (v0.2.23) and found impossible in Android Firefox; findings moved out of `CLAUDE.md` into `LESSONS_LEARNED.md` (L9, L10) under a root rule change. [verified: the entries below]
+- Promotion check: no `#cross-project` entry written this session; Doc tier stays 3. [verified: grep of LESSONS_LEARNED.md]
+- Scratch folder empty. [verified]
+- Next user action: push the DropZone and vault-root repos; pick the next Backlog item.
+
 ## 2026-11-16 — v0.2.23 passes on PC Chrome; embedded covers checked and not there
 - Field: `In.Time.2011.1080p.Brrip.x264.Deceit.YIFY.mp4` uploaded from PC Chrome 156 to the Samsung on v0.2.23; thumbnail 6217 bytes, a picture (Gabe: "a good thumbnail"). [verified: log line `thumb saved ... src=1920x816 ms=1313`; Gabe's report] First field pass of the v0.2.23 timing fix; one browser, one film. [est_]
 - Gabe asked whether video files carry an embedded thumbnail to read instead. Checked the four films stored on the Samsung by reading only their index parts over adb (scratch `cover_probe.py`): Akira, Time Trap and In Time (`.mp4`) each have a tag block but no cover picture (`covr` absent); The Gorge (`.mkv`) has no attached picture (no `image/jpeg` or `image/png` in its first or last 8 MB; the word `cover` appears, not as an attachment). [verified: probe output 2026-11-16] Phone recordings, DropZone's common case, are not expected to carry one either. [assumed: not checked] Not pursued; recorded as `LESSONS_LEARNED.md` > L12.
