@@ -4,6 +4,10 @@ Every project-coined term in plain English. A term not here is not used in LOG, 
 
 - **DropCast** — working name (Gabe, 2026-11-13) for the second app planned in PLAN M2: share one file, show its QR, guests download it and can share one back. Not checked against existing products.
 - **Pair (DropCast)** — one shared file together with its own address and QR.
+- **Host's phone / guest's phone (DropCast)** — the phone running the DropCast app, and any other device that opens its pages in a browser. Always named in full; never a bare "the phone".
+- **Check, or claim (DropCast)** — what the host's phone does to a guest's upload once it has arrived: computes its MD5, looks for an identical file already held, makes its thumbnail. `claim` is the code name. Until it finishes the file is "being checked" and not yet shown to the host.
+- **Received file (DropCast)** — a file a guest shared, as it appears on the host's screen under "Shared with you".
+- **Landing page (DropCast)** — the page at `/` behind the host's receive-a-file QR: only "Share a file", nothing to download.
 - **Copy-in (DropCast)** — copying a file the host shares into the app's own storage before serving it.
 - **Host page / Remote page** — the two served pages. Host is `http://localhost:7070` (the machine running DropZone); Remote is `http://<ip>:7070/remote` (what a QR-scanning guest opens).
 - **sid** — per-visitor session id from `POST /api/session`; also keys the in-memory user (display name + files).

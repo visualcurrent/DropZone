@@ -22,6 +22,8 @@ Directions scoped but not built. Larger P3 features carried from the old backlog
 
 **Update 2026-11-13 (partial field result, LOG of this date).** Android Chrome 5/5 after one permission prompt; Android Via 5/5 with a dialog per file; Android Firefox 2/5; PC Chrome and PC Firefox 5/5 with a save dialog per file, and PC Chrome drops everything after the first when its "Automatic downloads" permission is blocked. iPhone Safari untested. Consequence so far: the zip must stay available beside separate files, because Android Firefox loses files. Host log, same date: Firefox was sent all 5 in full and kept 2, so the loss is inside Firefox, not in the requests; Via asks for each file 2 to 3 times; a blocked PC Chrome sends only the first request.
 
+**Status.** DROPPED by Gabe 2026-11-16 after the field tests: it fails on Android Firefox whatever the method (`LESSONS_LEARNED.md` > L8). This also settles U1's open point: the per-row download arrow stays.
+
 ## U2 Split "Download everything" into size-capped parts (old BACKLOG 11)
 **Idea.** Break one giant archive into multiple volumes up to a `MAX_ARCHIVE_BYTES` cap, packing whole files into each part without splitting a file across parts; the UI lists the parts.
 **Why it matters.** One giant archive is unwieldy on a phone.
@@ -47,3 +49,8 @@ Directions scoped but not built. Larger P3 features carried from the old backlog
 **Idea.** Before a guest uploads, the page asks the host whether it already has this file, and if so shows the existing QR at once.
 **Why it matters.** M2's MD5 check runs after the file has arrived, so it saves storage but not upload time.
 **In hand.** Browsers have no built-in MD5 and cannot hash a multi-GB file without reading all of it. Untried: a quick fingerprint (size plus a hash of the first and last few MB) as the pre-check, with the full MD5 on arrival still the deciding test.
+
+## U8 A hidden page behind the version number
+**Idea.** Tapping the version number in the header opens something not shown on the page.
+**Why it matters.** Gabe, 2026-11-16: it was a great easter egg location, worth remembering in case one is wanted.
+**In hand.** v0.2.17 to v0.2.20 did this for the multi-download test page: the version was a link that added `?test=1` to the address, and the page script showed extra buttons when it saw that. Removed in v0.2.21 with the test page; the version is plain text again.

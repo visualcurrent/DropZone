@@ -444,8 +444,7 @@ public class MainActivity extends Activity {
     private View buildFooter() {
         // Both numbers are written into the app when it is built (app/build.gradle),
         // so they are known before the server has ever been started.
-        TextView core = text("DropZone v" + BuildConfig.CORE_VERSION + " " + BuildConfig.CORE_STAGE,
-                12, cMuted, false);
+        TextView core = text("DropZone v" + BuildConfig.CORE_VERSION, 12, cMuted, false);
         TextView app = text("App " + BuildConfig.WRAPPER_VERSION, 12, cMuted, false);
 
         LinearLayout footer = new LinearLayout(this);
