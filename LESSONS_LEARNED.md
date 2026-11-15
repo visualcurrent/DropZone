@@ -34,16 +34,25 @@ What was tried and did not survive. The trip-wire list. Each entry: what was tri
 **Why it failed.** It was not tied to real bytes, so it hid where an upload actually stalled. Replaced v0.2.05 by an `XMLHttpRequest` driving the bar from `upload.onprogress` (true bytes + ETA), which also visibly halts at a stall point.
 **Evidence.** CHANGELOG [0.2.05]; BACKLOG item 9 (archived).
 
+### L11 Video thumbnails: "fade-in from black" fix (v0.2.18)
+**What was tried.** Some video thumbnails were black on v0.2.16; v0.2.18 moved the frame from 0.1 s in to 10% in, on the assumption that clips fade in from black.
+**Why it failed.** The assumption was never tested. On v0.2.22 two feature films were black on four browsers; a bright test video was black too. The real cause was jumping before the first frame was decoded (fixed v0.2.23). Reproducing the fault on a known-bright video would have shown this before the first fix.
+**Evidence.** LOG 2026-11-16 (v0.2.23 entry): scratch runs in headless Edge, brightness 0 before the fix and 127 after.
+
 ### L9 Pages look bigger on the Samsung than on the Xiaomi
 **What was seen.** Gabe, 2026-11-16: every element and all text on the host and guest pages looked big and clunky on the Samsung (SM-S921B) and fine on the Xiaomi (23116PN5BC).
 **Cause.** The phones and the browser, not the page. The Samsung gives a page 360 layout px across (1080 px at density 480), the Xiaomi 411 (1080 px at density 420), so every element is about 14% larger on the Samsung. Firefox's "Automatic font sizing" then scales text by the system font scale, which on the Samsung reads above 1.0 even one notch below its slider's middle; turning it off made the page look normal. The page fixes its text at 16 px and turns off the browser's text resizing. Nothing changed in `DropZone.py`; do not chase this there, and do not override Firefox's setting, which is an accessibility feature.
 **Evidence.** `wm size`, `wm density`, `settings get system font_scale` on both phones (Samsung 1.15 then 1.08, Xiaomi 1.0); Gabe's Firefox toggle; LOG 2026-11-16.
+### L10 Slow transfers from a phone to this PC
+**What was seen.** 2026-11-13: downloads from a host phone to this PC ran at about 5 MB/s in any browser and in curl.
+**Cause.** Outside the app and the core: the same phone sends to another phone at about 47 MB/s, and the PC receives from the internet at about 52 MB/s. Not the app or the core's send loop; do not chase it in `DropZone.py`.
+**Evidence.** Host logs and Gabe's speed tests, LOG 2026-11-13. The working note that held the measurements was deleted by Gabe on 2026-11-16 once he had what he needed; the LOG entries remain.
 
 ## Diagnosis and communication (DropCast session, 2026-11-13)
 ### L6 Naming a cause from one comparison #cross-project
 **What was tried.** After the host's phone sent a file to the guest's phone at about 47 MB/s and to the PC at about 5 MB/s, the agent reported "the slow leg is the PC's WiFi reception".
 **Why it failed.** Only one side of the slow pair had been compared. The PC had never been measured receiving from anything else; Gabe's speed tests then showed it receiving about 52 MB/s from the internet. The evidence supported "this phone to this PC is slow", nothing wider.
-**Evidence.** LOG 2026-11-13, the RETRACTION line; `HANDOFF_slow_phone_to_pc.md`.
+**Evidence.** LOG 2026-11-13, the RETRACTION line; `LESSONS_LEARNED.md` > L10.
 **Guardrail.** Before naming a device as the cause, measure that device against a second partner. Until then, state the finding as the pair that is slow.
 
 ### L7 Questions that could be read two ways #cross-project

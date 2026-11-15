@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.22"   # running build
+__version__   = "0.2.23"  # running build
 VERSION_STAGE = "nightly"       # release stage, for the log and console banner only (not on the page): nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -1190,15 +1190,19 @@ async function makeThumb(file, kind){
               w:img.naturalWidth, h:img.naturalHeight};
     }
     // Video: load it muted and never play it; jump 10% of the way in and draw
-    // the frame shown there. Many clips fade in from black, so a frame from the
-    // first moments made a black thumbnail (field 2026-11-12). If the length is
-    // unknown, fall back to 0.1 s in.
+    // the frame shown there (a frame near the start is often a fade from black).
+    // If the length is unknown, fall back to 0.1 s in.
+    // The jump waits for 'loadeddata' (the first frame is decoded), not
+    // 'loadedmetadata' (only size and length known). Jumping at metadata time in
+    // a freshly started browser drew a black frame every time, even though the
+    // video reported itself ready; after loadeddata it drew a picture every time
+    // (scratch test in Edge, 5 cold runs each, 2026-11-16).
     const v=document.createElement('video');
     v.muted=true; v.playsInline=true; v.preload='auto';
     try{
       await new Promise((resolve,reject)=>{
         const timer=setTimeout(()=>reject(new Error('video timeout')),8000);
-        v.onloadedmetadata=()=>{
+        v.onloadeddata=()=>{
           const d=isFinite(v.duration)?v.duration:0;
           v.currentTime = d>0 ? d*0.10 : 0.1;
         };

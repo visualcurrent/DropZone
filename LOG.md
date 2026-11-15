@@ -2,6 +2,17 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-16 — v0.2.23: black video thumbnails traced and fixed on the PC; rule change; handoff note removed
+- Field (Gabe): two films, black thumbnails on PC Chrome, PC Firefox, Android Via and Android Firefox. [verified: Gabe's report]
+- Reproduced on the PC: the page's own `makeThumb`, copied out of `DropZone.py` into a scratch page, on a bright 2-minute 1080p test video made with ffmpeg. In a freshly started headless Edge it drew flat black (mean brightness 0 of 255) 5 runs of 5, with the video reporting `readyState` 4 at 12.0 s (10% in). [verified: scratch runs] So the frame at 10% is not dark, and v0.2.18's fade-in idea was the wrong cause. [verified: test video is bright throughout]
+- Cause: the jump to 10% was started at `loadedmetadata`, when only the video's size and length are known. Starting it at `loadeddata`, after the first frame is decoded, gave a picture (brightness 127) 5 runs of 5; waiting for the browser's frame callback after the jump also worked but hung once in 5, so it was not used. In a browser already warmed up, the old code sometimes worked, which fits "some videos black" on v0.2.16. [verified: cold Edge runs per variant]
+- Not reproduced: headless Firefox on the PC drew a picture with the old code 4 of 4. [verified: scratch runs] So PC Firefox's black in the field is not explained by this test. [est_: headless Firefox may decode differently from a windowed one; untested]
+- Fixed, v0.2.23: `makeThumb` jumps at `loadeddata` instead of `loadedmetadata`; one handler name and the comment changed. The page's real code then gave a picture 5 of 5 cold in Edge. [verified: scratch runs; `node --check`] Tests not run on v0.2.23. [assumed: unaffected]
+- Installed as an update on both phones: Samsung and Xiaomi `0.1.06-dz0.2.23`, battery setting kept on each. [verified: `dumpsys package`, `deviceidle whitelist`]
+- Rule change (Gabe): root `docs-protocol.md` > What each file is now says `CLAUDE.md` do-not-re-derive holds only facts needed before touching code, and that many findings, including investigations that found no code defect, go in `LESSONS_LEARNED.md`; the project template says the same. The slow phone-to-PC finding moved from `CLAUDE.md` to `LESSONS_LEARNED.md` > L10. [verified: edits]
+- `HANDOFF_slow_phone_to_pc.md`: deleted by Gabe ("clutter"); deletion committed; its pointers in `CLAUDE.md`, `SESSION.md`, `PLAN.md` and `LESSONS_LEARNED.md` now point to L10. [verified: grep finds none outside old LOG entries]
+- Next user action: upload a film from each of PC Chrome, PC Firefox, Android Via and Android Firefox; report picture or black for each.
+
 ## 2026-11-16 — Page-size note moved; Xiaomi updated; video thumbnail still black on v0.2.22
 - MOVED: the page-size finding the entry below put in `CLAUDE.md` > Do-not-re-derive now sits in `LESSONS_LEARNED.md` > L9, under "Investigations that found no code defect", the project's existing home for this kind of finding (Gabe: wrong file). [verified: line removed from `CLAUDE.md`]
 - Xiaomi updated in place to `0.1.06-dz0.2.22`, user 0 (its only profile); log and battery exemption kept. [verified: `dumpsys package`, `run-as ls files`, `deviceidle whitelist`]
