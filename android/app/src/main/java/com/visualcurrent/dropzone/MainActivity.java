@@ -55,6 +55,15 @@ public class MainActivity extends Activity {
     private int cBg, cSurf, cOff, cBorder, cDiv, cTxt, cMuted, cPri, cPriHl, cOnPri, cErr, cErrBg, cDotOff;
     private float density;   // pixels per dp on this screen
 
+    // Light or dark. `night` is what the screen shows now. `nightChoice` is the
+    // header button's choice: null until the button is first tapped (the phone's
+    // setting applies), then true/false. It is static so it survives Android
+    // rebuilding the screen (rotation, the phone's own theme switch) but is
+    // forgotten when the app's process ends; nothing is written to storage, as
+    // on the web page, where the theme is not remembered between sessions.
+    private boolean night;
+    private static Boolean nightChoice = null;
+
     // Widgets that change between Stopped and Running.
     private View serverDot, batteryCard;
     private TextView serverState, serverSub, hostMain, hostSub, joinMain, joinSub, stopNote, step1Num, step1Text;
@@ -79,21 +88,41 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         density = getResources().getDisplayMetrics().density;
-        boolean night = (getResources().getConfiguration().uiMode
+        // Start from the phone's light/dark setting, unless the header's button
+        // was used since the app was opened (nightChoice, see its comment).
+        boolean phoneNight = (getResources().getConfiguration().uiMode
                 & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
+        night = (nightChoice != null) ? nightChoice : phoneNight;
+        buildScreen();
+
+        // Android 13+ hides notifications until the user allows them. The
+        // server runs either way; this only makes its notification visible.
+        if (Build.VERSION.SDK_INT >= 33
+                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                   != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
+        }
+    }
+
+    /**
+     * Builds the whole screen in the colours for `night` and shows it. Called
+     * once from onCreate and again each time the header's light/dark button is
+     * tapped: every colour is baked into the widgets as they are made, so a
+     * theme change is a rebuild, not a restyle.
+     */
+    private void buildScreen() {
         loadPalette(night);
 
         // System bars: match the page colours, and ask for dark icons on the
-        // light theme. (Android 15+ ignores the two colour calls and instead
-        // draws the app under the bars; the root's fitsSystemWindows below
-        // keeps our content clear of them either way.)
+        // light theme (0 clears that request again for the dark theme).
+        // (Android 15+ ignores the two colour calls and instead draws the app
+        // under the bars; the root's fitsSystemWindows below keeps our content
+        // clear of them either way.)
         getWindow().setBackgroundDrawable(new ColorDrawable(cBg));
         getWindow().setStatusBarColor(cSurf);
         getWindow().setNavigationBarColor(cSurf);
-        if (!night) {
-            getWindow().getDecorView().setSystemUiVisibility(
-                    View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        }
+        getWindow().getDecorView().setSystemUiVisibility(night ? 0
+                : View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
@@ -113,13 +142,9 @@ public class MainActivity extends Activity {
         root.addView(buildFooter());
         setContentView(root);
 
-        // Android 13+ hides notifications until the user allows them. The
-        // server runs either way; this only makes its notification visible.
-        if (Build.VERSION.SDK_INT >= 33
-                && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                   != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 1);
-        }
+        // The widgets are new and still show their Stopped defaults: forget
+        // what was shown so the next refresh() fills them in from the service.
+        shownState = null;
     }
 
     @Override
@@ -293,6 +318,26 @@ public class MainActivity extends Activity {
         top.addView(logo, logoLp);
         top.addView(name, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f));
         top.addView(badge);                                  // pushed to the right edge by the name's weight
+
+        // Light/dark button, as on the web page: a sun while dark (tap = light),
+        // a moon while light (tap = dark). 20dp drawing inside a 40dp touch
+        // target. A tap records the choice, rebuilds the screen in the other
+        // palette and refreshes at once so Running/Stopped does not blink.
+        ImageView themeBtn = new ImageView(this);
+        themeBtn.setImageResource(night ? R.drawable.ic_sun : R.drawable.ic_moon);
+        themeBtn.setColorFilter(cMuted);
+        themeBtn.setPadding(px(10), px(10), px(10), px(10));
+        themeBtn.setContentDescription(night ? "Switch to light theme" : "Switch to dark theme");
+        themeBtn.setOnClickListener(v -> {
+            nightChoice = !night;
+            night = nightChoice;
+            buildScreen();
+            refresh();
+        });
+        LinearLayout.LayoutParams themeLp = new LinearLayout.LayoutParams(px(40), px(40));
+        themeLp.leftMargin = px(6);
+        themeLp.rightMargin = -px(10);           // let the icon, not its padding, line up with the right edge
+        top.addView(themeBtn, themeLp);
 
         TextView tagline = text("Share files with anyone on this WiFi. Only this phone needs the app.",
                 14, cMuted, false);

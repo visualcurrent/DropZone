@@ -10,6 +10,7 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   save dialogs.
 
 ## [0.2.25] — nightly
+- Android app wrapper 0.1.07: a light/dark button in the app's header (sun while dark, moon while light), as on the web page. The screen still opens in the phone's own setting; the choice is forgotten when the app closes.
 - Preview: the previous and next arrows moved from beside the filename onto the faded neighbour pictures, as round chips. The whole strip from the screen edge to the centre picture is one target, so a click anywhere in it steps whatever the neighbour's shape. Fixes the preview closing when a click meant for the next picture landed beside a narrow one. A click on the empty part of the centre frame no longer closes the preview.
 
 ## [0.2.24] — nightly

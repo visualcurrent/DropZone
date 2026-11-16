@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sun for the header's light/dark button, shown while the screen is dark
+     (tap = go light). Same drawing as the SUN icon in DropZone.py's initTheme:
+     a circle of radius 5 and eight short rays. Drawn white; MainActivity tints
+     it at runtime. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- disc: a circle written as two half-turn arcs (vector paths have no circle element) -->
+    <path
+        android:pathData="M7,12a5,5 0,1 0,10 0a5,5 0,1 0,-10 0"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2" />
+    <!-- rays: up, down, four diagonals, left, right -->
+    <path
+        android:pathData="M12,1v2M12,21v2M4.22,4.22l1.42,1.42M18.36,18.36l1.42,1.42M1,12h2M21,12h2M4.22,19.78l1.42,-1.42M18.36,5.64l1.42,-1.42"
+        android:strokeColor="#FFFFFFFF"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+</vector>

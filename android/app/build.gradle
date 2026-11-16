@@ -21,7 +21,7 @@ def coreMatch = (coreDst.getText('UTF-8') =~ /(?m)^__version__\s*=\s*"([^"]+)"/)
 def coreVersion = coreMatch.find() ? coreMatch.group(1) : 'unknown'
 
 // Wrapper's own version (release.beta.incremental, same scheme as DropZone).
-def wrapperVersion = '0.1.06'
+def wrapperVersion = '0.1.07'
 
 android {
     namespace 'com.visualcurrent.dropzone'
@@ -31,7 +31,7 @@ android {
         applicationId 'com.visualcurrent.dropzone'
         minSdk 26               // Android 8.0
         targetSdk 35
-        versionCode 6
+        versionCode 7
         versionName "${wrapperVersion}-dz${coreVersion}"
 
         // Constants the Java code reads as BuildConfig.CORE_VERSION etc., so the

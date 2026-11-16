@@ -2,6 +2,15 @@
 
 Append-only. Newest on top. One dated entry per working session: built / decided / rejected / retracted, with evidence. Every claim tagged. Never edit an old entry.
 
+## 2026-11-16 — App 0.1.07: light/dark button on the app's screen; session close
+- Gabe on v0.2.25: "all looks really good"; DropZone is "largely functional as imagined". Which devices and browsers he looked at was not stated, so the Backlog 20 phone DoD stays open line by line. [verified: his message]
+- Asked by Gabe: a light/dark toggle in the app, as the web page has. Built by the main agent (PLAN Backlog 21): a sun/moon button at the right of the app's header. `MainActivity`: `night` + static `nightChoice` (null until tapped, kept while the app's process lives, nothing stored), `onCreate`'s screen building moved into `buildScreen()`, which the button calls again with the other palette, then `refresh()`. New drawables `ic_sun.xml`, `ic_moon.xml` (the page's two icons). Wrapper 0.1.07, versionCode 7. [verified: build SUCCESSFUL]
+- Check on the Xiaomi `fc0f334f` (phone in dark mode): the screen opens dark with the sun; one tap gives the light palette, the moon, dark status-bar icons, the button's description "Switch to dark theme", and the server row still reads its state; a second tap was sent to put it back. [verified: two screenshots and the `uiautomator` dump] Not checked: rotation keeping the choice, the Running state across a toggle, Android 8-14, the Samsung's screen. [assumed: work]
+- `0.1.07-dz0.2.25` installed as an update on both phones; battery exemption still listed on the Samsung, nothing in its user 95. [verified: `dumpsys package`, `deviceidle whitelist`, `pm list packages --user 95`] The Xiaomi's exemption was read after the v0.2.25 install, not again after this one. [assumed: kept]
+- Gabe will think about folding DropCast into DropZone himself. The agent's one suggestion, not a plan: the preview could carry a "Show QR for this file" option. No DropCast work this session; its APK is still `0.1.11-dz0.2.18`.
+- Promotion check: no `#cross-project` entry written this session; Doc tier stays 3. Scratch folder empty. [verified: grep, listing]
+- Next user action: push the DropZone and vault-root repos; finish the Backlog 20 phone lines when convenient.
+
 ## 2026-11-16 — v0.2.25: preview side zones carry the arrows; Termux run of v0.2.24 passed
 - Termux on the Samsung, v0.2.24: `tests/run_all.py` ended `DOWNLOAD STARRED: PASS` and `ALL TESTS PASSED`. [verified: Gabe's paste of the last lines, 2026-11-16] The suite has now run in full on v0.2.24; the per-test memory figures were not reported.
 - Gabe, PC Firefox on v0.2.24: (1) the arrows beside the filename are not noticeable enough; (2) bug — clicking the faded next picture repeatedly in one spot closes the preview as soon as a portrait picture or an icon arrives.
