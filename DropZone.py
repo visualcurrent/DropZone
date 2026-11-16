@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.24"  # running build
+__version__   = "0.2.25"  # running build
 VERSION_STAGE = "nightly"       # release stage, for the log and console banner only (not on the page): nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -1022,26 +1022,50 @@ button{cursor:pointer;background:none;border:none}
   display:flex;align-items:center;justify-content:center}
 .pk-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;border-radius:var(--r)}
 .pk-ico{font-size:5rem;line-height:1}
-/* Neighbours: 160px half box + 12px gap from the centre, faded, and masked to
-   vanish toward the outer screen edge. A tap on one steps to that file. */
-.pk-prev,.pk-next{position:absolute;top:0;bottom:0;display:flex;align-items:center;
-  opacity:.35;pointer-events:auto;cursor:pointer}
+/* Side zones: one real button per direction. It fills the stage's full height and
+   runs from the screen edge to the centre box, so a click anywhere in the
+   neighbour's frame steps, whatever shape the picture inside has. z-index 2 puts
+   it above .pk-box: on a narrow phone, where the free space is under 56px, the
+   zone overlaps the outer edge of the centre picture instead of vanishing.
+   166px = 160px half box + 6px, so the 12px gap to the centre picture is kept. */
+.pk-prev,.pk-next{position:absolute;top:0;bottom:0;width:max(56px,calc(50% - 166px));z-index:2;
+  display:flex;align-items:center;margin:0;padding:0;border:0;background:none;
+  color:#fff;font:inherit;cursor:pointer}
+/* The padding below keeps the faded picture's inner edge 12px outside the centre
+   box at every width. On a wide screen it is 6px. On a narrow phone the zone is
+   held at 56px and so reaches over the centre picture; the padding then grows by
+   the same amount (56px + 172px - half the stage), pushing the faded picture back
+   out so only the arrow chip, never the neighbour, lies on the centre picture.
+   border-box so that the padding sits inside the zone's width. */
+.pk-prev,.pk-next{box-sizing:border-box}
+.pk-prev{left:0;justify-content:flex-end;padding-right:max(6px,calc(228px - 50%))}   /* picture hugs the inner (right) edge */
+.pk-next{right:0;justify-content:flex-start;padding-left:max(6px,calc(228px - 50%))}  /* picture hugs the inner (left) edge */
+/* Only the picture is faded and masked, so the arrow chip stays fully bright.
+   flex:none keeps it at its own size: when the zone is narrower it overflows
+   toward the outer screen edge and the stage clips it, it is never squeezed. */
+.pk-prev .pk-img,.pk-next .pk-img,.pk-prev .pk-ico,.pk-next .pk-ico{flex:none;opacity:.35}
 .pk-prev .pk-img,.pk-next .pk-img{max-width:320px}
-.pk-prev{right:calc(50% + 172px);
+.pk-prev .pk-img,.pk-prev .pk-ico{
   -webkit-mask-image:linear-gradient(to left,#000 30%,transparent);
   mask-image:linear-gradient(to left,#000 30%,transparent)}
-.pk-next{left:calc(50% + 172px);
+.pk-next .pk-img,.pk-next .pk-ico{
   -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
   mask-image:linear-gradient(to right,#000 30%,transparent)}
+/* Arrow chip: decoration inside the zone button, drawn over the faded picture at
+   the zone's inner end. Dark disc with a light rim so it reads on any picture. */
+.pk-arrow{position:absolute;top:50%;margin-top:-20px;width:40px;height:40px;
+  display:flex;align-items:center;justify-content:center;border-radius:var(--rfull);
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.4);color:#fff;pointer-events:none}
+.pk-prev .pk-arrow{right:8px}
+.pk-next .pk-arrow{left:8px}
+.pk-arrow svg{width:22px;height:22px}
+/* Mouse users: the chip brightens when its zone is hovered (touch has no hover). */
+@media (hover:hover){
+  .pk-prev:hover .pk-arrow,.pk-next:hover .pk-arrow{background:rgba(0,0,0,.7);border-color:#fff}
+}
+.pk-prev:focus-visible,.pk-next:focus-visible{outline:2px solid #fff;outline-offset:-2px}
 /* Name, size line and the two actions, in a centred column. */
 .pk-info{max-width:420px;margin:0 auto;padding:16px 16px 28px;text-align:center}
-/* Name block as three columns: previous arrow, text, next arrow. The arrow
-   columns are always 44px wide (a hidden arrow keeps its space), so the text
-   does not shift sideways from one file to the next. */
-.pk-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;column-gap:4px}
-.pk-arrow{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
-  color:#fff;border-radius:var(--rfull)}
-.pk-arrow svg{width:24px;height:24px}
 .pk-name{font-size:.95rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
 .pk-meta{font-size:.8rem;opacity:.7;margin-top:4px}
 .pk-actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
@@ -1638,19 +1662,13 @@ function fillPeek(){
   const html=`
     <button class="pk-x" onclick="closePeek()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
     <div class="pk-stage">
-      ${prev?`<div class="pk-prev">${peekPic(prev.f)}</div>`:''}
+      ${prev?`<button class="pk-prev" aria-label="Previous file">${peekPic(prev.f)}<span class="pk-arrow" aria-hidden="true">${chevron}</span></button>`:''}
       <div class="pk-box">${peekPic(f)}</div>
-      ${next?`<div class="pk-next">${peekPic(next.f)}</div>`:''}
+      ${next?`<button class="pk-next" aria-label="Next file">${peekPic(next.f)}<span class="pk-arrow" aria-hidden="true">${chevron.replace('15 6 9 12 15 18','9 6 15 12 9 18')}</span></button>`:''}
     </div>
     <div class="pk-info">
-      <div class="pk-head">
-        <button class="pk-arrow" onclick="peekStep(-1)" aria-label="Previous file"${prev?'':' disabled style="visibility:hidden"'}>${chevron}</button>
-        <div>
-          <div class="pk-name">${escHtml(f.name)}</div>
-          <div class="pk-meta">${f.size_str} &middot; from ${escHtml(e.owner)}</div>
-        </div>
-        <button class="pk-arrow" onclick="peekStep(1)" aria-label="Next file"${next?'':' disabled style="visibility:hidden"'}>${chevron.replace('15 6 9 12 15 18','9 6 15 12 9 18')}</button>
-      </div>
+      <div class="pk-name">${escHtml(f.name)}</div>
+      <div class="pk-meta">${f.size_str} &middot; from ${escHtml(e.owner)}</div>
       <div class="pk-actions">
         <button class="pk-star${on?' on':''}" onclick="toggleStar(event,'${id}',false)" aria-pressed="${on}">${starIcon(on)}${on?'Starred':'Star'}</button>
         <a class="pk-dl" href="${API}/api/download?id=${id}" download="${escAttr(f.name)}" onclick="return downloadOne(event,'${id}')">${dlIcon}Download</a>
@@ -1672,12 +1690,12 @@ function fillPeek(){
   });
   const pk=document.getElementById('peek');
   if(pk) pk.addEventListener('click',ev=>{
-    // Only the empty backdrop closes it, not the picture, the text or a button.
+    // Only the empty backdrop closes it, not the picture (its frame, .pk-box, does nothing), the text or a button.
     const t=ev.target;
     if(Date.now()-_swipeAt<400) return;      // the click a finger-lift can raise after a swipe must not close it
-    const nb=t.closest('.pk-prev,.pk-next'); // a faded neighbour: step to it (the click lands on its picture)
+    const nb=t.closest('.pk-prev,.pk-next'); // a side zone (the click may land on its picture or chip): step
     if(nb){ peekStep(nb.classList.contains('pk-prev')?-1:1); return; }
-    if(t===pk||t.classList.contains('pk-stage')||t.classList.contains('pk-box')||t.classList.contains('pk-info'))
+    if(t===pk||t.classList.contains('pk-stage')||t.classList.contains('pk-info'))
       closePeek();
   });
   // Swipe: a mostly-sideways drag of 50px or more. Left goes to the next file,

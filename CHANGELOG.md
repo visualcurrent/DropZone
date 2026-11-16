@@ -9,6 +9,9 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.25] — nightly
+- Preview: the previous and next arrows moved from beside the filename onto the faded neighbour pictures, as round chips. The whole strip from the screen edge to the centre picture is one target, so a click anywhere in it steps whatever the neighbour's shape. Fixes the preview closing when a click meant for the next picture landed beside a narrow one. A click on the empty part of the centre frame no longer closes the preview.
+
 ## [0.2.24] — nightly
 - Preview: tapping a file in "Available on Network" opens a full-screen preview with the file's picture at its own size (or a large icon), its full name, size and owner, a Star toggle and Download. Previous and next by arrow buttons, a sideways swipe, a tap on the faded neighbour picture, or the arrow keys; Esc, the X, a tap outside or the phone's Back closes it. The row of the file last previewed stays highlighted, and the page scrolls to it on closing.
 - Starred shortlist: every network row has a star. Starred files are listed in a Starred section at the top of "Available on Network", each with its download button, and "All N files (.zip)" downloads them as one flat zip through the new `GET /api/download_starred?ids=`. Stars are kept in the browser tab only. Unstarring in the Starred section folds the row away and highlights the file where it sits in its owner's list. New test `tests/test_download_starred.py`.
