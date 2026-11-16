@@ -12,6 +12,8 @@ Append-only. Newest on top. One dated entry per working session: built / decided
 - Not built from U1's 2026-11-12 design, by Gabe's word today: row-tap selection, select circles, the one list-wide download button; the middle cut of a very long name (the name wraps in full).
 - Known limits: on a 360 px phone the faded neighbours show about 8 px each side, since the picture box is 320 px. [verified: screenshot] Reloading with a preview open leaves one spare history entry. [est_: by construction, not run] Nothing here has run on a phone, on Android Firefox or on iPhone Safari. [assumed: works]
 - `__version__` 0.2.24. `DropZone.py` and `tests\` pushed to the Samsung at `Backups/DropZone/test-0.2.24` for the Termux run; Gabe's own files in `Backups/DropZone` untouched. [verified: adb listing]
+- Built `android\DropZone-debug.apk` with Gradle task `:app:assembleDebug` alone (DropCast not rebuilt): `0.1.06-dz0.2.24`, installed with `adb install --user 0 -r` on the Samsung and the Xiaomi. [verified: `aapt dump badging`; `dumpsys package` shows the version on both; no copy in the Samsung's user 95] Battery setting after the update not re-read. [assumed: kept, as on earlier updates]
+- Scratch folder emptied. [verified: listing]
 - Next user action: run `python3 tests/run_all.py` in Termux; then the Backlog 20 phone gate on the new APK.
 
 ## 2026-11-16 — Session close

@@ -3,7 +3,7 @@
 > Read first, update last. Current-state block under 15 lines. It is a prompt, not a history.
 
 ## Current state
-- Source is **core v0.2.24, wrapper 0.1.06**, uncommitted. Both phones still run `0.1.06-dz0.2.23` (the Samsung `RFCXA10KBPZ`, the Xiaomi `fc0f334f`; main profile only, battery setting kept). Nothing pushed since 2026-11-12. [verified: `git status`; phones as of LOG 2026-11-16 session close]
+- Source is **core v0.2.24, wrapper 0.1.06**, committed (`f94eb94`), not pushed; `android\DropZone-debug.apk` is `0.1.06-dz0.2.24`, installed as an update on the Samsung `RFCXA10KBPZ` and the Xiaomi `fc0f334f` (main profile only; the Samsung's dual-app profile holds no copy). Nothing pushed since 2026-11-12. [verified: `dumpsys package` on both, `pm list packages --user 95`, `git log`]
 - **Preview and starred shortlist (Backlog 20, v0.2.24): built, passes headless Edge on the PC, not yet on any phone.** Tap a network row for the preview (arrows, swipe, keys, Back); star rows into a Starred section with its own zip (`/api/download_starred`). Built by four Sonnet subagents under review. [verified: LOG 2026-11-16 top entry] Termux run of the 7 tests PENDING: bundle is on the Samsung at `Backups/DropZone/test-0.2.24`. [assumed: passes]
 - Page and app show the version without a stage label. [verified: page text by script; app footer seen by Gabe 2026-11-16]
 - Stopped-host notice (Backlog 19, v0.2.20): PASSED on phones. [verified: Gabe 2026-11-16]
@@ -24,7 +24,7 @@
 - New names for the DropZone / DropCast pair before the icon work resumes. [verified: Gabe 2026-11-14]
 
 ## Resume
-- Next action: Gabe runs the Termux tests (`cp -r /storage/emulated/0/Backups/DropZone/test-0.2.24 ~/dz-test; cd ~/dz-test; python3 tests/run_all.py`), then the Backlog 20 phone gate; the agent installs `android\DropZone-debug.apk` (`0.1.06-dz0.2.24`) on both phones first, on Gabe's go. After that: PLAN Backlog — active (open: 2, 4, 6, 8, 15, 17, 18's remaining DoD lines); or DropCast, below.
+- Next action: Gabe runs the Termux tests (`cp -r /storage/emulated/0/Backups/DropZone/test-0.2.24 ~/dz-test; cd ~/dz-test; python3 tests/run_all.py`), then the Backlog 20 phone gate on the installed `0.1.06-dz0.2.24`. After that: PLAN Backlog — active (open: 2, 4, 6, 8, 15, 17, 18's remaining DoD lines); or DropCast, below.
 - Read: PLAN.md > Backlog — active, item 20; SCRIPT_INDEX.md > DropZone.py map > Stars, `renderAllUsers`, Preview; ARCHITECTURE.md > Contracts to preserve, 11.
 - Pending gate: Backlog 20, user-run on Android Chrome, Android Firefox, iPhone Safari — tap opens the preview; swipe and arrows move and stop at the ends; the marker is on the last previewed file after closing; three starred files from two people arrive as a zip of exactly those three, byte-exact; unstarring marks the original row without scrolling; Back closes the preview without leaving the page; `tests/run_all.py` passes on Termux.
 - For DropCast instead: read PLAN.md > M2 (status, open items, gate), SCRIPT_INDEX.md rows under `android/dropcast/`, and ARCHITECTURE.md > Contracts to preserve, 7. Next DropCast action (Gabe): open DropCast with nothing shared and have a guest send a file through its QR; then the M2 field gate.
