@@ -15,6 +15,8 @@ Directions scoped but not built. Larger P3 features carried from the old backlog
 - Selection is kept in the page and reapplied when the list is redrawn. The top "my files" card keeps its remove button and gains only thumbnail and peek.
 - OPEN: whether the per-row download arrow stays. It depends on U4.
 
+**Update 2026-11-16.** Built as PLAN Backlog 20 (v0.2.24) in a changed form, by Gabe: the peek became a preview opened by a tap anywhere on a row, with previous/next; selection became a star on each row and a Starred section with its own zip. Not built and no longer planned: row-tap selection, select circles, the one list-wide download button, the middle cut of a long name. The per-person zip links and "Download everything" stay.
+
 ## U4 Several individual files from one tap
 **Idea.** "Download N selected" delivers N separate files instead of one zip, with a zip on/off toggle beside the button.
 **Why it matters.** On a phone an individual photo lands where the gallery can see it; a zip has to be unpacked first. If this works, the per-row download arrow can go.

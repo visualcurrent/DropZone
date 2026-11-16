@@ -3,13 +3,13 @@
 > Read first, update last. Current-state block under 15 lines. It is a prompt, not a history.
 
 ## Current state
-- Source is **core v0.2.23, wrapper 0.1.06**; `android\DropZone-debug.apk` is `0.1.06-dz0.2.23`, installed as an update on the Samsung `RFCXA10KBPZ` and the Xiaomi `fc0f334f` (main profile only, battery setting kept). Nothing pushed since 2026-11-12. [verified: `dumpsys package`, `deviceidle whitelist`, `git log`]
+- Source is **core v0.2.24, wrapper 0.1.06**, uncommitted. Both phones still run `0.1.06-dz0.2.23` (the Samsung `RFCXA10KBPZ`, the Xiaomi `fc0f334f`; main profile only, battery setting kept). Nothing pushed since 2026-11-12. [verified: `git status`; phones as of LOG 2026-11-16 session close]
+- **Preview and starred shortlist (Backlog 20, v0.2.24): built, passes headless Edge on the PC, not yet on any phone.** Tap a network row for the preview (arrows, swipe, keys, Back); star rows into a Starred section with its own zip (`/api/download_starred`). Built by four Sonnet subagents under review. [verified: LOG 2026-11-16 top entry] Termux run of the 7 tests PENDING: bundle is on the Samsung at `Backups/DropZone/test-0.2.24`. [assumed: passes]
 - Page and app show the version without a stage label. [verified: page text by script; app footer seen by Gabe 2026-11-16]
 - Stopped-host notice (Backlog 19, v0.2.20): PASSED on phones. [verified: Gabe 2026-11-16]
 - Several separate downloads from one tap (U4) is DROPPED; every file keeps its download button; the test page is removed. [verified: Gabe's decision 2026-11-16; `LESSONS_LEARNED.md` L8]
 - Thumbnails (Backlog 18): photos good; video thumbnails fixed in v0.2.23 (jump waits for the first frame) and PASSED on PC Chrome, one film. Android Firefox cannot make video thumbnails by any page method; its uploads stay black, accepted. [verified: LOG 2026-11-16; `CLAUDE.md` > Do-not-re-derive] Android Chrome and Via video uploads, iPhone, undecodable-file, removal and memory lines not yet reported. [assumed: pending]
-- Tests not run since v0.2.18 (5 of 6 passed on Windows through a scratch shim; `test_zip_streaming.py` cannot run on Windows). [assumed: v0.2.19-0.2.23 page-script changes do not affect them]
-- Designed, not built (`UNEXPLORED_IDEAS.md` U1): tap thumbnail = peek, tap row = select, one list-wide download button, header select circles; the per-row download arrow stays.
+- Full test suite not run since v0.2.18 (5 of 6 passed on Windows through a scratch shim; `test_zip_streaming.py` cannot run on Windows); only the new `test_download_starred.py` ran on v0.2.24, on the PC. [verified: scratch run]
 - M1 field: one phone by script, 2.6 GB up and down byte-exact. [verified: sha256, 2026-11-11] Second phone and browser-driven checks still owed. [assumed: pending]
 - **DropCast (PLAN M2):** `0.1.11-dz0.2.18` on the Xiaomi; every built step passed except the receive-without-sharing QR, not yet reported; field gate not run; icon on hold. [verified: LOG 2026-11-13] DropCast was not rebuilt this session; `build.bat` still never run in its two-app form.
 - Installs: update in place with `adb install --user 0 -r`; the Samsung's dual-app profile stays empty. [verified: `CLAUDE.md` settled decision 2026-11-16]
@@ -24,7 +24,9 @@
 - New names for the DropZone / DropCast pair before the icon work resumes. [verified: Gabe 2026-11-14]
 
 ## Resume
-- Next action: Gabe picks the next item from PLAN Backlog — active (open: 2, 4, 6, 8, 15, 17, 18's remaining DoD lines); or DropCast, below. Start with a planning round.
+- Next action: Gabe runs the Termux tests (`cp -r /storage/emulated/0/Backups/DropZone/test-0.2.24 ~/dz-test; cd ~/dz-test; python3 tests/run_all.py`), then the Backlog 20 phone gate; the agent installs `android\DropZone-debug.apk` (`0.1.06-dz0.2.24`) on both phones first, on Gabe's go. After that: PLAN Backlog — active (open: 2, 4, 6, 8, 15, 17, 18's remaining DoD lines); or DropCast, below.
+- Read: PLAN.md > Backlog — active, item 20; SCRIPT_INDEX.md > DropZone.py map > Stars, `renderAllUsers`, Preview; ARCHITECTURE.md > Contracts to preserve, 11.
+- Pending gate: Backlog 20, user-run on Android Chrome, Android Firefox, iPhone Safari — tap opens the preview; swipe and arrows move and stop at the ends; the marker is on the last previewed file after closing; three starred files from two people arrive as a zip of exactly those three, byte-exact; unstarring marks the original row without scrolling; Back closes the preview without leaving the page; `tests/run_all.py` passes on Termux.
 - For DropCast instead: read PLAN.md > M2 (status, open items, gate), SCRIPT_INDEX.md rows under `android/dropcast/`, and ARCHITECTURE.md > Contracts to preserve, 7. Next DropCast action (Gabe): open DropCast with nothing shared and have a guest send a file through its QR; then the M2 field gate.
 - Read: PLAN.md > Backlog — active, item 18 (remaining DoD lines).
 - Read: SCRIPT_INDEX.md > DropZone.py map > Thumbnails in the page script, and Host-unreachable notice in the page script.

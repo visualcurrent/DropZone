@@ -20,7 +20,7 @@ PORT         = 7070
 
 # ── Version ──────────────────────────────────────────────────────────────────
 # Format: release.beta.incremental (see docs/DEVELOPMENT.md).
-__version__   = "0.2.23"  # running build
+__version__   = "0.2.24"  # running build
 VERSION_STAGE = "nightly"       # release stage, for the log and console banner only (not on the page): nightly | beta | stable
 
 ADJECTIVES = ["Swift","Crimson","Golden","Silver","Azure","Jade","Amber","Coral","Indigo","Teal"]
@@ -634,6 +634,27 @@ class Handler(BaseHTTPRequestHandler):
             self.stream_zip(entries, "DropZone-all-files.zip")
             return
 
+        if path == "/api/download_starred":
+            # The page's Starred section: one zip of the files a person starred,
+            # which can come from several owners. Flat (no per-owner folders)
+            # because the starred set is one person's own pick, not a share tree;
+            # same-named files are told apart by dedup_name.
+            ids = []
+            for fid in qs.get("ids",[""])[0].split(","):
+                if fid and fid not in ids: ids.append(fid)   # drop blanks and repeats, keep order
+            with state_lock:
+                seen, entries = {}, []
+                for fid in ids:
+                    f = shared_files.get(fid)
+                    if not f: continue                       # unknown or already removed
+                    fp = Path(f["tmp_path"])
+                    if not fp.exists(): continue
+                    entries.append((dedup_name(seen, f["name"]), str(fp), f.get("size", 0)))
+            if not entries:
+                self.send_json({"error":"No files"},404); return
+            self.stream_zip(entries, "DropZone-starred.zip")
+            return
+
     def do_POST(self):
         path   = urlparse(self.path).path
         length = int(self.headers.get("Content-Length", 0))
@@ -932,7 +953,7 @@ button{cursor:pointer;background:none;border:none}
 .file-list{display:flex;flex-direction:column;margin-top:12px}
 .file-row{
   display:grid;
-  grid-template-columns:48px 1fr 32px;   /* col 1 fits a thumbnail; icon rows use the same width so names line up */
+  grid-template-columns:48px 1fr auto;   /* col 1 fits a thumbnail; icon rows use the same width so names line up; col 3 grows to hold the star + download buttons */
   grid-template-rows:auto auto;
   column-gap:8px;
   padding:8px 6px;
@@ -940,8 +961,15 @@ button{cursor:pointer;background:none;border:none}
   transition:background .15s;
   align-items:start;
 }
-.file-row:hover{background:var(--off)}
+/* Hover only for a real mouse: on a touch screen :hover sticks to the last
+   tapped row and looks like a selection. */
+@media (hover:hover){.file-row:hover{background:var(--off)}}
+/* The one "position marker" row (see _mark in the script); after the hover rule so it wins. */
+.file-row.mark{background:var(--pri-hl)}
 .file-row+.file-row{border-top:1px solid var(--div)}
+/* A row unstarred from the Starred section folds shut before the redraw removes it. */
+.file-row.gone{max-height:0!important;opacity:0;padding-top:0;padding-bottom:0;overflow:hidden;
+  transition:max-height .2s,opacity .2s,padding .2s}
 .f-ico{grid-column:1;grid-row:1/3;font-size:1.2rem;align-self:center;justify-self:center;line-height:1;padding-top:1px}
 /* A file's thumbnail takes the icon's place: a 48px square, cropped to fill
    (object-fit:cover), drawn from the 320px JPEG the uploader's browser made. */
@@ -952,7 +980,12 @@ button{cursor:pointer;background:none;border:none}
 .f-meta{grid-column:2;grid-row:2;font-size:.72rem;color:var(--hint);
   font-variant-numeric:tabular-nums;margin-top:2px}
 .f-action{grid-column:3;grid-row:1/3;align-self:center;
-  display:flex;align-items:center;justify-content:center}
+  display:flex;align-items:center;justify-content:center;gap:4px}
+/* Star toggle: same 32px hit area as the download button, no background. */
+.star-btn{width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  border-radius:var(--r);background:none;color:var(--hint);transition:color .15s}
+.star-btn.on{color:var(--pri)}
+.star-btn svg{width:16px;height:16px}
 .rm-btn{width:28px;height:28px;display:flex;align-items:center;justify-content:center;
   border-radius:var(--r);font-size:.75rem;color:var(--hint);
   transition:background .15s,color .15s}
@@ -963,6 +996,64 @@ button{cursor:pointer;background:none;border:none}
   font-size:1rem;font-weight:700;text-decoration:none;transition:background .15s,color .15s}
 .dl-btn:hover{background:var(--pri);color:#fff}
 .dl-btn svg{width:16px;height:16px}
+
+/* Rows in the network list open the preview when tapped. */
+#net-files .file-row{cursor:pointer}
+
+/* ── Preview ("peek") ── */
+/* Full-screen overlay, hidden until it has class "on". z-index 110 covers the
+   sticky header (100); the host-activity banner is raised to 120 so it stays on top.
+   The backdrop is dark in both themes, so text on it is white whatever the theme. */
+#peek{display:none;position:fixed;top:0;right:0;bottom:0;left:0;z-index:110;
+  background:rgba(0,0,0,.84);color:#fff;
+  touch-action:pan-y;                     /* vertical scroll stays ours to the browser; a sideways swipe is left to the page's own swipe code */
+  overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+  padding-top:56px}                       /* room under the close button */
+#peek.on{display:block}
+/* Close button: fixed to the corner so it stays put if the overlay scrolls.
+   Theme variables give it a solid chip that reads on the dark backdrop. */
+.pk-x{position:fixed;top:6px;right:6px;width:44px;height:44px;border-radius:var(--rfull);
+  background:var(--surf2);color:var(--txt);display:flex;align-items:center;justify-content:center;z-index:1}
+.pk-x svg{width:20px;height:20px}
+/* Stage: a band across the full screen. The centre box holds the file's picture
+   at its own size (never enlarged); the neighbours peek in from the sides. */
+.pk-stage{position:relative;overflow:hidden;width:100%;height:min(320px,55vh)}
+.pk-box{position:absolute;top:0;bottom:0;left:0;right:0;margin:0 auto;width:min(320px,100%);
+  display:flex;align-items:center;justify-content:center}
+.pk-img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;border-radius:var(--r)}
+.pk-ico{font-size:5rem;line-height:1}
+/* Neighbours: 160px half box + 12px gap from the centre, faded, and masked to
+   vanish toward the outer screen edge. A tap on one steps to that file. */
+.pk-prev,.pk-next{position:absolute;top:0;bottom:0;display:flex;align-items:center;
+  opacity:.35;pointer-events:auto;cursor:pointer}
+.pk-prev .pk-img,.pk-next .pk-img{max-width:320px}
+.pk-prev{right:calc(50% + 172px);
+  -webkit-mask-image:linear-gradient(to left,#000 30%,transparent);
+  mask-image:linear-gradient(to left,#000 30%,transparent)}
+.pk-next{left:calc(50% + 172px);
+  -webkit-mask-image:linear-gradient(to right,#000 30%,transparent);
+  mask-image:linear-gradient(to right,#000 30%,transparent)}
+/* Name, size line and the two actions, in a centred column. */
+.pk-info{max-width:420px;margin:0 auto;padding:16px 16px 28px;text-align:center}
+/* Name block as three columns: previous arrow, text, next arrow. The arrow
+   columns are always 44px wide (a hidden arrow keeps its space), so the text
+   does not shift sideways from one file to the next. */
+.pk-head{display:grid;grid-template-columns:44px 1fr 44px;align-items:center;column-gap:4px}
+.pk-arrow{width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+  color:#fff;border-radius:var(--rfull)}
+.pk-arrow svg{width:24px;height:24px}
+.pk-name{font-size:.95rem;font-weight:600;line-height:1.35;overflow-wrap:anywhere}
+.pk-meta{font-size:.8rem;opacity:.7;margin-top:4px}
+.pk-actions{display:flex;gap:10px;justify-content:center;margin-top:16px}
+.pk-star,.pk-dl{min-height:44px;padding:0 18px;border-radius:var(--r);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font-weight:600;font-size:.9rem;text-decoration:none}
+.pk-star svg,.pk-dl svg{width:18px;height:18px}
+.pk-star{color:#fff;border:1px solid #fff}
+.pk-star.on{background:#fff;color:var(--pri)}      /* starred: a white pill, readable in both themes */
+.pk-dl{background:var(--pri);color:#fff;border:1px solid var(--pri)}
+/* Host unreachable: grey the actions like the cards; closing still works. */
+.dz-lost #peek .pk-actions{opacity:.45;pointer-events:none}
 
 /* ── User groups ── */
 .user-group{border:1px solid var(--pri);border-radius:var(--rx);
@@ -1263,21 +1354,83 @@ function renderMyFiles(files){
     </div>`).join('')+'</div>';
 }
 
+// ── Stars ────────────────────────────────────────────────────────────────────
+// A star is a per-page bookmark on a file id. It lives only in this tab's
+// sessionStorage (so a reload keeps it); the host never hears about it.
+// Storage can be unavailable (private mode, blocked), so every access is
+// wrapped and the page works without it.
+const _stars=new Set();
+try{
+  const saved=JSON.parse(sessionStorage.getItem('dz-stars')||'[]');
+  if(Array.isArray(saved)) saved.forEach(id=>_stars.add(String(id)));
+}catch(_){}
+function saveStars(){
+  try{sessionStorage.setItem('dz-stars',JSON.stringify([..._stars]));}catch(_){}
+}
+// The one "position marker": the row to highlight so the eye can find its place
+// again after a list change. {id, star}: star true = the row inside the Starred
+// section, false = the row in its owner's section. null = no marker.
+let _mark=null;
+let _lastUsers=[];       // last list given to renderAllUsers, so a star can redraw at once
+function redrawNet(){ _netSig=null; renderAllUsers(_lastUsers); }
+
+// Tap on a star button. inStar tells which copy of the row was tapped.
+function toggleStar(ev,id,inStar){
+  ev.stopPropagation(); ev.preventDefault();   // a later change makes the whole row tappable
+  if(!_stars.has(id)){                         // starring: no marker, no animation
+    _stars.add(id); saveStars(); redrawNet(); return;
+  }
+  _stars.delete(id); saveStars();
+  if(!inStar){ redrawNet(); return; }          // unstar from the owner's row: just redraw
+  // Unstar from the Starred section: mark the file's row in its owner's section
+  // (so a mistaken tap is easy to find again) and fold the Starred row shut
+  // first. No scrolling or focusing: the page must stay where it is.
+  _mark={id:id,star:false};
+  const row=document.querySelector('.file-row[data-id="'+id+'"][data-star="1"]');
+  if(!row){ redrawNet(); return; }
+  row.style.maxHeight=row.offsetHeight+'px';   // give the transition a start value
+  void row.offsetHeight;                       // force a reflow so it is applied
+  row.classList.add('gone');
+  setTimeout(redrawNet,200);
+}
+
 let _netSig=null;
 function renderAllUsers(all_users){
   const el = document.getElementById('net-files');
   if(!el) return;
-  // Skip the rebuild when the network file list is unchanged (see renderMyFiles).
-  const sig=JSON.stringify(all_users);
+  _lastUsers=all_users;
+  // Drop stars (and the marker) for files that no longer exist. Safe here: this
+  // is only called with a real answer from the host, never during an outage.
+  const liveIds=new Set();
+  all_users.forEach(u=>u.files.forEach(f=>liveIds.add(f.id)));
+  let dropped=false;
+  [..._stars].forEach(id=>{ if(!liveIds.has(id)){_stars.delete(id); dropped=true;} });
+  if(dropped) saveStars();
+  if(_mark && !liveIds.has(_mark.id)) _mark=null;
+  // Skip the rebuild when nothing changed: the file list, the stars or the marker.
+  const sig=JSON.stringify([all_users,[..._stars],_mark]);
   if(sig===_netSig) return;
   _netSig=sig;
-  if(!all_users.length){el.innerHTML='<p class="empty">No files on the network yet.</p>';return;}
+  if(!all_users.length){
+    _files=new Map(); _netOrder=[]; _starOrder=[];   // nothing left for a preview to show
+    el.innerHTML='<p class="empty">No files on the network yet.</p>';
+    peekSync();
+    return;
+  }
   // Alphabetical by name, but keep your own section pinned to the bottom.
   all_users=[...all_users].sort((a,b)=>
     (a.is_me?1:0)-(b.is_me?1:0) ||
     a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
   // "Download everything" covers everyone else (your own files are up top already).
   const others=all_users.filter(u=>!u.is_me);
+  // Data for the preview, in page order: others alphabetical, then your own.
+  // _starOrder is the same order restricted to starred files (the Starred section).
+  _files=new Map(); _netOrder=[]; _starOrder=[];
+  others.concat(all_users.filter(u=>u.is_me)).forEach(u=>u.files.forEach(f=>{
+    _files.set(f.id,{f:f,owner:u.name});
+    _netOrder.push(f.id);
+    if(_stars.has(f.id)) _starOrder.push(f.id);
+  }));
   const totalFiles=others.reduce((n,u)=>n+u.files.length,0);
   const totalBytes=others.reduce((n,u)=>n+u.files.reduce((m,f)=>m+(f.size||0),0),0);
   const everyBar=(totalFiles>0)?`
@@ -1302,23 +1455,265 @@ function renderAllUsers(all_users){
              All ${u.files.length} files (.zip)</a>`:''}
       </div>
       <div class="u-files"><div class="file-list">
-        ${u.files.map(f=>`
-          <div class="file-row">
+        ${u.files.map(f=>rowHtml(f,false)).join('')}
+      </div></div>
+    </div>`;};
+  // One file row, used by the people's groups (inStar false) and the Starred
+  // section (inStar true). data-id / data-star say which copy of the file this is.
+  const rowHtml=(f,inStar)=>{
+    const on=_stars.has(f.id);
+    const marked=_mark && _mark.id===f.id && _mark.star===inStar;
+    const starSvg=starIcon(on);   // shared with the preview, see "Preview" below
+    return `
+          <div class="file-row${marked?' mark':''}" data-id="${f.id}" data-star="${inStar?1:0}">
             ${fileThumb(f)}
             <span class="f-name">${escHtml(f.name)}</span>
             <span class="f-meta">${f.size_str}</span>
             <span class="f-action">
+              <button class="star-btn${on?' on':''}" onclick="toggleStar(event,'${f.id}',${inStar})"
+                 title="${on?'Unstar':'Star'}" aria-label="${on?'Unstar':'Star'}" aria-pressed="${on}">${starSvg}</button>
               <a class="dl-btn" href="${API}/api/download?id=${f.id}"
                  download="${escAttr(f.name)}" onclick="return downloadOne(event,'${f.id}')" title="Download"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg></a>
             </span>
-          </div>`).join('')}
-      </div></div>
-    </div>`;};
-  // Layout: everyone else's files, then the "Download everything" bar acting as a
-  // divider, then your own contribution below it (which the bar deliberately omits).
+          </div>`;};
+  // Starred section: every starred file, in page order (others alphabetical,
+  // then your own), not in the order they were starred. Always shown, header
+  // only when nothing is starred.
+  const starred=[];
+  others.concat(all_users.filter(u=>u.is_me)).forEach(u=>u.files.forEach(f=>{
+    if(_stars.has(f.id)) starred.push(f);
+  }));
+  const starBytes=starred.reduce((m,f)=>m+(f.size||0),0);
+  const starHtml=`
+    <div class="user-group starred">
+      <div class="u-hdr">
+        <div class="u-av"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+        <span class="u-nm">Starred</span>
+        ${starred.length>1?`<a class="dl-all" href="${API}/api/download_starred?ids=${starred.map(f=>f.id).join(',')}" download
+             onclick="return confirmBulk(event,this.href,${starBytes})"
+             title="Download all ${starred.length} starred files as one ZIP">
+             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+             All ${starred.length} files (.zip)</a>`:''}
+      </div>
+      ${starred.length?`<div class="u-files"><div class="file-list">
+        ${starred.map(f=>rowHtml(f,true)).join('')}
+      </div></div>`:''}
+    </div>`;
+  // Layout: Starred section, everyone else's files, then the "Download everything"
+  // bar acting as a divider, then your own contribution below it (which the bar
+  // deliberately omits).
   const mine=all_users.filter(u=>u.is_me).map(groupHtml).join('');
-  el.innerHTML=others.map(groupHtml).join('')+everyBar+mine;
+  el.innerHTML=starHtml+others.map(groupHtml).join('')+everyBar+mine;
+  peekSync();   // an open preview follows the fresh list (star state, vanished files)
 }
+
+// ── Preview ("peek") ─────────────────────────────────────────────────────────
+// Tapping a file row opens a full-screen preview of that file, with Star and
+// Download buttons. The list behind it stays alive: the row being previewed is
+// highlighted (the _mark above), and it is the row the page scrolls to on close.
+// Everything the preview needs is refreshed by renderAllUsers (the three
+// variables below) and the preview is told about it through peekSync().
+let _files=new Map();   // file id -> {f: the file, owner: the owner's display name}
+let _netOrder=[];       // file ids in page order (the Starred copies are not in it)
+let _starOrder=[];      // starred file ids in the order the Starred section shows them
+// null, or {seq, i, star}: seq = the file ids frozen when the preview opened (so
+// a poll cannot reshuffle it under the finger), i = index of the file shown,
+// star = opened from the Starred section (the marker then sits on that copy).
+let _peek=null;
+let _swipeAt=0;         // time of the last recognised swipe (ms), see the listeners at the end of this block
+let _peekHtml='';       // what the overlay currently holds; identical HTML is not rewritten (no flicker)
+
+// The star drawing, one place for the list rows and the preview.
+function starIcon(on){
+  return `<svg viewBox="0 0 24 24" fill="${on?'currentColor':'none'}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`;
+}
+// A file's picture at its own size (the thumbnail), or its icon when it has none.
+function peekPic(f){
+  return f.thumb
+    ? `<img class="pk-img" alt="" src="${API}/api/thumb?id=${encodeURIComponent(f.id)}">`
+    : `<span class="pk-ico">${fileIcon(f.name)}</span>`;
+}
+
+// Open on file id. star says which copy of the row was tapped.
+function openPeek(id,star){
+  if(_peek) return;
+  const seq=(star?_starOrder:_netOrder).slice();   // frozen copy
+  const i=seq.indexOf(id);
+  if(i<0) return;
+  _peek={seq:seq,i:i,star:star};
+  document.getElementById('peek').classList.add('on');
+  document.body.style.overflow='hidden';           // the page behind must not scroll
+  // One history entry for the whole preview, so the phone's Back button closes
+  // it instead of leaving the page. Stepping between files adds none.
+  try{ history.pushState({peek:1},''); }catch(e){}
+  drawPeek();
+}
+
+// Move to the previous (d=-1) or next (d=+1) file. The two ends are hard stops:
+// no wrap-around. The page behind is not scrolled; only closing does that.
+function peekStep(d){
+  if(!_peek) return;
+  const j=_peek.i+d;
+  if(j<0||j>=_peek.seq.length) return;
+  _peek.i=j;
+  drawPeek();
+}
+
+// Show seq[i] and move the highlight to its row. Only open (and later,
+// navigation) call this; peekSync calls fillPeek, which never moves the marker,
+// so the redraw below cannot loop back here.
+function drawPeek(){
+  if(!_peek) return;
+  fillPeek();
+  _mark={id:_peek.seq[_peek.i],star:_peek.star};
+  redrawNet();     // no page scrolling here: only closing scrolls
+}
+
+// Ask to close. When the preview owns a history entry, going Back is what
+// closes it (the popstate listener below calls peekShut), so the X, the
+// backdrop, Escape and the phone's Back button all end the same way and no
+// spare entry is left behind. _peekBack stops a second request, made before
+// popstate arrives, from calling history.back() twice.
+let _peekBack=false;
+function closePeek(){
+  if(!_peek) return;
+  if(history.state && history.state.peek){
+    if(_peekBack) return;
+    _peekBack=true;
+    history.back();
+    return;
+  }
+  peekShut();                   // no history entry (pushState failed): close now
+}
+
+// The real close; the page scrolls to the row last looked at.
+function peekShut(){
+  if(!_peek) return;
+  _peek=null;
+  _peekBack=false;
+  _peekHtml='';
+  const box=document.getElementById('peek');
+  box.classList.remove('on');
+  box.innerHTML='';
+  document.body.style.overflow='';
+  // The Starred copy is gone if the file was unstarred meanwhile: mark the
+  // owner's row instead.
+  if(_mark && _mark.star && !_stars.has(_mark.id)){
+    _mark={id:_mark.id,star:false};
+    redrawNet();
+  }
+  // Scroll a moment later: when the close came from going Back, the browser
+  // puts the page at its old scroll position just after popstate, which would
+  // undo a scroll made right here.
+  setTimeout(()=>{
+    const row=document.querySelector('#net-files .file-row.mark');
+    if(row) row.scrollIntoView({block:'nearest'});
+  },0);
+}
+
+// Called after every list redraw: keep an open preview true to the fresh data.
+function peekSync(){
+  if(!_peek) return;
+  const cur=_peek.seq[_peek.i];
+  if(!_files.has(cur)){ closePeek(); return; }      // the file was removed
+  _peek.seq=_peek.seq.filter(id=>_files.has(id));   // drop other vanished files...
+  _peek.i=_peek.seq.indexOf(cur);                   // ...staying on the same file
+  fillPeek();
+}
+
+// Write the overlay's contents for seq[i]. Pure drawing: no marker, no redraw.
+function fillPeek(){
+  const box=document.getElementById('peek');
+  if(!box||!_peek) return;
+  const id=_peek.seq[_peek.i];
+  const e=_files.get(id);
+  if(!e) return;
+  const f=e.f;
+  const on=_stars.has(id);
+  const prev=_files.get(_peek.seq[_peek.i-1]);   // undefined at the start...
+  const next=_files.get(_peek.seq[_peek.i+1]);   // ...and at the end of the sequence
+  const dlIcon='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>';
+  // Left-pointing chevron; the right-pointing one is the same points mirrored.
+  const chevron='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 6 9 12 15 18"/></svg>';
+  const html=`
+    <button class="pk-x" onclick="closePeek()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    <div class="pk-stage">
+      ${prev?`<div class="pk-prev">${peekPic(prev.f)}</div>`:''}
+      <div class="pk-box">${peekPic(f)}</div>
+      ${next?`<div class="pk-next">${peekPic(next.f)}</div>`:''}
+    </div>
+    <div class="pk-info">
+      <div class="pk-head">
+        <button class="pk-arrow" onclick="peekStep(-1)" aria-label="Previous file"${prev?'':' disabled style="visibility:hidden"'}>${chevron}</button>
+        <div>
+          <div class="pk-name">${escHtml(f.name)}</div>
+          <div class="pk-meta">${f.size_str} &middot; from ${escHtml(e.owner)}</div>
+        </div>
+        <button class="pk-arrow" onclick="peekStep(1)" aria-label="Next file"${next?'':' disabled style="visibility:hidden"'}>${chevron.replace('15 6 9 12 15 18','9 6 15 12 9 18')}</button>
+      </div>
+      <div class="pk-actions">
+        <button class="pk-star${on?' on':''}" onclick="toggleStar(event,'${id}',false)" aria-pressed="${on}">${starIcon(on)}${on?'Starred':'Star'}</button>
+        <a class="pk-dl" href="${API}/api/download?id=${id}" download="${escAttr(f.name)}" onclick="return downloadOne(event,'${id}')">${dlIcon}Download</a>
+      </div>
+    </div>`;
+  if(html===_peekHtml) return;   // nothing changed: leave the pictures alone
+  _peekHtml=html;
+  box.innerHTML=html;
+}
+
+// Listeners, attached once here: #net-files and #peek live for the whole page
+// (only their children are rebuilt), so no init string needs to know about them.
+(function(){
+  const net=document.getElementById('net-files');
+  if(net) net.addEventListener('click',ev=>{
+    if(ev.target.closest('a,button')) return;          // star / download / zip buttons keep their own job
+    const row=ev.target.closest('.file-row');
+    if(row) openPeek(row.dataset.id,row.dataset.star==='1');
+  });
+  const pk=document.getElementById('peek');
+  if(pk) pk.addEventListener('click',ev=>{
+    // Only the empty backdrop closes it, not the picture, the text or a button.
+    const t=ev.target;
+    if(Date.now()-_swipeAt<400) return;      // the click a finger-lift can raise after a swipe must not close it
+    const nb=t.closest('.pk-prev,.pk-next'); // a faded neighbour: step to it (the click lands on its picture)
+    if(nb){ peekStep(nb.classList.contains('pk-prev')?-1:1); return; }
+    if(t===pk||t.classList.contains('pk-stage')||t.classList.contains('pk-box')||t.classList.contains('pk-info'))
+      closePeek();
+  });
+  // Swipe: a mostly-sideways drag of 50px or more. Left goes to the next file,
+  // right to the previous. Multi-finger gestures are ignored. The time of a
+  // recognised swipe is kept so the click handler above can ignore the click.
+  let sx=0,sy=0,single=false;
+  if(pk){
+    pk.addEventListener('touchstart',ev=>{
+      single=ev.touches.length===1;
+      if(single){ sx=ev.touches[0].clientX; sy=ev.touches[0].clientY; }
+    },{passive:true});
+    pk.addEventListener('touchend',ev=>{
+      if(!single||!_peek) return;
+      single=false;
+      const t=ev.changedTouches[0];
+      const dx=t.clientX-sx, dy=t.clientY-sy;
+      if(Math.abs(dx)>=50 && Math.abs(dx)>1.5*Math.abs(dy)){
+        _swipeAt=Date.now();
+        peekStep(dx<0?1:-1);
+      }
+    },{passive:true});
+  }
+})();
+
+// Keyboard, only while a preview is open (and not while typing in a field).
+document.addEventListener('keydown',ev=>{
+  if(!_peek) return;
+  const tg=ev.target&&ev.target.tagName;
+  if(tg==='INPUT'||tg==='TEXTAREA') return;
+  if(ev.key==='ArrowLeft'){ ev.preventDefault(); peekStep(-1); }
+  else if(ev.key==='ArrowRight'){ ev.preventDefault(); peekStep(1); }
+  else if(ev.key==='Escape'){ ev.preventDefault(); closePeek(); }
+});
+
+// The phone's Back button (or history.back() from closePeek) closes the preview.
+window.addEventListener('popstate',()=>{ if(_peek) peekShut(); });
 
 async function removeFile(id){
   await fetch(`${API}/api/remove_file`,{method:'POST',
@@ -1614,7 +2009,9 @@ def make_page(badge, tagline, body, init_script):
 </main>
 <!-- Floating, out of normal flow: always visible (no scroll to the top) and its
      show/hide never shifts the page content below it. Empty => invisible. -->
-<div id="activity" style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,calc(100vw - 20px));z-index:60;pointer-events:none"></div>
+<div id="activity" style="position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(680px,calc(100vw - 20px));z-index:120;pointer-events:none"></div>
+<!-- Full-screen file preview (z-index 110, under the banner at 120); the script fills it. -->
+<div id="peek"></div>
 <script>
 {JS}
 {init_script}

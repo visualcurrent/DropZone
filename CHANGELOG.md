@@ -9,6 +9,11 @@ Keep a Changelog; versions follow SemVer with a channel suffix (see
   with the instant native download UI — no `name (1).ext`, no delay, no stacked
   save dialogs.
 
+## [0.2.24] — nightly
+- Preview: tapping a file in "Available on Network" opens a full-screen preview with the file's picture at its own size (or a large icon), its full name, size and owner, a Star toggle and Download. Previous and next by arrow buttons, a sideways swipe, a tap on the faded neighbour picture, or the arrow keys; Esc, the X, a tap outside or the phone's Back closes it. The row of the file last previewed stays highlighted, and the page scrolls to it on closing.
+- Starred shortlist: every network row has a star. Starred files are listed in a Starred section at the top of "Available on Network", each with its download button, and "All N files (.zip)" downloads them as one flat zip through the new `GET /api/download_starred?ids=`. Stars are kept in the browser tab only. Unstarring in the Starred section folds the row away and highlights the file where it sits in its owner's list. New test `tests/test_download_starred.py`.
+- The row highlight on touch screens is no longer a hover effect that stuck to the last tapped row.
+
 ## [0.2.18] — nightly
 - Video thumbnails take the frame 10% of the way into the clip instead of 0.1 s in. Clips that fade in from black were getting a black thumbnail. If the browser does not know the clip's length it still uses 0.1 s.
 
